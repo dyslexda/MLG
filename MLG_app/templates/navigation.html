@@ -1,0 +1,30 @@
+<nav class="navbar navbar-expand navbar-light bg-light">
+  <a class="navbar-brand" href="{{ url_for('index_bp.index')}}">MLG Home</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbars" aria-controls="navbars" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbars">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('teams_bp.teams') }}">Teams <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('players_bp.players') }}">Players</a>
+      </li>
+    </ul>
+    {% if session['username'] %}
+      <div class="dropdown">
+        <button class="btn btn-dark dropdown-toggle" type="button" id="navbarUserDropdownButton" data-toggle="dropdown">
+        {{ "/u/" + session['username'] }}
+        </button>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="/auth/logout">Log Out</a>
+        </div>
+      </div>
+    {% else %}
+    <a href="/auth/login">
+      <button class="btn btn-dark" type="button">Reddit Login</button>
+    </a>
+    {% endif %}
+  </div>
+</nav>

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Players
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+      <h1>League Players</h1>
+      <hr />
+        <hr />
+        <div class="table-responsive-sm">
+          <table class="table table-striped table-hover table-sm table-bordered">
+            <thead class="thead-dark">
+              <tr>
+                <th>Player</th>
+                <th>Team</th>
+                <th>Hand</th>
+                <th>PPos</th>
+                <th>SPos</th>
+                <th>CON</th>
+                <th>EYE</th>
+                <th>POW</th>
+                <th>SPE</th>
+                <th>MOV</th>
+                <th>COM</th>
+                <th>VEL</th>
+                <th>AWA</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for player in player_list %}
+              <tr>
+                <td>{{player.Player_Name}}</td>
+                <td>{{player.Team.team_abbr}}</td>
+                <td>{{player.Hand}}</td>
+                <td>{{player.PPos}}</td>
+                <td>{{player.SPos}}</td>
+                <td>{{player.Contact}}</td>
+                <td>{{player.Eye}}</td>
+                <td>{{player.Power}}</td>
+                <td>{{player.Speed}}</td>
+                <td>{{player.Movement}}</td>
+                <td>{{player.Command}}</td>
+                <td>{{player.Velocity}}</td>
+                <td>{{player.Awareness}}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+      </div>
+    </div>
+
+
+{% endblock %}
