@@ -26,11 +26,13 @@ def create_app():
         from .teams import teams
         from .players import players
         from .auth import auth
+        from .admin import admin
 
 
         app.register_blueprint(index.index_bp)
         app.register_blueprint(teams.teams_bp)
         app.register_blueprint(players.players_bp)
         app.register_blueprint(auth.auth_bp)
+        app.register_blueprint(admin.admin_bp)
 
         return app
