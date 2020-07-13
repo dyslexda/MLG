@@ -109,6 +109,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+mlg-env/
 
 # Spyder project settings
 .spyderproject
