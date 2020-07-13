@@ -11,6 +11,9 @@
       <li class="nav-item">
         <a class="nav-link" href="{{ url_for('players_bp.players') }}">Players</a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin_bp.devnotes') }}">Dev Notes</a>
+      </li>
     </ul>
     {% if session['username'] %}
       <div class="dropdown">
