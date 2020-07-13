@@ -12,11 +12,11 @@ Teams
       <div class="card-deck">
         {% for team in team_list %}
         <div class="card my-2">
-          <a href="/teams/{{ team.team_abbr }}">
-            <img class="card-img-top p-3" src={{ url_for('teams_bp.static',filename=(team.team_abbr + "_Logo.png")) }} alt="{{ team.team_abbr }}" style="object-fit: contain" height="200rem" />
+          <a href="/teams/{{ team.Team_Abbr }}">
+            <img class="card-img-top p-3" src={{ url_for('teams_bp.static',filename=(team.Team_Abbr + "_Logo.png")) }} alt="{{ team.Team_Abbr }}" style="object-fit: contain" height="200rem" />
           </a>
           <div class="card-body"></div>
-          <div class="card-footer text-center">{{ team.team_name }}</div>
+          <div class="card-footer text-center">{{ team.Team_Name }}</div>
         </div>
         {% endfor %}
       </div>
