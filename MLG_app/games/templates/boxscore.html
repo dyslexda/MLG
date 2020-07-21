@@ -1,0 +1,100 @@
+      <div class="row">
+          {% for team in [game.Away,game.Home] %}
+        <div class="col-sm">
+          <div id="lineups">
+              <h2 class="sub-header">{{team.Team_Name}}</h2>
+              <div class="table-responsive-sm">
+                <table class="table table-sm table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th>Pitcher</th>
+                      <th>IP</th>
+                      <th>ER</th>
+                      <th>H</th>
+                      <th>BB</th>
+                      <th>K</th>
+                      <th>ERA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for entry in lineups if ( (entry.Team.Team_Abbr == team.Team_Abbr) and (entry.Position == 'P') ) %}
+                    <tr>
+                      {% if boxscore_active(lineups,entry) == 'inactive' %}
+                      <td><del>{{entry.Player.Player_Name}}</del></td>
+                      {% else %}
+                      <td>{{entry.Player.Player_Name}}</td>
+                      {% endif %}
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <div class="table-responsive-sm">
+                <table class="table table-sm table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Name</th>
+                      <th>Pos</th>
+                      <th>AB</th>
+                      <th>R</th>
+                      <th>H</th>
+                      <th>RBI</th>
+                      <th>BB</th>
+                      <th>K</th>
+                      <th>BA</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for entry in lineups if ( (entry.Team.Team_Abbr == team.Team_Abbr) and (entry.Position != 'P') and (entry.Box != 0) ) %}
+                      <tr>
+                      {% if boxscore_active(lineups,entry) == 'inactive' %}
+                        <td><del>{{entry.Order}}</del></td>
+                        <td><del>{{entry.Player.Player_Name}}</del></td>
+                      {% else %}
+                        <td>{{entry.Order}}</td>
+                        <td>{{entry.Player.Player_Name}}</td>
+                      {% endif %}
+                        <td>{{entry.Position}}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <div class="table-responsive-sm">
+                <table class="table table-sm table-striped table-hover">
+                  <thead>
+                    <tr>
+                      <th>Bench Name</th>
+                      <th>Position</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for entry in lineups if ( (entry.Team.Team_Abbr == team.Team_Abbr) and (entry.Box == 0) ) %}
+                      <tr>
+                        <td>{{entry.Player.Player_Name}}</td>
+                        <td>{{entry.Player.PPos}}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+          </div>
+        </div>
+          {% endfor %}
+      </div>
+    </div>

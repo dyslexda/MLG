@@ -12,8 +12,12 @@ Dev Notes
         <li>Hook in calculator</li>
         <li>Refactor gamestate files to database system</li>
         <li>Install game management for selected umpires (validated via Reddit login)</li>
+        <li>Clean up games.py and models.py. Have tons of unnecessary imports from trying to figure out the right library to use for lineups.</li>
       <br /><br />
       <h2>Done</h2>
+      <hr />
+        <li>7/20/20 - Added authorization ability through Reddit login and session cookies. Checks whether user has umpire or commissioner roles. Partially implemented in terms of what games are viewable in the Manage Games screen. Need to further lock down, though.</li>
+        <li>7/20/20 - Lineups are now implemented using a DB model. When a game is created, lineups must first be initialized (assuming games get created early in the season, but rosters can change by the game date). Once initialized, the lineups management page properly pulls existing lineup information (box, order, position), and can POST it back to update the DB.</li>
         <li>Reddit login saves username as session cookie</li>
         <li>Basic models (Users, Teams, Players, All PAs) implemented and accessible</li>
     </div>

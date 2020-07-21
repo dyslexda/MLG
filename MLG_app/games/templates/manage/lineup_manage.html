@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{game.Game_ID}} Management
+{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+      <h3>Season {{game.Season}} Session {{game.Session}}: {{game.Away.Team_Abbr}} @ {{game.Home.Team_Abbr}}</h3>
+      <hr />
+      <div class="row">
+          <div class="col">
+              <h2 class="text-center">
+                  {{game.Away.Team_Abbr}} {{game.A_Score}} - {{game.H_Score}} {{game.Home.Team_Abbr}} | {{game.Inning}}
+              </h2><hr />
+          </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <h3 class="text-center">
+            {% if status == 'empty' %} Lineups have not been initialized in the database
+          </h3>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <form id="initialize-lineups" action="/games/manage/{{game.Game_Number}}/lineups/init" method="POST" role="form" class="text-center">
+            <input type="submit" value="Initialize Lineups">
+          </form>
+        </div>
+      </div>
+    </div>
+            {% elif status == 'init' %} Lineups have been set, but can be modified
+          </h3>
+        </div>
+      </div>
+    </div>
+    <form id="lineup-form" action="" method="POST" role="form">
+        {{ form.hidden_tag() }}
+      <div class="row">
+          {% for team in [game.Away,game.Home] %}
+          <div class="col-md-6">
+            <h2 class="sub-header">{{team.Team_Name}}</h2>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Box</th>
+                    <th>Order</th>
+                    <th>Position</th>
+                    <th>Name</th>
+                    <th>PPos</th>
+                    <th>SPos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for entry in lineups %}
+                    {% if (entry.Team.Team_Abbr == team.Team_Abbr) %}
+                      {{ form.bop[loop.index0].player_id }}
+                      <tr>
+                        <td><div class="clearfix">{{ form.bop[loop.index0].box }}</div></td>
+                        <td><div class="clearfix">{{ form.bop[loop.index0].order }}</div></td>
+                        <td><div class="clearfix">{{ form.bop[loop.index0].pos }}</div></td>
+                        <td>{{entry.Player.Player_Name}}</td>
+                        <td>{{entry.Player.PPos}}</td>
+                        <td>{{entry.Player.SPos}}</td>
+                      </tr>
+                    {% endif %}
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {% endfor %}
+      </div>
+      <input type="submit">
+    </form>
+              {% endif %}
+{% endblock %}

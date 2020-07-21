@@ -108,8 +108,8 @@ class BoxOrderPosForm(Form):
     pos = SelectField(choices = pos_choices)
 
 class LineupBoxForm(FlaskForm):
-    a_bop = FieldList(FormField(BoxOrderPosForm))
-    h_bop = FieldList(FormField(BoxOrderPosForm))
+    bop = FieldList(FormField(BoxOrderPosForm))
+#    h_bop = FieldList(FormField(BoxOrderPosForm))
 
 class All_PAs(BaseModel):
     id = AutoField(primary_key=True)

@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, g, session, request, redirect, url_for
 from flask import current_app as app
-from models import Teams, Players, Games, GameCreationForm, LineupBoxForm, Lineups, db
+from models import Teams, Players, Games, GameCreationForm, LineupBoxForm, BoxOrderPosForm, Lineups, db
 from MLG_app.auth.auth import login_required
+from peewee import *
 
 
 # Blueprint Configuration
@@ -23,9 +24,11 @@ def games():
 @games_bp.route('/games/<game_number>', methods=['GET'])
 def game_page(game_number):
     game = Games.get(Games.Game_Number == game_number)
+    lineups = Lineups.select().where(Lineups.Game_Number == game.Game_Number).order_by(Lineups.Team, Lineups.Order.asc(), Lineups.Box.asc())
     return render_template(
         'game_page.html',
-        game = game
+        game = game,
+        lineups = lineups
     )
 
 @games_bp.route('/games/create',methods=['GET','POST'])
@@ -63,7 +66,7 @@ def games_manage():
     if session['commissioner']:
         visible_games = game_list
     return render_template(
-        'games_manage.html',
+        'manage/games_manage.html',
         game_list=visible_games
     )
 
@@ -71,55 +74,50 @@ def games_manage():
 @login_required
 def game_manage(game_number):
     game = Games.get(Games.Game_Number == game_number)
-    if Lineups.select().where(Lineups.Game_Number == game.Game_Number).count() == 0:
-        status = 'empty'
-    else:
-        status = 'init'
-    a_players = Players.select().where(Players.Team == game.Away.Team_Abbr)
-    h_players = Players.select().where(Players.Team == game.Home.Team_Abbr)
+    lineups = Lineups.select().where(Lineups.Game_Number == game.Game_Number).order_by(Lineups.Team, Lineups.Order.asc(), Lineups.Box.asc())
     return render_template(
-        'game_manage.html',
-        status = status,
+        'manage/game_manage.html',
         game = game,
-        a_players = a_players,
-        h_players = h_players,
+        lineups = lineups
     )
+
+@games_bp.context_processor
+def jinja_utilities():
+    def boxscore_active(lineups,entry):
+        max_box = lineups.select(fn.MAX(Lineups.Box)).where((Lineups.Game_Number == entry.Game_Number.Game_Number) & (Lineups.Position == entry.Position) & (Lineups.Team == entry.Team.Team_Abbr)).scalar()
+        if entry.Box == max_box: 
+            status = 'active'
+        else: 
+            status = 'inactive'
+        return status
+    return dict(boxscore_active=boxscore_active)
 
 @games_bp.route('/games/manage/<game_number>/lineups', methods=['GET', 'POST'])
 @login_required
 def lineup_manage(game_number):
     form = LineupBoxForm()
     game = Games.get(Games.Game_Number == game_number)
-    a_players = Players.select().where(Players.Team == game.Away.Team_Abbr)
-    h_players = Players.select().where(Players.Team == game.Home.Team_Abbr)
-    if Lineups.select().where(Lineups.Game_Number == game.Game_Number).count() == 0:
+    lineups = Lineups.select().where(Lineups.Game_Number == game.Game_Number).order_by(Lineups.Team, Lineups.Order.asc(), Lineups.Box.asc())
+    if lineups.count() == 0:
         status = 'empty'
     else:
         status = 'init'
         if request.method == 'POST':
             if form.validate_on_submit():
-                for entry in form.a_bop:
-                    player = a_players.where(Players.Player_ID==entry.player_id.data)[0]
+                for entry in form.bop:
+                    player = Lineups.get((Lineups.Player==entry.player_id.data) & (Lineups.Game_Number == game.Game_Number)).Player
                     player_update = {'Game_Number':game_number, 'Team':player.Team.Team_Abbr,'Player':player.Player_ID,'Box':entry.box.data,'Order':entry.order.data,'Position':entry.pos.data}
                     num = Lineups.update(player_update).where((Lineups.Game_Number == game.Game_Number) & (Lineups.Player == player.Player_ID)).execute()
-                for entry in form.h_bop:
-                    player = h_players.where(Players.Player_ID==entry.player_id.data)[0]
-                    player_update = {'Game_Number':game_number, 'Team':player.Team.Team_Abbr,'Player':player.Player_ID,'Box':entry.box.data,'Order':entry.order.data,'Position':entry.pos.data}
-                    num = Lineups.update(player_update).where((Lineups.Game_Number == game.Game_Number) & (Lineups.Player == player.Player_ID)).execute()
-            else:
-                redirect('/games/manage/<game_number>')
+            return redirect(url_for('games_bp.game_manage',game_number=game_number))
         else:
-            for player in a_players:
-                form.a_bop.append_entry(data=lineup_populate(player,game))
-            for player in h_players:
-                form.h_bop.append_entry(data=lineup_populate(player,game))
+            for entry in lineups:
+                form.bop.append_entry(data=lineup_populate(entry.Player,game))
     return render_template(
-        'lineup_manage.html',
+        'manage/lineup_manage.html',
         status = status,
         form = form,
         game = game,
-        a_players = a_players,
-        h_players = h_players,
+        lineups = lineups
     )
 
 @games_bp.route('/games/manage/<game_number>/lineups/init', methods=['GET', 'POST'])
@@ -150,4 +148,3 @@ def lineup_populate(player,game):
     except:
         pass
     return data
-#    return 'hello'
