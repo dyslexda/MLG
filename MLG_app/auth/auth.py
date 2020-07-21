@@ -1,7 +1,9 @@
 """General page routes."""
 import praw, requests, json
-from flask import Blueprint, render_template, Flask, session, redirect, url_for, request
+import functools
+from flask import Blueprint, render_template, Flask, session, redirect, url_for, request, g
 from flask import current_app as app
+from models import Users
 
 # Blueprint Configuration
 auth_bp = Blueprint(
@@ -22,7 +24,7 @@ def login():
 
 @auth_bp.route('/logout')
 def logout():
-    session.pop('username', None)
+    session.clear()
     return redirect(url_for('index_bp.index'))
 
 @auth_bp.route('/authorize_callback', methods=['GET'])
@@ -33,6 +35,15 @@ def authorized():
         access_token = getOAuthToken(code)
         reddit_name = getIdentity(access_token)
         session['username'] = reddit_name
+        user = Users.get(Users.Reddit_Name == reddit_name)
+        if 'umpire' in user.Roles:
+            session['umpire'] = True
+        else:
+            session['umpire'] = False
+        if 'commissioner' in user.Roles:
+            session['commissioner'] = True
+        else:
+            session['commissioner'] = False
         revokeToken(access_token,"access_token")
     return redirect(url_for('index_bp.index'))
 
@@ -54,3 +65,21 @@ def revokeToken(token, tokentype):
                       auth = ('tUv_ZIIJCczWkQ','bfh-3E2wfIyvifXUhyL9xiOhrKk'),
                       headers = {'User-agent':app.config['USER_AGENT'],'Content-Type':'application/x-www-form-urlencoded'},
                       data = {'token':token,'token_type_hint':tokentype})
+
+@auth_bp.before_app_request
+def load_logged_in_user():
+    username = session.get('username')
+    if username is None:
+        g.user = None
+    else:
+        g.user = Users.get(Users.Reddit_Name == username)
+
+def login_required(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if g.user is None:
+            return redirect(url_for('index_bp.index'))
+
+        return view(**kwargs)
+
+    return wrapped_view

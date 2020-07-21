@@ -11,6 +11,18 @@
       <li class="nav-item">
         <a class="nav-link" href="{{ url_for('players_bp.players') }}">Players</a>
       </li>
+      <li class="dropdown">
+        <a class="nav-link dropdown-toggle" id="navbarUserDropdownButton" data-toggle="dropdown">Games</a>
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="/games">Current Games</a>
+          {% if session['commissioner'] %}
+          <a class="dropdown-item" href="/games/create">Create Game</a>
+          {% endif %}
+          {% if session['umpire'] %}
+          <a class="dropdown-item" href="/games/manage">Manage Game</a>
+          {% endif %}
+        </div>
+      </li>
       <li class="nav-item">
         <a class="nav-link" href="{{ url_for('admin_bp.devnotes') }}">Dev Notes</a>
       </li>

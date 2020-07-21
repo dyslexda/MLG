@@ -27,6 +27,7 @@ def create_app():
         from .players import players
         from .auth import auth
         from .admin import admin
+        from .games import games
 
 
         app.register_blueprint(index.index_bp)
@@ -34,5 +35,6 @@ def create_app():
         app.register_blueprint(players.players_bp)
         app.register_blueprint(auth.auth_bp)
         app.register_blueprint(admin.admin_bp)
+        app.register_blueprint(games.games_bp)
 
         return app

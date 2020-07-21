@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{{game.Game_ID}} Management
+{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+      <h3>Season {{game.Season}} Session {{game.Session}}: {{game.Away.Team_Abbr}} @ {{game.Home.Team_Abbr}}</h3>
+      <hr />
+      <div class="row">
+          <div class="col">
+              <h2 class="text-center">
+                  {{game.Away.Team_Abbr}} {{game.A_Score}} - {{game.H_Score}} {{game.Home.Team_Abbr}} | {{game.Inning}}
+              </h2><hr />
+          </div>
+      </div>
+      <a href="/games/manage/{{game.Game_Number}}/lineups">Manage Lineup</a>
+
+{% endblock %}
