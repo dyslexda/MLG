@@ -1,17 +1,10 @@
 from peewee import *
-from wtfpeewee.fields import ModelHiddenField
-from wtfpeewee.orm import model_form, ModelConverter
+from wtfpeewee.orm import model_form
 import wtforms
 from flask_wtf import FlaskForm
 from wtforms import Form, FieldList, FormField, SelectField, HiddenField, validators
 
-
 db = SqliteDatabase('mlg.s', check_same_thread=False, pragmas={'foreign_keys': 1})
-
-
-class HiddenForeignKeyConverter(ModelConverter):
-    def handle_foreign_key(self, model, field, **kwargs):
-        return field.name, ModelHiddenField(model=field.rel_model, **kwargs)
 
 class BaseModel(Model):
     class Meta:
@@ -109,7 +102,6 @@ class BoxOrderPosForm(Form):
 
 class LineupBoxForm(FlaskForm):
     bop = FieldList(FormField(BoxOrderPosForm))
-#    h_bop = FieldList(FormField(BoxOrderPosForm))
 
 class All_PAs(BaseModel):
     id = AutoField(primary_key=True)

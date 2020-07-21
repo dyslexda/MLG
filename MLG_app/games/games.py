@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, g, session, request, redirect, url_for
 from flask import current_app as app
-from models import Teams, Players, Games, GameCreationForm, LineupBoxForm, BoxOrderPosForm, Lineups, db
+from models import Teams, Players, Games, GameCreationForm, LineupBoxForm, Lineups, db
 from MLG_app.auth.auth import login_required
 from peewee import *
 
