@@ -17,32 +17,7 @@
             </div>
         </div>
     </div>
-    <div class="row">
-      <div class="col-sm">
-        <h5 class="text-center">
-          {{game.Away.Team_Abbr}} Lineup
-        </h5>
-        <hr />
-        <div class="container float-center">
-          <div id="lineups">
-            <div class="table-responsive-sm">
-              <table class="table table-sm table-striped table-hover">
-                <thead>
-                  <tr>
-                    <th>Pitcher</th>
-                    <th>IP</th>
-                    <th>ER</th>
-                    <th>H</th>
-                    <th>BB</th>
-                    <th>K</th>
-                    <th>ERA</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+
+{% include 'boxscore.html' %}
 
 {% endblock %}
