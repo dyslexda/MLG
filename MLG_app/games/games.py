@@ -31,27 +31,27 @@ def game_page(game_number):
         lineups = lineups
     )
 
-@games_bp.route('/games/create',methods=['GET','POST'])
-@login_required
-def games_create():
-    game = Games()
-    if request.method == 'POST':
-        form = GameCreationForm(request.form, obj=game)
-        if form.validate():
-            form.populate_obj(game)
-            game.save()
-            flash('Successfully added %s' % game, 'success')
-            return redirect(url_for('game_page', game_number=game.Game_Number))
-    else:
-        form = GameCreationForm(obj=game)
-
-    return render_template('game_create.html', game=game, form=form)
-#    if session['commissioner']:
-#        teams = Teams.select()
-#        return render_template(
-#            'game_create.html',
-#            teams=teams
-#        )
+#@games_bp.route('/games/create',methods=['GET','POST'])
+#@login_required
+#def games_create():
+#    game = Games()
+#    if request.method == 'POST':
+#        form = GameCreationForm(request.form, obj=game)
+#        if form.validate():
+#            form.populate_obj(game)
+#            game.save()
+#            flash('Successfully added %s' % game, 'success')
+#            return redirect(url_for('game_page', game_number=game.Game_Number))
+#    else:
+#        form = GameCreationForm(obj=game)
+#
+#    return render_template('game_create.html', game=game, form=form)
+##    if session['commissioner']:
+##        teams = Teams.select()
+##        return render_template(
+##            'game_create.html',
+##            teams=teams
+##        )
 
 @games_bp.route('/games/manage',methods=['GET'])
 @login_required
@@ -97,34 +97,31 @@ def jinja_utilities():
 def lineup_manage(game_number):
     form = LineupBoxForm()
     game = Games.get(Games.Game_Number == game_number)
+    if game.Status == 'Staged' or game.Status == 'Final':
+        return redirect(url_for('games_bp.game_manage',game_number=game_number))
     lineups = Lineups.select().where(Lineups.Game_Number == game.Game_Number).order_by(Lineups.Team, Lineups.Order.asc(), Lineups.Box.asc())
-    if lineups.count() == 0:
-        status = 'empty'
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            for entry in form.bop:
+                player = Lineups.get((Lineups.Player==entry.player_id.data) & (Lineups.Game_Number == game.Game_Number)).Player
+                player_update = {'Game_Number':game_number, 'Team':player.Team.Team_Abbr,'Player':player.Player_ID,'Box':entry.box.data,'Order':entry.order.data,'Position':entry.pos.data}
+                num = Lineups.update(player_update).where((Lineups.Game_Number == game.Game_Number) & (Lineups.Player == player.Player_ID)).execute()
+        return redirect(url_for('games_bp.game_manage',game_number=game_number))
     else:
-        status = 'init'
-        if request.method == 'POST':
-            if form.validate_on_submit():
-                for entry in form.bop:
-                    player = Lineups.get((Lineups.Player==entry.player_id.data) & (Lineups.Game_Number == game.Game_Number)).Player
-                    player_update = {'Game_Number':game_number, 'Team':player.Team.Team_Abbr,'Player':player.Player_ID,'Box':entry.box.data,'Order':entry.order.data,'Position':entry.pos.data}
-                    num = Lineups.update(player_update).where((Lineups.Game_Number == game.Game_Number) & (Lineups.Player == player.Player_ID)).execute()
-            return redirect(url_for('games_bp.game_manage',game_number=game_number))
-        else:
-            for entry in lineups:
-                form.bop.append_entry(data=lineup_populate(entry.Player,game))
+        for entry in lineups:
+            form.bop.append_entry(data=lineup_populate(entry.Player,game))
     return render_template(
         'manage/lineup_manage.html',
-        status = status,
         form = form,
         game = game,
         lineups = lineups
     )
 
-@games_bp.route('/games/manage/<game_number>/lineups/init', methods=['GET', 'POST'])
+@games_bp.route('/games/manage/<game_number>/init', methods=['GET', 'POST'])
 @login_required
 def game_init(game_number):
-    if session['commissioner']:
-        game = Games.get(Games.Game_Number == game_number)
+    game = Games.get(Games.Game_Number == game_number)
+    if session['commissioner'] and game.Status == 'Staged':
         a_players = Players.select().where(Players.Team == game.Away.Team_Abbr)
         h_players = Players.select().where(Players.Team == game.Home.Team_Abbr)
         player_adds = []
@@ -134,8 +131,9 @@ def game_init(game_number):
         print(player_adds)
         with db.atomic():
             Lineups.insert_many(player_adds).execute()
+            game.Status = 'Initialized'
+            game.save()
     return redirect(url_for('games_bp.game_manage',game_number=game_number))
-
 
 def lineup_populate(player,game):
     data = {}

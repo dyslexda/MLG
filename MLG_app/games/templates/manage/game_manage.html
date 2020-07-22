@@ -16,7 +16,12 @@
               </h2><hr />
           </div>
       </div>
-      <a href="/games/manage/{{game.Game_Number}}/lineups">Manage Lineup</a>
+      {% if game.Status == 'Staged' %}
+      <a href="/games/manage/{{game.Game_Number}}/init">Start Game</a><br />
+      {% elif game.Status == 'Initialized' or game.Status == 'Started' %}
+      <a href="/games/manage/{{game.Game_Number}}/lineups">Manage Lineup</a><br />
+      {% elif game.Status == 'Final' %} Game Over!
+      {% endif %}
 {% include 'boxscore.html' %}
 
 {% endblock %}
