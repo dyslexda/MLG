@@ -45,7 +45,7 @@ class Games(BaseModel):
     id = AutoField(primary_key=True)
     Game_Number = IntegerField(unique=True)
     Game_ID = CharField()
-    Status = CharField(default='Staged') # 'Staged' is created; 'Initialized' means lineups are populated; 'Started' has been started, and sent messages to players; 'Final' means game has ended.
+    Status = CharField(default='Staged') # 'Staged' is created; 'Init' means lineups are populated; 'Started' has been started, and sent messages to players; 'Final' means game has ended.
     Season = IntegerField(null=True)
     Session = IntegerField(null=True)
     Away = ForeignKeyField(Teams,field='Team_Abbr',null=True)
