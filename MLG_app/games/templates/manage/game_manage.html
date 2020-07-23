@@ -16,7 +16,18 @@
               </h2><hr />
           </div>
       </div>
-      <a href="/games/manage/{{game.Game_Number}}/lineups">Manage Lineup</a>
+      <div class="row">Game Status: {{game.Status}}</div>
+      {% if game.Status == 'Staged' %}
+      <a href="/games/manage/{{game.Game_Number}}/init">Initialize Lineups</a><br />
+      {% elif game.Status == 'Init'%}
+      <a href="/games/manage/{{game.Game_Number}}/lineups">Manage Lineup</a><br />
+      <button class="btn-drk" type="button" id="gameStart">
+        <a href="/games/manage/{{game.Game_Number}}/start">Start Game</a>
+      </button>
+      {% elif game.Status == 'Started' %}
+      <a href="/games/manage/{{game.Game_Number}}/lineups">Manage Lineup</a><br />
+      {% elif game.Status == 'Final' %} Game Over!
+      {% endif %}
 {% include 'boxscore.html' %}
 
 {% endblock %}
