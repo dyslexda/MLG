@@ -3,6 +3,7 @@ from flask import current_app as app
 from models import Teams, Players, Games, GameCreationForm, LineupBoxForm, Lineups, db
 from MLG_app.auth.auth import login_required
 from peewee import *
+import MLG_app.webhook_functions as webhook_functions
 
 
 # Blueprint Configuration
@@ -156,12 +157,77 @@ def game_start(game_number):
             raw_lineups[entry.Player.Team.Team_Abbr].append(player_update)
         valid, errors = validate_lineups(raw_lineups,game)
         if valid:
+            active_players(game)
             game.Status = 'Started'
             game.save()
+            webhook_functions.game_start(game)
         elif not valid:
             for error in errors: flash(error)
     return redirect(url_for('games_bp.game_manage',game_number=game_number))
 
+@games_bp.route('/games/manage/check', methods=['GET','POST'])
+def game_check():
+    if request.method == 'POST':
+        payload = request.get_json()
+        game = Games.get(Games.Game_Number == payload['Game_Number'])
+        if game.Pitch is not None and game.Swing is not None:
+            print(game.Pitch,game.Swing)
+    return redirect(url_for('index_bp.index'))
+
+
+def active_players(game):
+    if game.Inning[0] == 'T':
+        off_team = game.Away.Team_Abbr
+        def_team = game.Home.Team_Abbr
+        bat_pos = game.A_Bat_Pos
+    else:
+        off_team = game.Home.Team_Abbr
+        def_team = game.Away.Team_Abbr
+        bat_pos = game.H_Bat_Pos
+    with db.atomic():
+        max_p_box = (Lineups
+         .select(fn.MAX(Lineups.Box))
+         .where((Lineups.Game_Number == game.Game_Number) & 
+                (Lineups.Team == def_team) & 
+                (Lineups.Position == 'P')
+                )).scalar()
+        max_c_box = (Lineups
+         .select(fn.MAX(Lineups.Box))
+         .where((Lineups.Game_Number == game.Game_Number) & 
+                (Lineups.Team == def_team) & 
+                (Lineups.Position == 'C')
+                )).scalar()
+        max_b_box = (Lineups
+         .select(fn.MAX(Lineups.Box))
+         .where((Lineups.Game_Number == game.Game_Number) & 
+                (Lineups.Team == off_team) & 
+                (Lineups.Order == bat_pos)
+                )).scalar()
+        pitcher = (Lineups
+         .select(Lineups,Players,Games).join(Games).switch(Lineups).join(Players)
+         .where((Lineups.Game_Number == game.Game_Number) & 
+                (Lineups.Team == def_team) & 
+                (Lineups.Position == 'P') & 
+                (Lineups.Box == max_p_box)
+                )).objects()[0]
+        catcher = (Lineups
+         .select(Lineups,Players,Games).join(Games).switch(Lineups).join(Players)
+         .where((Lineups.Game_Number == game.Game_Number) & 
+                (Lineups.Team == def_team) & 
+                (Lineups.Position == 'C') & 
+                (Lineups.Box == max_c_box)
+                )).objects()[0]
+        batter = (Lineups
+         .select(Lineups,Players,Games).join(Games).switch(Lineups).join(Players)
+         .where((Lineups.Game_Number == game.Game_Number) & 
+                (Lineups.Team == off_team) & 
+                (Lineups.Order == bat_pos) & 
+                (Lineups.Box == max_b_box)
+                )).objects()[0]
+        game.Pitcher = pitcher.Player_ID
+        game.Catcher = catcher.Player_ID
+        game.Batter = batter.Player_ID
+        game.save()
 
 def lineup_populate(player,game):
     data = {}

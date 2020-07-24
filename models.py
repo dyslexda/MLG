@@ -1,10 +1,12 @@
 from peewee import *
 from wtfpeewee.orm import model_form
-import wtforms
+import wtforms, os, inspect
 from flask_wtf import FlaskForm
 from wtforms import Form, FieldList, FormField, SelectField, HiddenField, validators
 
-db = SqliteDatabase('mlg.s', check_same_thread=False, pragmas={'foreign_keys': 1})
+# Builds absolute path relative to this models.py file so other directories (like bots) can find the same database when importing
+db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'mlg.s')
+db = SqliteDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1})
 
 class BaseModel(Model):
     class Meta:
@@ -54,9 +56,12 @@ class Games(BaseModel):
     H_Score = CharField(default=0)
     A_Bat_Pos = IntegerField(default=1)
     H_Bat_Pos = IntegerField(default=1)
-    Inning = CharField(null=True)
+    Inning = CharField(default='T1')
     Outs = IntegerField(default=0)
     Situation = CharField(null=True)
+    Pitcher = ForeignKeyField(Players,field='Player_ID',null=True)
+    Batter = ForeignKeyField(Players,field='Player_ID',null=True)
+    Catcher = ForeignKeyField(Players,field='Player_ID',null=True)
     First_Base = ForeignKeyField(Players,field='Player_ID',null=True)
     Second_Base = ForeignKeyField(Players,field='Player_ID',null=True)
     Third_Base = ForeignKeyField(Players,field='Player_ID',null=True)
@@ -144,7 +149,10 @@ def db_init():
 
 def populate_test_data():
     test_teams = [{'Team_Name':'Lonestar Pumpjacks','Team_Abbr':'LPJ','Logo':'/home/RLB_app/RLB_app/teams/static/LPJ_Logo'},
-             {'Team_Name':'Sleepy Hollow Horsemen','Team_Abbr':'SHH','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'}]
+                  {'Team_Name':'Sleepy Hollow Horsemen','Team_Abbr':'SHH','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'},
+                  {'Team_Name':'TestTeam1','Team_Abbr':'TT1','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'},
+                  {'Team_Name':'TestTeam2','Team_Abbr':'TT2','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'}
+]
     test_users = [
     {'Reddit_Name':'Jzkitty21', 'Discord_Name': 'JZKITTY#3143', 'Discord_ID': 254774534274547713, 'Roles': 'player'},
     {'Reddit_Name':'ghosthardware515', 'Discord_Name': 'sarah_#4781', 'Discord_ID': 167796704739983360, 'Roles': 'player'},
@@ -155,7 +163,8 @@ def populate_test_data():
     {'Reddit_Name':'steelermade28', 'Discord_Name': 'steelermade28#8041', 'Discord_ID': 198821468317024256, 'Roles': 'player'},
     {'Reddit_Name':'xbijin', 'Discord_Name': 'xbijin#3776', 'Discord_ID': 398235187634503702, 'Roles': 'player'},
     {'Reddit_Name':'Ashbymtg','Discord_Name': 'Keyo', 'Discord_ID': 114529305219956739, 'Roles': 'player'},
-    {'Reddit_Name':'Druidicdwarf','Discord_Name': 'LefLop#4771', 'Discord_ID': 246762932703068162, 'Roles': 'player'}]
+    {'Reddit_Name':'Druidicdwarf','Discord_Name': 'LefLop#4771', 'Discord_ID': 246762932703068162, 'Roles': 'player'},
+    {'Reddit_Name':'FT_Blasit', 'Discord_Name': 'dairy_test_user#5360', 'Discord_ID': 679869242954350644, 'Roles': 'player'}]
     test_players = [
     { 'User_ID':1, 'Player_ID':7001, 'Player_Name': 'JZ', 'PPos': 'C', 'SPos': 'CIF', 'Hand': 'R', 'Team': 'LPJ', 'Contact':2, 'Eye':4, 'Power':1, 'Speed':5, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
     { 'User_ID':2, 'Player_ID':7002, 'Player_Name': 'Sarah Buntingsworth', 'PPos': '2B', 'SPos': 'UTIL', 'Hand': 'L', 'Team': 'LPJ', 'Contact':5, 'Eye':1, 'Power':2, 'Speed':4, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
@@ -166,9 +175,20 @@ def populate_test_data():
     { 'User_ID':7, 'Player_ID':7007, 'Player_Name': 'Dominus Nominus', 'PPos': 'CF', 'SPos': '', 'Hand': 'L', 'Team': 'SHH', 'Contact':2, 'Eye':4, 'Power':5, 'Speed':1, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
     { 'User_ID':8, 'Player_ID':7008, 'Player_Name': 'Spike Swordfish II', 'PPos': 'P', 'SPos': '', 'Hand': 'R', 'Team': 'SHH', 'Contact':0, 'Eye':0, 'Power':0, 'Speed':0, 'Movement':4, 'Command':2, 'Velocity':1, 'Awareness':5},
     { 'User_ID': 9, 'Player_ID': 7009, 'Player_Name': 'Rekt Kiddo', 'PPos': 'SS', 'SPos': 'UTIL', 'Hand': 'R', 'Team': 'LPJ', 'Contact': 3, 'Eye': 3, 'Power': 3, 'Speed': 3, 'Movement': 0, 'Command': 0, 'Velocity': 0, 'Awareness': 0},
-    { 'User_ID': 10, 'Player_ID': 7010, 'Player_Name': 'King Kruul', 'PPos': 'SS', 'SPos': 'UTIL', 'Hand': 'R', 'Team': 'SHH', 'Contact': 3, 'Eye': 3, 'Power': 3, 'Speed': 3, 'Movement': 0, 'Command': 0, 'Velocity': 0, 'Awareness': 0}]
+    { 'User_ID': 10, 'Player_ID': 7010, 'Player_Name': 'King Kruul', 'PPos': 'SS', 'SPos': 'UTIL', 'Hand': 'R', 'Team': 'SHH', 'Contact': 3, 'Eye': 3, 'Power': 3, 'Speed': 3, 'Movement': 0, 'Command': 0, 'Velocity': 0, 'Awareness': 0},
+    { 'User_ID':3, 'Player_ID':7011, 'Player_Name': 'Tygen Pitcherbeard', 'PPos': 'P', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+    { 'User_ID':3, 'Player_ID':7012, 'Player_Name': 'Tygen Batterbeard1', 'PPos': 'C', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+    { 'User_ID':3, 'Player_ID':7013, 'Player_Name': 'Tygen Batterbeard2', 'PPos': '2B', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+    { 'User_ID':3, 'Player_ID':7014, 'Player_Name': 'Tygen Batterbeard3', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+    { 'User_ID':3, 'Player_ID':7015, 'Player_Name': 'Tygen Batterbeard4', 'PPos': 'SS', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+    { 'User_ID':11, 'Player_ID':7016, 'Player_Name': 'Dairy Pitcherbeard', 'PPos': 'P', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+    { 'User_ID':11, 'Player_ID':7017, 'Player_Name': 'Dairy Hitterbeard1', 'PPos': 'C', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+    { 'User_ID':11, 'Player_ID':7018, 'Player_Name': 'Dairy Hitterbeard2', 'PPos': '2B', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+    { 'User_ID':11, 'Player_ID':7019, 'Player_Name': 'Dairy Hitterbeard3', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+    { 'User_ID':11, 'Player_ID':7020, 'Player_Name': 'Dairy Hitterbeard4', 'PPos': 'SS', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0}]
     test_games = [{'Game_Number':50002,'Game_ID':'SHHLPJ2','Season':5,'Session':2,'Away':'SHH','Home':'LPJ'},
-                  {'Game_Number':50003,'Game_ID':'LPJSHH3','Season':5,'Session':3,'Away':'LPJ','Home':'SHH'}]
+                  {'Game_Number':50003,'Game_ID':'LPJSHH3','Season':5,'Session':3,'Away':'LPJ','Home':'SHH'},
+                  {'Game_Number':50004,'Game_ID':'TT1TT24','Season':5,'Session':4,'Away':'TT1','Home':'TT2'}]
 
 
     with db.atomic():
