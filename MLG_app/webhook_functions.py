@@ -10,6 +10,14 @@ def game_start(game):
     payload = {'Command':'game_start','Game_Number':game.Game_Number,'Pitcher':pitcher,'Batter':batter}
     webhook_send(json.dumps(payload))
 
+def play_result(game,msg):
+    payload = {'Command':'play_result','Game_Number':game.Game_Number,'Pitcher':game.Pitcher.Player_ID,'Batter':game.Batter.Player_ID,'msg':msg}
+    webhook_send(json.dumps(payload))
+
+def next_PA(game):
+    payload = {'Command':'next_PA','Game_Number':game.Game_Number,'Pitcher':game.Pitcher.Player_ID,'Batter':game.Batter.Player_ID}
+    webhook_send(json.dumps(payload))
+
 def get_batter(game):
     if game.Inning[0] == 'T':
         team_abbr = game.Away.Team_Abbr

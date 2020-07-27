@@ -1,4 +1,5 @@
 from peewee import *
+from playhouse.pool import PooledSqliteExtDatabase
 from wtfpeewee.orm import model_form
 import wtforms, os, inspect
 from flask_wtf import FlaskForm
@@ -6,7 +7,8 @@ from wtforms import Form, FieldList, FormField, SelectField, HiddenField, valida
 
 # Builds absolute path relative to this models.py file so other directories (like bots) can find the same database when importing
 db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'mlg.s')
-db = SqliteDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1})
+#db = SqliteDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1})
+db = PooledSqliteExtDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1},max_connections=30,stale_timeout=3600)
 
 class BaseModel(Model):
     class Meta:
@@ -52,8 +54,8 @@ class Games(BaseModel):
     Session = IntegerField(null=True)
     Away = ForeignKeyField(Teams,field='Team_Abbr',null=True)
     Home = ForeignKeyField(Teams,field='Team_Abbr',null=True)
-    A_Score = CharField(default=0)
-    H_Score = CharField(default=0)
+    A_Score = IntegerField(default=0)
+    H_Score = IntegerField(default=0)
     A_Bat_Pos = IntegerField(default=1)
     H_Bat_Pos = IntegerField(default=1)
     Inning = CharField(default='T1')
@@ -65,6 +67,7 @@ class Games(BaseModel):
     First_Base = ForeignKeyField(Players,field='Player_ID',null=True)
     Second_Base = ForeignKeyField(Players,field='Player_ID',null=True)
     Third_Base = ForeignKeyField(Players,field='Player_ID',null=True)
+    Runner = IntegerField(null=True)
     Pitch = IntegerField(null=True)
     Swing = IntegerField(null=True)
     C_Throw = IntegerField(null=True)
