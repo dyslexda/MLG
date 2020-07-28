@@ -1,8 +1,10 @@
 from flask import Blueprint, render_template, g, session, request, redirect, url_for, flash
 from flask import current_app as app
-from models import Teams, Players, Games, GameCreationForm, LineupBoxForm, Lineups, db
+from models import Teams, Players, Games, GameCreationForm, LineupBoxForm, Lineups, All_PAs, db
 from MLG_app.auth.auth import login_required
 from peewee import *
+import MLG_app.webhook_functions as webhook_functions
+import calculator.calculator as calc
 
 
 # Blueprint Configuration
@@ -25,10 +27,14 @@ def games():
 def game_page(game_number):
     game = Games.get(Games.Game_Number == game_number)
     lineups = Lineups.select().where(Lineups.Game_Number == game.Game_Number).order_by(Lineups.Team, Lineups.Order.asc(), Lineups.Box.asc())
+    game_pas = All_PAs.select().where(All_PAs.Game_No == game.Game_Number).order_by(All_PAs.Play_No.desc())
+    msg = score_bug(game)
     return render_template(
         'game_page.html',
         game = game,
-        lineups = lineups
+        lineups = lineups,
+        game_pas = game_pas,
+        msg = msg
     )
 
 #@games_bp.route('/games/create',methods=['GET','POST'])
@@ -156,12 +162,25 @@ def game_start(game_number):
             raw_lineups[entry.Player.Team.Team_Abbr].append(player_update)
         valid, errors = validate_lineups(raw_lineups,game)
         if valid:
+            calc.active_players(game)
             game.Status = 'Started'
             game.save()
+            webhook_functions.game_start(game)
         elif not valid:
             for error in errors: flash(error)
     return redirect(url_for('games_bp.game_manage',game_number=game_number))
 
+@games_bp.route('/games/manage/check', methods=['GET','POST'])
+def game_check():
+    if request.method == 'POST':
+        payload = request.get_json()
+        game = Games.get(Games.Game_Number == payload['Game_Number'])
+        result = calc.play_check(game)
+        print(result)
+        if result[0][3] == 'Steal':
+            result = calc.play_check(game) #Why isn't this working? Returns "None"
+            print(result)
+    return redirect(url_for('index_bp.index'))
 
 def lineup_populate(player,game):
     data = {}
@@ -220,3 +239,32 @@ def validate_lineups(raw_lineups,game):
                     valid = False
     return(valid,errors)
 
+def score_bug(game):
+    pitcher = Players.get(Players.Player_ID == game.Pitcher.Player_ID)
+    batter = Players.get(Players.Player_ID == game.Batter.Player_ID)
+    empty_base = '○'
+    occupied_base = '●'
+    top = '▲'
+    bot = '▼'
+    if game.Outs == 1:
+        out_text = " 1 Out"
+    else:
+        out_text = (str(game.Outs) + " Outs")
+    if game.Inning[0] == 'T': 
+        inning = ("   " + top + " " + game.Inning[1:])
+    else:
+        inning = ("   " + bot + " " + game.Inning[1:])
+    if game.First_Base is not None: first = occupied_base
+    else: first = empty_base
+    if game.Second_Base is not None: second = occupied_base
+    else: second = empty_base
+    if game.Third_Base is not None: third = occupied_base
+    else: third = empty_base
+    msg = []
+    line1 = game.Away.Team_Abbr + ((5 - len(game.Away.Team_Abbr)) * " ") + str(game.A_Score) + "      " + second + "      " + inning
+    line2 = game.Home.Team_Abbr + ((5 - len(game.Home.Team_Abbr)) * " ") + str(game.H_Score) + "    " + third + "   " + first + "    " + out_text
+    msg.append(line1)
+    msg.append(line2)
+    msg.append(f"On the mound: {pitcher.Player_Name}")
+    msg.append(f"Up to bat:    {batter.Player_Name}")
+    return(msg)
