@@ -10,8 +10,12 @@ def game_start(game):
     payload = {'Command':'game_start','Game_Number':game.Game_Number,'Pitcher':pitcher,'Batter':batter}
     webhook_send(json.dumps(payload))
 
-def play_result(game,msg):
-    payload = {'Command':'play_result','Game_Number':game.Game_Number,'Pitcher':game.Pitcher.Player_ID,'Batter':game.Batter.Player_ID,'msg':msg}
+def swing_result(game,msg):
+    payload = {'Command':'swing_result','Game_Number':game.Game_Number,'Pitcher':game.Pitcher.Player_ID,'Batter':game.Batter.Player_ID,'msg':msg}
+    webhook_send(json.dumps(payload))
+
+def steal_result(game,runner,msg):
+    payload = {'Command':'steal_result','Game_Number':game.Game_Number,'Pitcher':game.Pitcher.Player_ID,'Catcher':game.Catcher.Player_ID,'Runner':runner.Player_ID,'msg':msg}
     webhook_send(json.dumps(payload))
 
 def next_PA(game):

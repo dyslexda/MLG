@@ -1,0 +1,55 @@
+    <div class="row">
+      <div class="col">
+        <div id="plays">
+          <h3 class="sub-header">Game Plays</h3>
+          <div class="table-responsive-sm">
+            <table class="table table-sm table-striped table-hover">
+              <thead>
+                <tr>
+                  <th>Play #</th>
+                  <th>Inning</th>
+                  <th>Outs</th>
+                  <th>BRC</th>
+                  <th>Play</th>
+                  <th>Pitcher</th>
+                  <th>Pitch</th>
+                  <th>Batter</th>
+                  <th>Swing</th>
+                  <th>Catcher</th>
+                  <th>Throw</th>
+                  <th>Runner</th>
+                  <th>Steal</th>
+                  <th>Result</th>
+                  <th>Diff</th>
+                  <th>Off</th>
+                  <th>Def</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for play in game_pas %}
+                <tr>
+                  <td>{{play.Play_No}}</td>
+                  <td>{{play.Inning}}</td>
+                  <td>{{play.Outs}}</td>
+                  <td>{{play.BRC}}</td>
+                  <td>{{play.Play_Type}}</td>
+                  <td>{% if play.Pitcher != None %}{{play.Pitcher}}{% else %}{% endif %}</td>
+                  <td>{% if play.Pitch_No != None %}{{play.Pitch_No}}{% else %}{% endif %}</td>
+                  <td>{% if play.Batter != None %}{{play.Batter}}{% else %}{% endif %}</td>
+                  <td>{% if play.Swing_No != None %}{{play.Swing_No}}{% else %}{% endif %}</td>
+                  <td>{% if play.Catcher != None %}{{play.Catcher}}{% else %}{% endif %}</td>
+                  <td>{% if play.Throw_No != None %}{{play.Throw_No}}{% else %}{% endif %}</td>
+                  <td>{% if play.Runner != None %}{{play.Runner}}{% else %}{% endif %}</td>
+                  <td>{% if play.Steal_No != None %}{{play.Steal_No}}{% else %}{% endif %}</td>
+                  <td>{{play.Result}}</td>
+                  <td>{{play.Diff}}</td>
+                  <td>{{play.Off_Team}}</td>
+                  <td>{{play.Def_Team}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>

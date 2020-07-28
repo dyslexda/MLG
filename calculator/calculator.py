@@ -11,8 +11,7 @@ from models import *
 def play_check(game):
     if game.C_Throw and game.R_Steal:
         brc = ranges_calc.brc_calc(game)
-        result = resulting_steal(game)
-        print(result)
+        result,runner = resulting_steal(game)
         lookup_play = (f"{str(brc)}_{str(game.Outs)}_{result}")
         new_outcome = {}
         if play_outcomes[lookup_play][0] not in ["", "0", "b4"]:
@@ -23,12 +22,14 @@ def play_check(game):
             new_outcome[play_outcomes[lookup_play][2]] = game.Second_Base
         if play_outcomes[lookup_play][3] not in ["", "0", "b4"]:
             new_outcome[play_outcomes[lookup_play][3]] = game.Third_Base
-        result_msg = [game.Inning, game.Outs, brc, "Steal", game.Pitcher.Player_Name,
-                      game.Catcher.Player_Name, game.C_Throw, game.R_Steal, result]
+        result_msg = [game.Inning, game.Outs, brc, "Steal", game.Catcher.Player_Name,
+                      runner.Player_Name, game.C_Throw, game.R_Steal, result]
         runs_scored = 0
+        outs = 0
         with db.atomic():
             for i in play_outcomes[lookup_play][0:4]:
                 if i == '0':
+                    outs += 1
                     game.Outs += 1
                 elif i == "b4":
                     runs_scored += 1
@@ -39,6 +40,9 @@ def play_check(game):
             game.save()
         result_msg.append(runs_scored)
         msg = steal_result_bug(game,result_msg)
+        webhook_functions.steal_result(game,runner,msg)
+        scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runner)
+        print(scorebook_line)
         next_PA(game,new_outcome)
         return([result_msg,msg])
     elif game.Pitch and game.Swing and game.Runner == None:
@@ -57,9 +61,11 @@ def play_check(game):
         result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
                       game.Batter.Player_Name, game.Pitch, game.Swing, result]
         runs_scored = 0
+        outs = 0
         with db.atomic():
             for i in play_outcomes[lookup_play][0:4]:
                 if i == '0':
+                    outs += 1
                     game.Outs += 1
                 elif i == "b4":
                     runs_scored += 1
@@ -70,13 +76,59 @@ def play_check(game):
             game.save()
         result_msg.append(runs_scored)
         msg = swing_result_bug(game,result_msg)
-        webhook_functions.play_result(game,msg)
+        webhook_functions.swing_result(game,msg)
+        scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result)
+        print(scorebook_line)
         next_PA(game,new_outcome)
         return([result_msg,msg])
+    else:
+        return([['','','','']])
+
+def save_play_result(game,result_msg,runs_scored,outs,result,runner=None):
+    data = {}
+    last_play = All_PAs.select(fn.MAX(All_PAs.Play_No)).where(All_PAs.Play_No ** (str(game.Game_Number)+"%")).scalar()
+    try:
+        data['Play_No'] = last_play+1
+    except:
+        data['Play_No'] = str(game.Game_Number)+'001'
+    data['Inning'] = result_msg[0]
+    data['Outs'] = result_msg[1]
+    data['BRC'] = result_msg[2]
+    data['Play_Type'] = result_msg[3]
+    if data['Play_Type'] == 'Swing':
+        data['Pitcher'] = result_msg[4]
+        data['Pitch_No'] = result_msg[6]
+        data['Batter'] = result_msg[5]
+        data['Swing_No'] = result_msg[7]
+        data['Diff'] = ranges_calc.calc_diff(game.Pitch,game.Swing)
+        data['Pitcher_ID'] = game.Pitcher.Player_ID
+        data['Batter_ID'] = game.Batter.Player_ID
+    elif data['Play_Type'] == 'Steal':
+        data['Catcher'] = result_msg[4]
+        data['Throw_No'] = result_msg[6]
+        data['Runner'] = result_msg[5]
+        data['Steal_No'] = result_msg[7]
+        data['Diff'] = ranges_calc.calc_diff(game.C_Throw,game.R_Steal)
+        data['Catcher_ID'] = game.Catcher.Player_ID
+        data['Runner_ID'] = runner.Player_ID
+    data['Runs_Scored_On_Play'] = runs_scored
+    data['Result'] = result
+    if data['Inning'][0] == "T":
+        data['Off_Team'] = game.Away.Team_Abbr
+        data['Def_Team'] = game.Home.Team_Abbr
+    else:
+        data['Off_Team'] = game.Home.Team_Abbr
+        data['Def_Team'] = game.Away.Team_Abbr
+    data['Game_No'] = game.Game_Number
+    data['Session_No'] = game.Session
+    data['Inning_No'] = game.Inning[1:]
+    with db.atomic():
+        All_PAs.insert(data).execute()
+    return data
 
 def next_PA(game,new_outcome=None):
     with db.atomic():
-        lineup_size = 3
+        lineup_size = 4
         try:
             game.First_Base = new_outcome['first_base']
         except:
@@ -89,18 +141,23 @@ def next_PA(game,new_outcome=None):
             game.Third_Base = new_outcome['third_base']
         except:
             game.Third_Base = None
-        game.Pitch = None
-        game.Swing = None
-        if game.Inning[0] == 'T':
-            if game.A_Bat_Pos == lineup_size:
-                game.A_Bat_Pos = 1
-            else:
-                game.A_Bat_Pos += 1
+        if game.R_Steal:
+            game.C_Throw = None
+            game.R_Steal = None
+            game.Runner = None
         else:
-            if game.H_Bat_Pos == lineup_size:
-                game.H_Bat_Pos = 1
+            if game.Inning[0] == 'T':
+                if game.A_Bat_Pos == lineup_size:
+                    game.A_Bat_Pos = 1
+                else:
+                    game.A_Bat_Pos += 1
             else:
-                game.H_Bat_Pos += 1
+                if game.H_Bat_Pos == lineup_size:
+                    game.H_Bat_Pos = 1
+                else:
+                    game.H_Bat_Pos += 1
+            game.Pitch = None
+            game.Swing = None
         if game.Outs == 3:
             game.Outs = 0
             if game.Inning[0] == 'T':
@@ -110,6 +167,8 @@ def next_PA(game,new_outcome=None):
                 frame = 'T'
                 inning_no = int(game.Inning[1:]) + 1
             game.Inning = frame + str(inning_no)
+            game.Pitch = None
+            game.Swing = None
         game.save()
         active_players(game)
     webhook_functions.next_PA(game)
@@ -171,8 +230,8 @@ def active_players(game):
 
 def resulting_steal(game):
     diff = ranges_calc.calc_diff(game.C_Throw,game.R_Steal)
-    result = ranges_calc.calc_steal(game,ranges_lookup.steal_dict,diff)
-    return result
+    result,runner = ranges_calc.calc_steal(game,ranges_lookup.steal_dict,diff)
+    return(result,runner)
 
 def resulting_swing(game):
     handedness = ranges_calc.calc_handedness(game.Pitcher,game.Batter)

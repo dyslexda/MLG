@@ -18,6 +18,13 @@
         </div>
     </div>
 
+{% for line in msg %}
+{{line}}
+<br>
+{% endfor %}
+
 {% include 'boxscore.html' %}
+
+{% include 'play_list.html' %}
 
 {% endblock %}

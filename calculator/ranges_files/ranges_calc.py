@@ -58,21 +58,21 @@ def avg_speed(game):
 def calc_steal(game,steal_dict,diff):
     if game.Runner == 1:
         base = '2'
-        runner_speed = game.First_Base.Speed
+        runner = game.First_Base
     elif game.Runner == 2:
         base = '3'
-        runner_speed = game.Second_Base.Speed
+        runner = game.Second_Base
     elif game.Runner == 3:
         base = '4'
-        runner_speed = game.Third_Base.Speed
+        runner = game.Third_Base
     battery = int(Decimal((game.Pitcher.Awareness + game.Catcher.Eye)/2).quantize(Decimal('1.'), rounding='ROUND_DOWN'))
-    matchup = runner_speed - battery
+    matchup = runner.Speed - battery
     steal_range = steal_dict[base][matchup]
     if int(diff) <= int(steal_range):
         result = 'SB'+base
     else:
         result = 'CS'+base
-    return(result)
+    return(result,runner)
 
 def calc_ranges(obr_dict,modifiers_dict,pitcher,batter,handedness):
     raw_base_hit = obr_dict['HIT'][handedness][stat_checker(batter.Contact,pitcher.Movement)]
