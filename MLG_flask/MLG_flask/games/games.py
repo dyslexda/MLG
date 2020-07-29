@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, g, session, request, redirect, url_for, flash
 from flask import current_app as app
 from models import Teams, Players, Games, GameCreationForm, LineupBoxForm, Lineups, All_PAs, db
-from MLG_app.auth.auth import login_required
+from MLG_flask.auth.auth import login_required
 from peewee import *
-import MLG_app.webhook_functions as webhook_functions
+import MLG_flask.webhook_functions as webhook_functions
 import calculator.calculator as calc
 from calculator.ranges_files.ranges_calc import brc_calc
 
@@ -99,7 +99,6 @@ def stat_generator(game,lineups,game_pas):
             gamestats[entry.Player.Player_ID]['Batting']['BB'] = game_pas.select().where((All_PAs.Result == 'BB') & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
             gamestats[entry.Player.Player_ID]['Batting']['K'] = game_pas.select().where((All_PAs.Result == 'K') & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
             gamestats[entry.Player.Player_ID]['Batting']['BA'] = ''
-    print(gamestats)
     return gamestats
 
 # Routes game_pas.select().where((All_PAs.Result == 'K') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
@@ -172,10 +171,16 @@ def games_manage():
 def game_manage(game_number):
     game = Games.get(Games.Game_Number == game_number)
     lineups = Lineups.select().where(Lineups.Game_Number == game.Game_Number).order_by(Lineups.Team, Lineups.Order.asc(), Lineups.Box.asc())
+    game_pas = All_PAs.select().where(All_PAs.Game_No == game.Game_Number).order_by(All_PAs.Play_No.desc())
+    brc = brc_calc(game)
+    gamestats = stat_generator(game,lineups,game_pas)
     return render_template(
         'manage/game_manage.html',
         game = game,
-        lineups = lineups
+        brc = brc,
+        lineups = lineups,
+        game_pas = game_pas,
+        gamestats = gamestats
     )
 
 @games_bp.context_processor
@@ -267,8 +272,6 @@ def game_check():
         payload = request.get_json()
         game = Games.get(Games.Game_Number == payload['Game_Number'])
         result = calc.play_check(game)
-        print(result)
         if result[0][3] == 'Steal':
             result = calc.play_check(game)
-            print(result)
     return redirect(url_for('index_bp.index'))

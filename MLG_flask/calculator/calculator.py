@@ -3,7 +3,7 @@ from decimal import Decimal
 from os import path
 import calculator.ranges_files.ranges_calc as ranges_calc
 import calculator.ranges_files.ranges_lookup as ranges_lookup
-import MLG_app.webhook_functions as webhook_functions
+import MLG_flask.webhook_functions as webhook_functions
 from calculator.ranges_files.play_outcomes import play_outcomes
 from peewee import *
 from models import *
