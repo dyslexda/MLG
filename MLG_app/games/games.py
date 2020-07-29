@@ -5,6 +5,7 @@ from MLG_app.auth.auth import login_required
 from peewee import *
 import MLG_app.webhook_functions as webhook_functions
 import calculator.calculator as calc
+from calculator.ranges_files.ranges_calc import brc_calc
 
 
 # Blueprint Configuration
@@ -14,6 +15,94 @@ games_bp = Blueprint(
     static_folder='static',
     static_url_path='/games/static/'
 )
+
+# Functions
+
+def lineup_populate(player,game):
+    data = {}
+    player_select = Lineups.get((Lineups.Game_Number == game.Game_Number) & (Lineups.Player == player.Player_ID))
+    data['player_id'] = player.Player_ID
+    try:
+       data['box'] = player_select.Box
+       data['order'] = player_select.Order
+       data['pos'] = player_select.Position
+    except:
+        pass
+    return data
+
+def validate_lineups(raw_lineups,game):
+    #builds list of lineup errors, such that each error is flashed to user if it isn't valid
+    valid, errors = True, []
+    req_positions = ['P','C','2B','CF']
+    for team in [game.Away,game.Home]:
+        #Make sure initial lineup is clean, i.e. 1 box numbers for everyone
+        if game.Status == 'Init':
+            max_box = max([entry['Box'] for entry in raw_lineups[team.Team_Abbr]])
+            if max_box == 0:
+                errors.append(f'{team.Team_Abbr} has no box set')
+                valid = False
+            elif max_box > 1:
+                errors.append(f'{team.Team_Abbr} has a max box of {max_box}; should not be higher than 1 to start')
+                valid = False
+        #Make sure each position is properly accounted for, e.g. don't have a box 2 pitcher without two pitchers
+        #and each box is unique, e.g don't have two pitchers as 2 box
+        for pos in req_positions:
+            pos_count = ([entry['Position'] for entry in raw_lineups[team.Team_Abbr]]).count(pos)
+            if pos_count == 0:
+                errors.append(f'{team.Team_Abbr} is missing someone in the {pos} position')
+                valid = False
+            else:
+                pos_box = [entry['Box'] for entry in raw_lineups[team.Team_Abbr] if entry['Position'] == pos]
+                if pos_count != max(pos_box):
+                    errors.append(f'{team.Team_Abbr} has {pos_count} total {pos} but a max box for that position of {max(pos_box)}')
+                    valid = False
+                if len(set(pos_box)) != len(pos_box):
+                    errors.append(f'{team.Team_Abbr} has duplicate boxes for the {pos} position')
+                    valid = False
+        #Do same as for positions, but now for order
+        for order in range(1,4):
+            order_count = ([entry['Order'] for entry in raw_lineups[team.Team_Abbr]]).count(order)
+            if order_count == 0:
+                errors.append(f'{team.Team_Abbr} is missing someone in the {order} spot')
+                valid = False
+            else:
+                order_box = [entry['Box'] for entry in raw_lineups[team.Team_Abbr] if entry['Order'] == order]
+                if order_count != max(order_box):
+                    errors.append(f'{team.Team_Abbr} has {order_count} total {order} order, but a max box for that position of {max(order_box)}')
+                    valid = False
+                if len(set(order_box)) != len(order_box):
+                    errors.append(f'{team.Team_Abbr} has duplicate boxes for the {order} order slot')
+                    valid = False
+    return(valid,errors)
+
+def stat_generator(game,lineups,game_pas):
+    gamestats = {}
+    test2 = 'test2'
+    hits = ['HR','3B','2B','1B','IF1B','1BWH','1BWH2','2BWH']
+    outs = ['FO','PO','GO','K','GORA','FC','FC3rd','DPRun','FCH','K','DP21','DP31','DPH1','TP','DFO','DSacF','SacF']
+    with db.atomic():
+        for entry in lineups:
+            test = '3'
+            gamestats[entry.Player.Player_ID] = {}
+            gamestats[entry.Player.Player_ID]['Pitching'] = {}
+            gamestats[entry.Player.Player_ID]['Pitching']['IP'] = ''
+            gamestats[entry.Player.Player_ID]['Pitching']['ER'] = ''
+            gamestats[entry.Player.Player_ID]['Pitching']['H'] = game_pas.select().where((All_PAs.Result << hits) & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
+            gamestats[entry.Player.Player_ID]['Pitching']['BB'] = game_pas.select().where((All_PAs.Result == 'BB') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
+            gamestats[entry.Player.Player_ID]['Pitching']['K'] = game_pas.select().where((All_PAs.Result == 'K') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
+            gamestats[entry.Player.Player_ID]['Pitching']['ERA'] = ''
+            gamestats[entry.Player.Player_ID]['Batting'] = {}
+            gamestats[entry.Player.Player_ID]['Batting']['AB'] = game_pas.select().where((All_PAs.Result != 'BB') & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
+            gamestats[entry.Player.Player_ID]['Batting']['R'] = ''
+            gamestats[entry.Player.Player_ID]['Batting']['H'] = game_pas.select().where((All_PAs.Result << hits) & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
+            gamestats[entry.Player.Player_ID]['Batting']['RBI'] = ''
+            gamestats[entry.Player.Player_ID]['Batting']['BB'] = game_pas.select().where((All_PAs.Result == 'BB') & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
+            gamestats[entry.Player.Player_ID]['Batting']['K'] = game_pas.select().where((All_PAs.Result == 'K') & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
+            gamestats[entry.Player.Player_ID]['Batting']['BA'] = ''
+    print(gamestats)
+    return gamestats
+
+# Routes game_pas.select().where((All_PAs.Result == 'K') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
 
 @games_bp.route('/games', methods=['GET'])
 def games():
@@ -28,13 +117,15 @@ def game_page(game_number):
     game = Games.get(Games.Game_Number == game_number)
     lineups = Lineups.select().where(Lineups.Game_Number == game.Game_Number).order_by(Lineups.Team, Lineups.Order.asc(), Lineups.Box.asc())
     game_pas = All_PAs.select().where(All_PAs.Game_No == game.Game_Number).order_by(All_PAs.Play_No.desc())
-    msg = score_bug(game)
+    brc = brc_calc(game)
+    gamestats = stat_generator(game,lineups,game_pas)
     return render_template(
         'game_page.html',
         game = game,
+        brc = brc,
         lineups = lineups,
         game_pas = game_pas,
-        msg = msg
+        gamestats = gamestats
     )
 
 #@games_bp.route('/games/create',methods=['GET','POST'])
@@ -178,93 +269,6 @@ def game_check():
         result = calc.play_check(game)
         print(result)
         if result[0][3] == 'Steal':
-            result = calc.play_check(game) #Why isn't this working? Returns "None"
+            result = calc.play_check(game)
             print(result)
     return redirect(url_for('index_bp.index'))
-
-def lineup_populate(player,game):
-    data = {}
-    player_select = Lineups.get((Lineups.Game_Number == game.Game_Number) & (Lineups.Player == player.Player_ID))
-    data['player_id'] = player.Player_ID
-    try:
-       data['box'] = player_select.Box
-       data['order'] = player_select.Order
-       data['pos'] = player_select.Position
-    except:
-        pass
-    return data
-
-def validate_lineups(raw_lineups,game):
-    #builds list of lineup errors, such that each error is flashed to user if it isn't valid
-    valid, errors = True, []
-    req_positions = ['P','C','2B','CF']
-    for team in [game.Away,game.Home]:
-        #Make sure initial lineup is clean, i.e. 1 box numbers for everyone
-        if game.Status == 'Init':
-            max_box = max([entry['Box'] for entry in raw_lineups[team.Team_Abbr]])
-            if max_box == 0:
-                errors.append(f'{team.Team_Abbr} has no box set')
-                valid = False
-            elif max_box > 1:
-                errors.append(f'{team.Team_Abbr} has a max box of {max_box}; should not be higher than 1 to start')
-                valid = False
-        #Make sure each position is properly accounted for, e.g. don't have a box 2 pitcher without two pitchers
-        #and each box is unique, e.g don't have two pitchers as 2 box
-        for pos in req_positions:
-            pos_count = ([entry['Position'] for entry in raw_lineups[team.Team_Abbr]]).count(pos)
-            if pos_count == 0:
-                errors.append(f'{team.Team_Abbr} is missing someone in the {pos} position')
-                valid = False
-            else:
-                pos_box = [entry['Box'] for entry in raw_lineups[team.Team_Abbr] if entry['Position'] == pos]
-                if pos_count != max(pos_box):
-                    errors.append(f'{team.Team_Abbr} has {pos_count} total {pos} but a max box for that position of {max(pos_box)}')
-                    valid = False
-                if len(set(pos_box)) != len(pos_box):
-                    errors.append(f'{team.Team_Abbr} has duplicate boxes for the {pos} position')
-                    valid = False
-        #Do same as for positions, but now for order
-        for order in range(1,4):
-            order_count = ([entry['Order'] for entry in raw_lineups[team.Team_Abbr]]).count(order)
-            if order_count == 0:
-                errors.append(f'{team.Team_Abbr} is missing someone in the {order} spot')
-                valid = False
-            else:
-                order_box = [entry['Box'] for entry in raw_lineups[team.Team_Abbr] if entry['Order'] == order]
-                if order_count != max(order_box):
-                    errors.append(f'{team.Team_Abbr} has {order_count} total {order} order, but a max box for that position of {max(order_box)}')
-                    valid = False
-                if len(set(order_box)) != len(order_box):
-                    errors.append(f'{team.Team_Abbr} has duplicate boxes for the {order} order slot')
-                    valid = False
-    return(valid,errors)
-
-def score_bug(game):
-    pitcher = Players.get(Players.Player_ID == game.Pitcher.Player_ID)
-    batter = Players.get(Players.Player_ID == game.Batter.Player_ID)
-    empty_base = '○'
-    occupied_base = '●'
-    top = '▲'
-    bot = '▼'
-    if game.Outs == 1:
-        out_text = " 1 Out"
-    else:
-        out_text = (str(game.Outs) + " Outs")
-    if game.Inning[0] == 'T': 
-        inning = ("   " + top + " " + game.Inning[1:])
-    else:
-        inning = ("   " + bot + " " + game.Inning[1:])
-    if game.First_Base is not None: first = occupied_base
-    else: first = empty_base
-    if game.Second_Base is not None: second = occupied_base
-    else: second = empty_base
-    if game.Third_Base is not None: third = occupied_base
-    else: third = empty_base
-    msg = []
-    line1 = game.Away.Team_Abbr + ((5 - len(game.Away.Team_Abbr)) * " ") + str(game.A_Score) + "      " + second + "      " + inning
-    line2 = game.Home.Team_Abbr + ((5 - len(game.Home.Team_Abbr)) * " ") + str(game.H_Score) + "    " + third + "   " + first + "    " + out_text
-    msg.append(line1)
-    msg.append(line2)
-    msg.append(f"On the mound: {pitcher.Player_Name}")
-    msg.append(f"Up to bat:    {batter.Player_Name}")
-    return(msg)

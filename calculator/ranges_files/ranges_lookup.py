@@ -378,4 +378,3 @@ go_order_dict = {
 '7_1': ['PO','GORA','FCH','K','DP21','DP31','DPH1'],
 '7_2': base
 }
-

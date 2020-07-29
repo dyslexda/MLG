@@ -26,17 +26,20 @@ def play_check(game):
                       runner.Player_Name, game.C_Throw, game.R_Steal, result]
         runs_scored = 0
         outs = 0
+        index_base_map = {0:game.Batter,1:game.First_Base,2:game.Second_Base,3:game.Third_Base}
+        runners_scored = []
         with db.atomic():
-            for i in play_outcomes[lookup_play][0:4]:
-                if i == '0':
-                    outs += 1
-                    game.Outs += 1
-                elif i == "b4":
+            for base,outcome in enumerate(play_outcomes[lookup_play][0:4]):
+                if outcome == 'b4':
+                    runners_scored.append(index_base_map[base])
                     runs_scored += 1
                     if game.Inning[0] == 'T':
                         game.A_Score += 1
                     else:
                         game.H_Score += 1
+                elif outcome == '0':
+                    outs += 1
+                    game.Outs += 1
             game.save()
         result_msg.append(runs_scored)
         msg = steal_result_bug(game,result_msg)
@@ -62,31 +65,35 @@ def play_check(game):
                       game.Batter.Player_Name, game.Pitch, game.Swing, result]
         runs_scored = 0
         outs = 0
+        index_base_map = {0:game.Batter,1:game.First_Base,2:game.Second_Base,3:game.Third_Base}
+        runners_scored = []
         with db.atomic():
-            for i in play_outcomes[lookup_play][0:4]:
-                if i == '0':
-                    outs += 1
-                    game.Outs += 1
-                elif i == "b4":
+            for base,outcome in enumerate(play_outcomes[lookup_play][0:4]):
+                if outcome == 'b4':
+                    runners_scored.append(index_base_map[base])
                     runs_scored += 1
                     if game.Inning[0] == 'T':
                         game.A_Score += 1
                     else:
                         game.H_Score += 1
+                elif outcome == '0':
+                    outs += 1
+                    game.Outs += 1
             game.save()
         result_msg.append(runs_scored)
         msg = swing_result_bug(game,result_msg)
         webhook_functions.swing_result(game,msg)
-        scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result)
+        scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored)
         print(scorebook_line)
         next_PA(game,new_outcome)
         return([result_msg,msg])
     else:
         return([['','','','']])
 
-def save_play_result(game,result_msg,runs_scored,outs,result,runner=None):
+def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runner=None):
     data = {}
     last_play = All_PAs.select(fn.MAX(All_PAs.Play_No)).where(All_PAs.Play_No ** (str(game.Game_Number)+"%")).scalar()
+    rbi_plays = ['HR','3B','2B','1B','IF1B','1BWH','1BWH2','2BWH','BB','DFO','DSacF','SacF']
     try:
         data['Play_No'] = last_play+1
     except:
@@ -111,6 +118,12 @@ def save_play_result(game,result_msg,runs_scored,outs,result,runner=None):
         data['Diff'] = ranges_calc.calc_diff(game.C_Throw,game.R_Steal)
         data['Catcher_ID'] = game.Catcher.Player_ID
         data['Runner_ID'] = runner.Player_ID
+    if result == 'HR' or result == 'SB4':
+        data['Run_Scored'] = 1
+    if result in rbi_plays:
+        data['RBIs'] = runs_scored
+    else:
+        data['RBIs'] = 0
     data['Runs_Scored_On_Play'] = runs_scored
     data['Result'] = result
     if data['Inning'][0] == "T":
@@ -124,6 +137,8 @@ def save_play_result(game,result_msg,runs_scored,outs,result,runner=None):
     data['Inning_No'] = game.Inning[1:]
     with db.atomic():
         All_PAs.insert(data).execute()
+        for r_scored in runners_scored:
+            All_PAs.update(Run_Scored = 1).where((All_PAs.Batter_ID == r_scored) & (All_PAs.Play_Type == 'Swing')).order_by(All_PAs.Play_No.desc()).limit(1).execute()
     return data
 
 def next_PA(game,new_outcome=None):
