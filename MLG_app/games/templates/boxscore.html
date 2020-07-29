@@ -24,13 +24,12 @@
                       {% else %}
                       <td>{{entry.Player.Player_Name}}</td>
                       {% endif %}
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
+                      <td>{{gamestats[entry.Player.Player_ID]['Pitching']['IP']}}</td>
+                      <td>{{gamestats[entry.Player.Player_ID]['Pitching']['ER']}}</td>
+                      <td>{{gamestats[entry.Player.Player_ID]['Pitching']['H']}}</td>
+                      <td>{{gamestats[entry.Player.Player_ID]['Pitching']['BB']}}</td>
+                      <td>{{gamestats[entry.Player.Player_ID]['Pitching']['K']}}</td>
+                      <td>{{gamestats[entry.Player.Player_ID]['Pitching']['ERA']}}</td>
                     </tr>
                     {% endfor %}
                   </tbody>
@@ -63,13 +62,13 @@
                         <td>{{entry.Player.Player_Name}}</td>
                       {% endif %}
                         <td>{{entry.Position}}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td>{{gamestats[entry.Player.Player_ID]['Batting']['AB']}}</td>
+                        <td>{{gamestats[entry.Player.Player_ID]['Batting']['R']}}</td>
+                        <td>{{gamestats[entry.Player.Player_ID]['Batting']['H']}}</td>
+                        <td>{{gamestats[entry.Player.Player_ID]['Batting']['RBI']}}</td>
+                        <td>{{gamestats[entry.Player.Player_ID]['Batting']['BB']}}</td>
+                        <td>{{gamestats[entry.Player.Player_ID]['Batting']['K']}}</td>
+                        <td>{{gamestats[entry.Player.Player_ID]['Batting']['BA']}}</td>
                       </tr>
                     {% endfor %}
                   </tbody>
