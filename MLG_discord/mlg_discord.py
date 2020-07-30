@@ -5,10 +5,8 @@ from discord.ext import commands
 from discord.utils import get
 basedir = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 load_dotenv(os.path.join(basedir, '.env'))
-print(os.path.join(basedir, '.env'))
 #Discord config
 TOKEN = os.environ.get('DISCORD_TOKEN')
-GUILD = os.environ.get('DISCORD_GUILD')
 
 initial_extensions = [
                       'cogs.owner',

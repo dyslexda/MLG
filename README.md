@@ -28,5 +28,6 @@ REDIRECT_URI: '' #The redirect URL for a reddit bot. When running locally, shoul
 USER_AGENT: '' #A user agent string identifying the bot to Reddit's API. Something like "MLB bot by [user]"
 WEBHOOK_ID = '' #Webhook for posting to a Discord channel in order to communicate between the website and a bot
 WEBHOOK_TOKEN = '' #Webhook token
+DISCORD_TOKEN = '' #Discord bot token
 ```
 Local branches cannot use the same bot as the master branch due to only one redirect URI being allowed (which is the IP address of the droplet). Must make a separate bot for this.
