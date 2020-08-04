@@ -1,11 +1,14 @@
+import random
 from flask import Blueprint, render_template, g, session, request, redirect, url_for, flash
 from flask import current_app as app
-from models import Teams, Players, Games, GameCreationForm, LineupBoxForm, Lineups, All_PAs, db
+from models import Teams, Players, Games, All_PAs, Lineups, db
+from forms import LineupBoxForm, GameStatusForm
 from MLG_flask.auth.auth import login_required
 from peewee import *
 import MLG_flask.webhook_functions as webhook_functions
 import calculator.calculator as calc
 from calculator.ranges_files.ranges_calc import brc_calc
+from MLG_reddit.sender import edit_thread, reddit_boxscore_gen
 
 
 # Blueprint Configuration
@@ -28,6 +31,19 @@ def lineup_populate(player,game):
        data['pos'] = player_select.Position
     except:
         pass
+    return data
+
+def game_populate(game):
+    data = {}
+    data['game_id'] = game.Game_Number
+    data['status'] = game.Status
+    data['a_score'] = game.A_Score
+    data['h_score'] = game.H_Score
+    data['runner'] = game.Runner
+    data['pitch'] = game.Pitch
+    data['swing'] = game.Swing
+    data['c_throw'] = game.C_Throw
+    data['r_steal'] = game.R_Steal
     return data
 
 def validate_lineups(raw_lineups,game):
@@ -77,7 +93,6 @@ def validate_lineups(raw_lineups,game):
 
 def stat_generator(game,lineups,game_pas):
     gamestats = {}
-    test2 = 'test2'
     hits = ['HR','3B','2B','1B','IF1B','1BWH','1BWH2','2BWH']
     outs = ['FO','PO','GO','K','GORA','FC','FC3rd','DPRun','FCH','K','DP21','DP31','DPH1','TP','DFO','DSacF','SacF']
     with db.atomic():
@@ -85,23 +100,34 @@ def stat_generator(game,lineups,game_pas):
             test = '3'
             gamestats[entry.Player.Player_ID] = {}
             gamestats[entry.Player.Player_ID]['Pitching'] = {}
-            gamestats[entry.Player.Player_ID]['Pitching']['IP'] = ''
-            gamestats[entry.Player.Player_ID]['Pitching']['ER'] = ''
+            gamestats[entry.Player.Player_ID]['Pitching']['IP'] = ip_calc(game_pas.select().where((All_PAs.Result << outs) & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count())
+            gamestats[entry.Player.Player_ID]['Pitching']['ER'] = none_to_zero(game_pas.select(fn.SUM(All_PAs.Run_Scored)).where(All_PAs.Pitcher_ID == entry.Player.Player_ID).scalar())
             gamestats[entry.Player.Player_ID]['Pitching']['H'] = game_pas.select().where((All_PAs.Result << hits) & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
             gamestats[entry.Player.Player_ID]['Pitching']['BB'] = game_pas.select().where((All_PAs.Result == 'BB') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
             gamestats[entry.Player.Player_ID]['Pitching']['K'] = game_pas.select().where((All_PAs.Result == 'K') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
             gamestats[entry.Player.Player_ID]['Pitching']['ERA'] = ''
             gamestats[entry.Player.Player_ID]['Batting'] = {}
             gamestats[entry.Player.Player_ID]['Batting']['AB'] = game_pas.select().where((All_PAs.Result != 'BB') & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
-            gamestats[entry.Player.Player_ID]['Batting']['R'] = ''
+            gamestats[entry.Player.Player_ID]['Batting']['R'] = game_pas.select().where((All_PAs.Batter_ID == entry.Player.Player_ID) & (All_PAs.Run_Scored == 1)).count()
             gamestats[entry.Player.Player_ID]['Batting']['H'] = game_pas.select().where((All_PAs.Result << hits) & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
-            gamestats[entry.Player.Player_ID]['Batting']['RBI'] = ''
+            gamestats[entry.Player.Player_ID]['Batting']['RBI'] = none_to_zero(game_pas.select(fn.SUM(All_PAs.RBIs)).where(All_PAs.Batter_ID == entry.Player.Player_ID).scalar())
             gamestats[entry.Player.Player_ID]['Batting']['BB'] = game_pas.select().where((All_PAs.Result == 'BB') & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
             gamestats[entry.Player.Player_ID]['Batting']['K'] = game_pas.select().where((All_PAs.Result == 'K') & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
             gamestats[entry.Player.Player_ID]['Batting']['BA'] = ''
     return gamestats
 
-# Routes game_pas.select().where((All_PAs.Result == 'K') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
+def ip_calc(outs):
+    full = outs // 3
+    partial = outs % 3
+    ip = (f"{full}.{partial}")
+    return(ip)
+
+def none_to_zero(data):
+    if data == None:
+        data = 0
+    return(data)
+
+# Routes
 
 @games_bp.route('/games', methods=['GET'])
 def games():
@@ -174,9 +200,22 @@ def game_manage(game_number):
     game_pas = All_PAs.select().where(All_PAs.Game_No == game.Game_Number).order_by(All_PAs.Play_No.desc())
     brc = brc_calc(game)
     gamestats = stat_generator(game,lineups,game_pas)
+    if request.method == 'POST':
+        form = GameStatusForm()
+        if form.validate_on_submit():
+            with db.atomic():
+                game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data}
+                Games.update(game_update).where(Games.Game_Number == game.Game_Number).execute()
+                game = Games.get(Games.Game_Number == game_number)
+            result = calc.play_check(game)
+            print(result)
+        return redirect(url_for('games_bp.game_manage',game_number=game_number))
+    else:
+        form = GameStatusForm(data=game_populate(game))
     return render_template(
         'manage/game_manage.html',
         game = game,
+        form = form,
         brc = brc,
         lineups = lineups,
         game_pas = game_pas,
@@ -261,6 +300,11 @@ def game_start(game_number):
             calc.active_players(game)
             game.Status = 'Started'
             game.save()
+            game_pas = All_PAs.select().where(All_PAs.Game_No == game.Game_Number).order_by(All_PAs.Play_No.desc())
+            gamestats = stat_generator(game,lineups,game_pas)
+            msg = reddit_boxscore_gen(game,lineups,game_pas,gamestats)
+#            edit_thread('i32ir4',msg)
+#            print(reddit_boxscore)
             webhook_functions.game_start(game)
         elif not valid:
             for error in errors: flash(error)

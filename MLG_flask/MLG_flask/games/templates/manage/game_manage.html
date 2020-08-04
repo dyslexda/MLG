@@ -13,10 +13,12 @@
           <div class="col">
               <h2 class="text-center">
                   {{game.Away.Team_Abbr}} {{game.A_Score}} - {{game.H_Score}} {{game.Home.Team_Abbr}} | {{game.Inning}}
-              </h2><hr />
+              </h2>
+                <img class="mx-auto img-fluid d-block" src={{ url_for('games_bp.static',filename=("outs_" ~ game.Outs ~ ".png")) }} />
+                <img class="mx-auto img-fluid d-block" src={{ url_for('games_bp.static',filename=("brc_" ~ brc ~ ".png")) }} /><hr />
           </div>
       </div>
-      <div class="row">Game Status: {{game.Status}}</div>
+      {#{{ game_pas[0].Play_No }} {{ game_pas[0].Inning }} {{ game_pas[0].Outs }} {{ game_pas[0].BRC }} {{ game_pas[0].Play_Type }} {{ game_pas[0].Result }}<br />#}
       {% if game.Status == 'Staged' %}
       <a href="/games/manage/{{game.Game_Number}}/init">Initialize Lineups</a><br />
       {% elif game.Status == 'Init'%}
@@ -26,8 +28,31 @@
       </button>
       {% elif game.Status == 'Started' %}
       <a href="/games/manage/{{game.Game_Number}}/lineups">Manage Lineup</a><br />
-      {% elif game.Status == 'Final' %} Game Over!
+      {% elif game.Status == 'Final' %} Game Over!<br />
       {% endif %}
+      <form id="status-form" action="" method="POST" role="form">
+        {{ form.hidden_tag() }}
+        <div class="row">
+          <div class="col-md-4 order-md-2 mb-4">
+            <ul class="list-group mb-3">
+              {% for field in [form.status, form.pitch, form.swing, form.r_steal, form.c_throw] %}
+              <li class="list-group-item d-flex justify-content-between lh-condensed">
+                <div>
+                  <h6 class="my-0">{{field.label}}:</h6>
+                </div>
+                <span class="clearfix">{{ field }}</span>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        <input type="submit">
+      </form>
+
+
 {% include 'boxscore.html' %}
+
+{% include 'play_list.html' %}
+
 
 {% endblock %}

@@ -45,7 +45,6 @@ def play_check(game):
         msg = steal_result_bug(game,result_msg)
         webhook_functions.steal_result(game,runner,msg)
         scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runner)
-        print(scorebook_line)
         next_PA(game,new_outcome)
         return([result_msg,msg])
     elif game.Pitch and game.Swing and game.Runner == None:
@@ -84,11 +83,10 @@ def play_check(game):
         msg = swing_result_bug(game,result_msg)
         webhook_functions.swing_result(game,msg)
         scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored)
-        print(scorebook_line)
         next_PA(game,new_outcome)
         return([result_msg,msg])
     else:
-        return([['','','','']])
+        return([['','','','',game.Pitch,game.Swing,game.Runner]])
 
 def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runner=None):
     data = {}
@@ -138,7 +136,8 @@ def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runn
     with db.atomic():
         All_PAs.insert(data).execute()
         for r_scored in runners_scored:
-            All_PAs.update(Run_Scored = 1).where((All_PAs.Batter_ID == r_scored) & (All_PAs.Play_Type == 'Swing')).order_by(All_PAs.Play_No.desc()).limit(1).execute()
+            print(r_scored.Player_ID)
+            All_PAs.update(Run_Scored = 1).where((All_PAs.Batter_ID == r_scored.Player_ID) & (All_PAs.Play_Type == 'Swing')).order_by(All_PAs.Play_No.desc()).limit(1).execute()
     return data
 
 def next_PA(game,new_outcome=None):

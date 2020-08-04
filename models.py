@@ -112,6 +112,13 @@ class BoxOrderPosForm(Form):
 class LineupBoxForm(FlaskForm):
     bop = FieldList(FormField(BoxOrderPosForm))
 
+class GameStatusForm(FlaskForm):
+    choices = ['Staged','Init','Started','Final']
+    status_choices = []
+    for i in choices: status_choices.append((i,i))
+    game_id = HiddenField()
+    status = SelectField(choices = status_choices)
+
 class All_PAs(BaseModel):
     id = AutoField(primary_key=True)
     Play_No = IntegerField()
