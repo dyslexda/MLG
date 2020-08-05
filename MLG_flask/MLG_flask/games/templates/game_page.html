@@ -14,6 +14,7 @@
                 <h2 class="text-center">
                     {{game.Away.Team_Abbr}} {{game.A_Score}} - {{game.H_Score}} {{game.Home.Team_Abbr}} | {{game.Inning}}
                 </h2>
+                <a href="{{thread_url}}">Reddit Thread</a>
                 <img class="mx-auto img-fluid d-block" src={{ url_for('games_bp.static',filename=("outs_" ~ game.Outs ~ ".png")) }} />
                 <img class="mx-auto img-fluid d-block" src={{ url_for('games_bp.static',filename=("brc_" ~ brc ~ ".png")) }} />
             </div>

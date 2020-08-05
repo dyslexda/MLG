@@ -8,7 +8,7 @@ from peewee import *
 import MLG_flask.webhook_functions as webhook_functions
 import calculator.calculator as calc
 from calculator.ranges_files.ranges_calc import brc_calc
-from MLG_reddit.sender import edit_thread, reddit_boxscore_gen
+from MLG_reddit.sender import edit_thread, reddit_boxscore_gen, create_gamethread, reddit_threadURL, reddit_scorebug
 
 
 # Blueprint Configuration
@@ -49,7 +49,8 @@ def game_populate(game):
 def validate_lineups(raw_lineups,game):
     #builds list of lineup errors, such that each error is flashed to user if it isn't valid
     valid, errors = True, []
-    req_positions = ['P','C','2B','CF']
+    req_positions = list(app.config['REQ_POSITIONS'].split(","))
+#    req_positions = ['P','C','2B','CF']
     for team in [game.Away,game.Home]:
         #Make sure initial lineup is clean, i.e. 1 box numbers for everyone
         if game.Status == 'Init':
@@ -144,13 +145,15 @@ def game_page(game_number):
     game_pas = All_PAs.select().where(All_PAs.Game_No == game.Game_Number).order_by(All_PAs.Play_No.desc())
     brc = brc_calc(game)
     gamestats = stat_generator(game,lineups,game_pas)
+    thread_url = reddit_threadURL(game)
     return render_template(
         'game_page.html',
         game = game,
         brc = brc,
         lineups = lineups,
         game_pas = game_pas,
-        gamestats = gamestats
+        gamestats = gamestats,
+        thread_url = thread_url
     )
 
 #@games_bp.route('/games/create',methods=['GET','POST'])
@@ -204,11 +207,12 @@ def game_manage(game_number):
         form = GameStatusForm()
         if form.validate_on_submit():
             with db.atomic():
-                game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data}
+                if form.runner.data == '':
+                    form.runner.data = None
+                game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data}
                 Games.update(game_update).where(Games.Game_Number == game.Game_Number).execute()
                 game = Games.get(Games.Game_Number == game_number)
             result = calc.play_check(game)
-            print(result)
         return redirect(url_for('games_bp.game_manage',game_number=game_number))
     else:
         form = GameStatusForm(data=game_populate(game))
@@ -303,8 +307,10 @@ def game_start(game_number):
             game_pas = All_PAs.select().where(All_PAs.Game_No == game.Game_Number).order_by(All_PAs.Play_No.desc())
             gamestats = stat_generator(game,lineups,game_pas)
             msg = reddit_boxscore_gen(game,lineups,game_pas,gamestats)
-#            edit_thread('i32ir4',msg)
-#            print(reddit_boxscore)
+            reddit_thread = create_gamethread(game,msg)
+            game.Reddit_Thread = reddit_thread
+            game.save()
+            msg2 = reddit_scorebug(game)
             webhook_functions.game_start(game)
         elif not valid:
             for error in errors: flash(error)

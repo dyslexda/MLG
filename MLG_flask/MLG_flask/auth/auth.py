@@ -32,19 +32,22 @@ def authorized():
     if request.args.get('code', ''):
         state = request.args.get('state', '')
         code = request.args.get('code', '')
-        access_token = getOAuthToken(code)
-        reddit_name = getIdentity(access_token)
-        session['username'] = reddit_name
-        user = Users.get(Users.Reddit_Name == reddit_name)
-        if 'umpire' in user.Roles:
-            session['umpire'] = True
-        else:
-            session['umpire'] = False
-        if 'commissioner' in user.Roles:
-            session['commissioner'] = True
-        else:
-            session['commissioner'] = False
-        revokeToken(access_token,"access_token")
+        print(r.auth.scopes())
+        print(r.auth.authorize(code))
+        print(r.user.me())
+#        access_token = getOAuthToken(code)
+#        reddit_name = getIdentity(access_token)
+#        session['username'] = reddit_name
+#        user = Users.get(Users.Reddit_Name == reddit_name)
+#        if 'umpire' in user.Roles:
+#            session['umpire'] = True
+#        else:
+#            session['umpire'] = False
+#        if 'commissioner' in user.Roles:
+#            session['commissioner'] = True
+#        else:
+#            session['commissioner'] = False
+#        revokeToken(access_token,"access_token")
     return redirect(url_for('index_bp.index'))
 
 def getIdentity(access_token):

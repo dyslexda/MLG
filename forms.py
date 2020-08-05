@@ -25,7 +25,7 @@ class GameStatusForm(FlaskForm):
     status = SelectField(choices = status_choices)
     a_score = IntegerField()
     h_score = IntegerField()
-    runner = IntegerField()
+    runner = SelectField(label='Runner',choices = [('',''),(1,1),(2,2),(3,3)], validators=[validators.optional()])
     pitch = IntegerField(validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])
     swing = IntegerField(validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])
     r_steal = IntegerField(label='Steal',validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])

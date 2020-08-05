@@ -35,7 +35,7 @@
         <div class="row">
           <div class="col-md-4 order-md-2 mb-4">
             <ul class="list-group mb-3">
-              {% for field in [form.status, form.pitch, form.swing, form.r_steal, form.c_throw] %}
+              {% for field in [form.status, form.pitch, form.swing] %}
               <li class="list-group-item d-flex justify-content-between lh-condensed">
                 <div>
                   <h6 class="my-0">{{field.label}}:</h6>
@@ -44,6 +44,20 @@
               </li>
               {% endfor %}
             </ul>
+          <input type="button" value="Random Swing" onclick="RandomSwing();" />
+          </div>
+          <div class="col-md-4 order-md-2 mb-4">
+            <ul class="list-group mb-3">
+              {% for field in [form.runner, form.r_steal, form.c_throw] %}
+              <li class="list-group-item d-flex justify-content-between lh-condensed">
+                <div>
+                  <h6 class="my-0">{{field.label}}:</h6>
+                </div>
+                <span class="clearfix">{{ field }}</span>
+              </li>
+              {% endfor %}
+            </ul>
+          <input type="button" value="Random Steal" onclick="RandomSteal();" />
           </div>
         </div>
         <input type="submit">
@@ -53,6 +67,22 @@
 {% include 'boxscore.html' %}
 
 {% include 'play_list.html' %}
-
+<script>
+function getRndInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) ) + min;
+}
+function RandomSwing() {
+        var rnd1 = getRndInteger(1,1000);
+        var rnd2 = getRndInteger(1,1000);
+        document.getElementById('pitch').value = rnd1;
+        document.getElementById('swing').value = rnd2;
+    }
+function RandomSteal() {
+        var rnd1 = getRndInteger(1,1000);
+        var rnd2 = getRndInteger(1,1000);
+        document.getElementById('r_steal').value = rnd1;
+        document.getElementById('c_throw').value = rnd2;
+    }
+</script>
 
 {% endblock %}

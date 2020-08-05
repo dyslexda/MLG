@@ -23,7 +23,12 @@ class Config:
     CLIENT_SECRET = environ.get('CLIENT_SECRET')
     REDIRECT_URI = environ.get('REDIRECT_URI')
     USER_AGENT = environ.get('USER_AGENT')
+    REFRESH_TOKEN = environ.get('REFRESH_TOKEN')
 
     # Discord Auth
     WEBHOOK_ID = environ.get('WEBHOOK_ID')
     WEBHOOK_TOKEN = environ.get('WEBHOOK_TOKEN')
+
+    # Extra Config
+    REQ_POSITIONS = environ.get('REQ_POSITIONS')
+    LINEUP_SIZE = environ.get('LINEUP_SIZE')
