@@ -11,3 +11,4 @@ wtf-peewee
 flask_assets
 flask_table
 flask_wtf
+gunicorn
