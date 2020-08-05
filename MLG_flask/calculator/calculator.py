@@ -1,10 +1,13 @@
 import random, time, sys, json, os
 from decimal import Decimal
 from os import path
+from flask import current_app as app
 import calculator.ranges_files.ranges_calc as ranges_calc
 import calculator.ranges_files.ranges_lookup as ranges_lookup
 import MLG_flask.webhook_functions as webhook_functions
 from calculator.ranges_files.play_outcomes import play_outcomes
+from MLG_reddit.sender import reddit_scorebug, reddit_resultbug, reddit_stealresultbug, reddit_boxscore_gen, edit_thread
+from MLG_flask.games import games
 from peewee import *
 from models import *
 
@@ -43,9 +46,9 @@ def play_check(game):
             game.save()
         result_msg.append(runs_scored)
         msg = steal_result_bug(game,result_msg)
+        reddit_stealresultbug(game,result_msg)
         webhook_functions.steal_result(game,runner,msg)
-        scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runner)
-        print(scorebook_line)
+        scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runner)
         next_PA(game,new_outcome)
         return([result_msg,msg])
     elif game.Pitch and game.Swing and game.Runner == None:
@@ -82,13 +85,13 @@ def play_check(game):
             game.save()
         result_msg.append(runs_scored)
         msg = swing_result_bug(game,result_msg)
+        reddit_resultbug(game,result_msg)
         webhook_functions.swing_result(game,msg)
         scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored)
-        print(scorebook_line)
         next_PA(game,new_outcome)
         return([result_msg,msg])
     else:
-        return([['','','','']])
+        return([['','','','',game.Pitch,game.Swing,type(game.Runner)]])
 
 def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runner=None):
     data = {}
@@ -138,12 +141,14 @@ def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runn
     with db.atomic():
         All_PAs.insert(data).execute()
         for r_scored in runners_scored:
-            All_PAs.update(Run_Scored = 1).where((All_PAs.Batter_ID == r_scored) & (All_PAs.Play_Type == 'Swing')).order_by(All_PAs.Play_No.desc()).limit(1).execute()
+            All_PAs.update(Run_Scored = 1).where((All_PAs.Batter_ID == r_scored.Player_ID) & (All_PAs.Play_Type == 'Swing')).order_by(All_PAs.Play_No.desc()).limit(1).execute()
     return data
 
 def next_PA(game,new_outcome=None):
+    steal,frame = None,None
     with db.atomic():
-        lineup_size = 4
+        lineup_size = int(app.config['LINEUP_SIZE'])
+#        lineup_size = 4
         try:
             game.First_Base = new_outcome['first_base']
         except:
@@ -157,6 +162,7 @@ def next_PA(game,new_outcome=None):
         except:
             game.Third_Base = None
         if game.R_Steal:
+            steal = True
             game.C_Throw = None
             game.R_Steal = None
             game.Runner = None
@@ -186,6 +192,13 @@ def next_PA(game,new_outcome=None):
             game.Swing = None
         game.save()
         active_players(game)
+    if frame or not steal:
+        msg = reddit_scorebug(game)
+    lineups = Lineups.select().where(Lineups.Game_Number == game.Game_Number).order_by(Lineups.Team, Lineups.Order.asc(), Lineups.Box.asc())
+    game_pas = All_PAs.select().where(All_PAs.Game_No == game.Game_Number).order_by(All_PAs.Play_No.desc())
+    gamestats = games.stat_generator(game,lineups,game_pas)
+    boxscore = reddit_boxscore_gen(game,lineups,game_pas,gamestats)
+    edit_thread(game.Reddit_Thread,boxscore)
     webhook_functions.next_PA(game)
 
 # Pulls currently active players in a given game based upon inning (T or B), then saves them in the gamestate

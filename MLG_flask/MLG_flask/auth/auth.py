@@ -54,7 +54,7 @@ def getIdentity(access_token):
 
 def getOAuthToken(code):
     r = requests.post('https://www.reddit.com/api/v1/access_token',
-                     auth = ('tUv_ZIIJCczWkQ','bfh-3E2wfIyvifXUhyL9xiOhrKk'),
+                     auth = (app.config['CLIENT_ID'],app.config['CLIENT_SECRET']),
                      headers = {'User-agent':app.config['USER_AGENT'],'Content-Type':'application/x-www-form-urlencoded'},
                      data = {'grant_type':'authorization_code','code':code,'redirect_uri':app.config['REDIRECT_URI']})
     access_token = json.loads(r.text)["access_token"]
@@ -62,7 +62,7 @@ def getOAuthToken(code):
 
 def revokeToken(token, tokentype):
     r = requests.post('https://www.reddit.com/api/v1/revoke_token',
-                      auth = ('tUv_ZIIJCczWkQ','bfh-3E2wfIyvifXUhyL9xiOhrKk'),
+                      auth = (app.config['CLIENT_ID'],app.config['CLIENT_SECRET']),
                       headers = {'User-agent':app.config['USER_AGENT'],'Content-Type':'application/x-www-form-urlencoded'},
                       data = {'token':token,'token_type_hint':tokentype})
 

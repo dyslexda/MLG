@@ -1,7 +1,7 @@
 from peewee import *
 from playhouse.pool import PooledSqliteExtDatabase
 from wtfpeewee.orm import model_form
-import wtforms, os, inspect
+import wtforms, os, inspect, csv
 from flask_wtf import FlaskForm
 from wtforms import Form, FieldList, FormField, SelectField, HiddenField, validators
 
@@ -25,7 +25,6 @@ class Teams(BaseModel):
     id = AutoField(primary_key=True)
     Team_Name = CharField(unique=True)
     Team_Abbr = CharField(unique=True)
-    Logo = CharField()
 
 class Players(BaseModel):
     id = AutoField(primary_key=True)
@@ -112,6 +111,13 @@ class BoxOrderPosForm(Form):
 class LineupBoxForm(FlaskForm):
     bop = FieldList(FormField(BoxOrderPosForm))
 
+class GameStatusForm(FlaskForm):
+    choices = ['Staged','Init','Started','Final']
+    status_choices = []
+    for i in choices: status_choices.append((i,i))
+    game_id = HiddenField()
+    status = SelectField(choices = status_choices)
+
 class All_PAs(BaseModel):
     id = AutoField(primary_key=True)
     Play_No = IntegerField()
@@ -151,11 +157,16 @@ def db_init():
     db.close()
 
 def populate_test_data():
-    test_teams = [{'Team_Name':'Lonestar Pumpjacks','Team_Abbr':'LPJ','Logo':'/home/RLB_app/RLB_app/teams/static/LPJ_Logo'},
-                  {'Team_Name':'Sleepy Hollow Horsemen','Team_Abbr':'SHH','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'},
-                  {'Team_Name':'TestTeam1','Team_Abbr':'TT1','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'},
-                  {'Team_Name':'TestTeam2','Team_Abbr':'TT2','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'}
-]
+#    test_teams = [{'Team_Name':'Lonestar Pumpjacks','Team_Abbr':'LPJ','Logo':'/home/RLB_app/RLB_app/teams/static/LPJ_Logo'},
+#                  {'Team_Name':'Sleepy Hollow Horsemen','Team_Abbr':'SHH','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'},
+#                  {'Team_Name':'TestTeam1','Team_Abbr':'TT1','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'},
+#                  {'Team_Name':'TestTeam2','Team_Abbr':'TT2','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'}
+
+    test_teams = [{'Team_Name':'Curacao Couriers','Team_Abbr':'CUR'},
+                  {'Team_Name':'Jamaica Jammers','Team_Abbr':'JAM'},
+                  {'Team_Name':'St. Lucia Sharks','Team_Abbr':'STL'},
+                  {'Team_Name':'Trinidad Tridents','Team_Abbr':'TRI'}]
+
     test_users = [
     {'Reddit_Name':'Jzkitty21', 'Discord_Name': 'JZKITTY#3143', 'Discord_ID': 254774534274547713, 'Roles': 'player'},
     {'Reddit_Name':'ghosthardware515', 'Discord_Name': 'sarah_#4781', 'Discord_ID': 167796704739983360, 'Roles': 'player'},
@@ -169,30 +180,43 @@ def populate_test_data():
     {'Reddit_Name':'Druidicdwarf','Discord_Name': 'LefLop#4771', 'Discord_ID': 246762932703068162, 'Roles': 'player'},
     {'Reddit_Name':'FT_Blasit', 'Discord_Name': 'dairy_test_user#5360', 'Discord_ID': 679869242954350644, 'Roles': 'player'},
     {'Reddit_Name':'Juniped', 'Discord_Name': 'Juniped#0711', 'Discord_ID': 121871011091185664, 'Roles': 'player'}]
-    test_players = [
-    { 'User_ID':1, 'Player_ID':7001, 'Player_Name': 'JZ', 'PPos': 'C', 'SPos': 'CIF', 'Hand': 'R', 'Team': 'SHH', 'Contact':3, 'Eye':1, 'Power':3, 'Speed':5, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':2, 'Player_ID':7002, 'Player_Name': 'Sarah Buntingsworth', 'PPos': 'C', 'SPos': 'CIF', 'Hand': 'L', 'Team': 'LPJ', 'Contact':4, 'Eye':5, 'Power':2, 'Speed':1, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':3, 'Player_ID':7003, 'Player_Name': 'Tygen Shinybeard', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'LPJ', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':4, 'Player_ID':7004, 'Player_Name': 'Nate Duke', 'PPos': 'SS', 'SPos': 'UTIL', 'Hand': 'R', 'Team': 'LPJ', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':5, 'Player_ID':7005, 'Player_Name': 'Kalin Young', 'PPos': 'P', 'SPos': '', 'Hand': 'L', 'Team': 'LPJ', 'Contact':0, 'Eye':0, 'Power':0, 'Speed':0, 'Movement':5, 'Command':1, 'Velocity':5, 'Awareness':1},
-    { 'User_ID':6, 'Player_ID':7006, 'Player_Name': 'Poop McGee', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'SHH', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':7, 'Player_ID':7007, 'Player_Name': 'Dominus Nominus', 'PPos': 'P', 'SPos': '', 'Hand': 'R', 'Team': 'SHH', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':8, 'Player_ID':7008, 'Player_Name': 'Spike Swordfish II', 'PPos': 'SS', 'SPos': 'UTIL', 'Hand': 'L', 'Team': 'SHH', 'Contact':1, 'Eye':1, 'Power':5, 'Speed':5, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID': 12, 'Player_ID': 7009, 'Player_Name': 'Juniped', 'PPos': '2B', 'SPos': 'UTIL', 'Hand': 'R', 'Team': 'LPJ', 'Contact': 5, 'Eye': 1, 'Power': 5, 'Speed': 1, 'Movement': 0, 'Command': 0, 'Velocity': 0, 'Awareness': 0},
-    { 'User_ID': 10, 'Player_ID': 7010, 'Player_Name': 'King Kruul', 'PPos': '2B', 'SPos': 'UTIL', 'Hand': 'L', 'Team': 'SHH', 'Contact': 3, 'Eye': 3, 'Power': 1, 'Speed': 5, 'Movement': 0, 'Command': 0, 'Velocity': 0, 'Awareness': 0},
-    { 'User_ID':3, 'Player_ID':7011, 'Player_Name': 'Tygen Pitcherbeard', 'PPos': 'P', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':3, 'Player_ID':7012, 'Player_Name': 'Tygen Batterbeard1', 'PPos': 'C', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':3, 'Player_ID':7013, 'Player_Name': 'Tygen Batterbeard2', 'PPos': '2B', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':3, 'Player_ID':7014, 'Player_Name': 'Tygen Batterbeard3', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':3, 'Player_ID':7015, 'Player_Name': 'Tygen Batterbeard4', 'PPos': 'SS', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':11, 'Player_ID':7016, 'Player_Name': 'Dairy Pitcherbeard', 'PPos': 'P', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':11, 'Player_ID':7017, 'Player_Name': 'Dairy Hitterbeard1', 'PPos': 'C', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':11, 'Player_ID':7018, 'Player_Name': 'Dairy Hitterbeard2', 'PPos': '2B', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':11, 'Player_ID':7019, 'Player_Name': 'Dairy Hitterbeard3', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
-    { 'User_ID':11, 'Player_ID':7020, 'Player_Name': 'Dairy Hitterbeard4', 'PPos': 'SS', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0}]
-    test_games = [{'Game_Number':50002,'Game_ID':'SHHLPJ2','Season':5,'Session':2,'Away':'SHH','Home':'LPJ'},
-                  {'Game_Number':50003,'Game_ID':'LPJSHH3','Season':5,'Session':3,'Away':'LPJ','Home':'SHH'},
-                  {'Game_Number':50004,'Game_ID':'TT1TT24','Season':5,'Session':4,'Away':'TT1','Home':'TT2'}]
+
+    with open('test_players.csv') as file:
+        test_players = []
+        keys = ['User_ID','Player_ID','Player_Name','PPos','SPos','Hand','Team','Contact','Eye','Power','Speed','Movement','Command','Velocity','Awareness']
+        reader = csv.reader(file)
+        for row in reader:
+            player = dict(zip(keys,row))
+            test_players.append(player)
+    test_games = [{'Game_Number':50101,'Game_ID':'CURJAM1','Season':5,'Session':1,'Away':'CUR','Home':'JAM'},
+                  {'Game_Number':50102,'Game_ID':'STLTRI1','Season':5,'Session':1,'Away':'STL','Home':'TRI'},
+                  {'Game_Number':50201,'Game_ID':'JAMSTL2','Season':5,'Session':2,'Away':'JAM','Home':'STL'},
+                  {'Game_Number':50202,'Game_ID':'TRICUR2','Season':5,'Session':2,'Away':'TRI','Home':'CUR'}]
+
+#    test_players = [
+#    { 'User_ID':1, 'Player_ID':7001, 'Player_Name': 'JZ', 'PPos': 'C', 'SPos': 'CIF', 'Hand': 'R', 'Team': 'SHH', 'Contact':3, 'Eye':1, 'Power':3, 'Speed':5, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':2, 'Player_ID':7002, 'Player_Name': 'Sarah Buntingsworth', 'PPos': 'C', 'SPos': 'CIF', 'Hand': 'L', 'Team': 'LPJ', 'Contact':4, 'Eye':5, 'Power':2, 'Speed':1, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':3, 'Player_ID':7003, 'Player_Name': 'Tygen Shinybeard', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'LPJ', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':4, 'Player_ID':7004, 'Player_Name': 'Nate Duke', 'PPos': 'SS', 'SPos': 'UTIL', 'Hand': 'R', 'Team': 'LPJ', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':5, 'Player_ID':7005, 'Player_Name': 'Kalin Young', 'PPos': 'P', 'SPos': '', 'Hand': 'L', 'Team': 'LPJ', 'Contact':0, 'Eye':0, 'Power':0, 'Speed':0, 'Movement':5, 'Command':1, 'Velocity':5, 'Awareness':1},
+#    { 'User_ID':6, 'Player_ID':7006, 'Player_Name': 'Poop McGee', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'SHH', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':7, 'Player_ID':7007, 'Player_Name': 'Dominus Nominus', 'PPos': 'P', 'SPos': '', 'Hand': 'R', 'Team': 'SHH', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':8, 'Player_ID':7008, 'Player_Name': 'Spike Swordfish II', 'PPos': 'SS', 'SPos': 'UTIL', 'Hand': 'L', 'Team': 'SHH', 'Contact':1, 'Eye':1, 'Power':5, 'Speed':5, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID': 12, 'Player_ID': 7009, 'Player_Name': 'Juniped', 'PPos': '2B', 'SPos': 'UTIL', 'Hand': 'R', 'Team': 'LPJ', 'Contact': 5, 'Eye': 1, 'Power': 5, 'Speed': 1, 'Movement': 0, 'Command': 0, 'Velocity': 0, 'Awareness': 0},
+#    { 'User_ID': 10, 'Player_ID': 7010, 'Player_Name': 'King Kruul', 'PPos': '2B', 'SPos': 'UTIL', 'Hand': 'L', 'Team': 'SHH', 'Contact': 3, 'Eye': 3, 'Power': 1, 'Speed': 5, 'Movement': 0, 'Command': 0, 'Velocity': 0, 'Awareness': 0},
+#    { 'User_ID':3, 'Player_ID':7011, 'Player_Name': 'Tygen Pitcherbeard', 'PPos': 'P', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':3, 'Player_ID':7012, 'Player_Name': 'Tygen Batterbeard1', 'PPos': 'C', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':3, 'Player_ID':7013, 'Player_Name': 'Tygen Batterbeard2', 'PPos': '2B', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':3, 'Player_ID':7014, 'Player_Name': 'Tygen Batterbeard3', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':3, 'Player_ID':7015, 'Player_Name': 'Tygen Batterbeard4', 'PPos': 'SS', 'SPos': '', 'Hand': 'R', 'Team': 'TT1', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':11, 'Player_ID':7016, 'Player_Name': 'Dairy Pitcherbeard', 'PPos': 'P', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':11, 'Player_ID':7017, 'Player_Name': 'Dairy Hitterbeard1', 'PPos': 'C', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':11, 'Player_ID':7018, 'Player_Name': 'Dairy Hitterbeard2', 'PPos': '2B', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':11, 'Player_ID':7019, 'Player_Name': 'Dairy Hitterbeard3', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
+#    { 'User_ID':11, 'Player_ID':7020, 'Player_Name': 'Dairy Hitterbeard4', 'PPos': 'SS', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0}]
+#    test_games = [{'Game_Number':50002,'Game_ID':'SHHLPJ2','Season':5,'Session':2,'Away':'SHH','Home':'LPJ'},
+#                  {'Game_Number':50003,'Game_ID':'LPJSHH3','Season':5,'Session':3,'Away':'LPJ','Home':'SHH'},
+#                  {'Game_Number':50004,'Game_ID':'TT1TT24','Season':5,'Session':4,'Away':'TT1','Home':'TT2'}]
 
 
     with db.atomic():
