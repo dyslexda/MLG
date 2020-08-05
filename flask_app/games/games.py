@@ -3,10 +3,10 @@ from flask import Blueprint, render_template, g, session, request, redirect, url
 from flask import current_app as app
 from models import Teams, Players, Games, All_PAs, Lineups, db
 from forms import LineupBoxForm, GameStatusForm
-from MLG_flask.auth.auth import login_required
+from auth.auth import login_required
 from peewee import *
-import MLG_flask.webhook_functions as webhook_functions
-import calculator.calculator as calc
+import webhook_functions as webhook_functions
+import calculator as calc
 from calculator.ranges_files.ranges_calc import brc_calc
 from MLG_reddit.sender import edit_thread, reddit_boxscore_gen, create_gamethread, reddit_threadURL, reddit_scorebug
 
