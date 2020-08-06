@@ -6,7 +6,7 @@ from forms import LineupBoxForm, GameStatusForm
 from auth.auth import login_required
 from peewee import *
 import webhook_functions as webhook_functions
-import calculator as calc
+import calculator.calculator as calc
 from calculator.ranges_files.ranges_calc import brc_calc
 from MLG_reddit.sender import edit_thread, reddit_boxscore_gen, create_gamethread, reddit_threadURL, reddit_scorebug
 
@@ -95,13 +95,17 @@ def validate_lineups(raw_lineups,game):
 def stat_generator(game,lineups,game_pas):
     gamestats = {}
     hits = ['HR','3B','2B','1B','IF1B','1BWH','1BWH2','2BWH']
-    outs = ['FO','PO','GO','K','GORA','FC','FC3rd','DPRun','FCH','K','DP21','DP31','DPH1','TP','DFO','DSacF','SacF']
+    one_outs = ['FO','PO','GO','K','GORA','FC','FC3rd','DPRun','FCH','K','DFO','DSacF','SacF','CS2','CS3','CS4']
+    two_outs = ['DP21','DP31','DPH1','DP']
     with db.atomic():
         for entry in lineups:
             test = '3'
             gamestats[entry.Player.Player_ID] = {}
             gamestats[entry.Player.Player_ID]['Pitching'] = {}
-            gamestats[entry.Player.Player_ID]['Pitching']['IP'] = ip_calc(game_pas.select().where((All_PAs.Result << outs) & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count())
+            gamestats[entry.Player.Player_ID]['Pitching']['IP'] = ip_calc(
+                (game_pas.select().where((All_PAs.Result << one_outs) & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()) + 
+                (game_pas.select().where((All_PAs.Result << two_outs) & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()*2) +
+                (game_pas.select().where((All_PAs.Result == 'TP') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()*3))
             gamestats[entry.Player.Player_ID]['Pitching']['ER'] = none_to_zero(game_pas.select(fn.SUM(All_PAs.Run_Scored)).where(All_PAs.Pitcher_ID == entry.Player.Player_ID).scalar())
             gamestats[entry.Player.Player_ID]['Pitching']['H'] = game_pas.select().where((All_PAs.Result << hits) & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
             gamestats[entry.Player.Player_ID]['Pitching']['BB'] = game_pas.select().where((All_PAs.Result == 'BB') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()

@@ -1,13 +1,16 @@
-import sys, os
+import sys, os, logging
 sys.path.insert(0,os.path.dirname(os.path.dirname(__file__)))
 from flask import Flask, g
 from flask_assets import Environment
 from models import *
 
 app = Flask(__name__,instance_relative_config=True)
+logging.basicConfig(filename='output.log',
+                    level=logging.DEBUG)
 app.config.from_object('config.Config')
 assets = Environment()
 assets.init_app(app)
+
 
 with app.app_context():
     from index import index
@@ -26,15 +29,15 @@ with app.app_context():
     app.register_blueprint(games.games_bp)
 
 
-@app.before_request
-def before_request():
-    g.db = db
-    g.db.connect()
-
-@app.after_request
-def after_request(response):
-    g.db.close()
-    return response
+#@app.before_request
+#def before_request():
+#    g.db = db
+#    g.db.connect()
+#
+#@app.teardown_request
+#def after_request(response):
+#    g.db.close()
+#    return response
 
 
 if __name__ == "__main__":

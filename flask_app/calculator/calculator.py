@@ -4,10 +4,10 @@ from os import path
 from flask import current_app as app
 import calculator.ranges_files.ranges_calc as ranges_calc
 import calculator.ranges_files.ranges_lookup as ranges_lookup
-import MLG_flask.webhook_functions as webhook_functions
+import webhook_functions as webhook_functions
 from calculator.ranges_files.play_outcomes import play_outcomes
 from MLG_reddit.sender import reddit_scorebug, reddit_resultbug, reddit_stealresultbug, reddit_boxscore_gen, edit_thread
-from MLG_flask.games import games
+from games import games
 from peewee import *
 from models import *
 
@@ -119,6 +119,7 @@ def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runn
         data['Runner'] = result_msg[5]
         data['Steal_No'] = result_msg[7]
         data['Diff'] = ranges_calc.calc_diff(game.C_Throw,game.R_Steal)
+        data['Pitcher_ID'] = game.Pitcher.Player_ID
         data['Catcher_ID'] = game.Catcher.Player_ID
         data['Runner_ID'] = runner.Player_ID
     if result == 'HR' or result == 'SB4':
