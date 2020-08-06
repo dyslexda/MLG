@@ -15,10 +15,7 @@
         <a class="nav-link dropdown-toggle" id="navbarUserDropdownButton" data-toggle="dropdown">Games</a>
         <div class="dropdown-menu">
           <a class="dropdown-item" href="/games">Current Games</a>
-          {% if session['commissioner'] %}
-          <a class="dropdown-item" href="/games/create">Create Game</a>
-          {% endif %}
-          {% if session['umpire'] %}
+          {% if session['umpire'] or session['commissioner'] %}
           <a class="dropdown-item" href="/games/manage">Manage Game</a>
           {% endif %}
         </div>

@@ -8,8 +8,8 @@ cd MLG
 python3 -m venv mlg-env
 source mlg-env/bin/activate
 pip3 install -r requirements.txt
-cd MLG_flask
-bash flask_start.sh
+cd flask_app
+gunicorn --bind 0.0.0.0:5000 wsgi:app
 ```
 
 ## Configuration
