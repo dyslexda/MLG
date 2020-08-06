@@ -17,6 +17,7 @@ The .env file must be configured for a local branch. Add it manually to /MLG.
 ```
 FLASK_APP=app.py
 FLASK_ENV=development
+SESSION_COOKIE_SECURE=True
 SECRET_KEY: '' #Random string of letters and numbers
 LESS_BIN=/usr/local/bin/lessc
 ASSETS_DEBUG=False
