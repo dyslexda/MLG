@@ -6,7 +6,7 @@ import calculator.ranges_files.ranges_calc as ranges_calc
 import calculator.ranges_files.ranges_lookup as ranges_lookup
 import webhook_functions as webhook_functions
 from calculator.ranges_files.play_outcomes import play_outcomes
-from MLG_reddit.sender import reddit_scorebug, reddit_resultbug, reddit_stealresultbug, reddit_boxscore_gen, edit_thread
+from reddit_bot.sender import reddit_scorebug, reddit_resultbug, reddit_stealresultbug, reddit_boxscore_gen, edit_thread
 from games import games
 from peewee import *
 from models import *

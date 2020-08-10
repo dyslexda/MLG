@@ -1,12 +1,14 @@
 # sudo nohup python3 mlg_discord.py > mlg_discord.txt &
-import re, statistics, random, operator, csv, time, collections, io, string, asyncio, discord, os, sys, traceback
+import asyncio, discord, os, sys, traceback
+from os import environ, path
+sys.path.insert(0,path.dirname(path.dirname(__file__)))
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord.utils import get
 basedir = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 load_dotenv(os.path.join(basedir, '.env'))
 #Discord config
-TOKEN = os.environ.get('DISCORD_TOKEN')
+TOKEN = environ.get('DISCORD_TOKEN')
 
 initial_extensions = [
                       'cogs.owner',

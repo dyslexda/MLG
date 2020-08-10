@@ -8,7 +8,7 @@ from peewee import *
 import webhook_functions as webhook_functions
 import calculator.calculator as calc
 from calculator.ranges_files.ranges_calc import brc_calc
-from MLG_reddit.sender import edit_thread, reddit_boxscore_gen, create_gamethread, reddit_threadURL, reddit_scorebug
+from reddit_bot.sender import edit_thread, reddit_boxscore_gen, create_gamethread, reddit_threadURL, reddit_scorebug
 
 
 # Blueprint Configuration

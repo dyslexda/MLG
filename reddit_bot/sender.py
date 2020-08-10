@@ -5,24 +5,8 @@ from dotenv import load_dotenv
 from models import All_PAs,Lineups,Players
 from peewee import *
 
-#handler = logging.StreamHandler()
-#handler.setLevel(logging.DEBUG)
-#for logger_name in ("praw", "prawcore"):
-#    logger = logging.getLogger(logger_name)
-#    logger.setLevel(logging.DEBUG)
-#    logger.addHandler(handler)
-
 basedir = path.dirname(path.abspath(path.dirname(__file__)))
 load_dotenv(path.join(basedir, '.env'))
-
-
-#target_sub = 'MajorLeagueGuessball'
-#subreddit = r.subreddit(target_sub)
-#
-##thread = subreddit.submit("Test post, please ignore2",selftext="This is a test post")
-#thread = r.submission(id='i32ir4')
-#thread.edit("this is edited text")
-#print(thread.selftext)
 
 
 def reddit_connect():
@@ -31,15 +15,14 @@ def reddit_connect():
                     redirect_uri = environ.get('REDIRECT_URI'),
                     user_agent = environ.get('USER_AGENT'),
                     refresh_token = environ.get('REFRESH_TOKEN'))
-#                    username = environ.get('USERNAME'),
-#                    password = environ.get('PASSWORD'))
     return(r)
 
 #r = reddit_connect()
-##print(r.auth.scopes())
+#print(r.auth.scopes())
 #state = str(random.randint(0, 65000))
 #url = r.auth.url(["*"], state, "permanent")
 #print(url)
+#print(r.auth.authorize(''))
 #print(environ.get('REFRESH_TOKEN')
 
 
