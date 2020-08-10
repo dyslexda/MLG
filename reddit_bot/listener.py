@@ -25,9 +25,9 @@ async def validate(item):
         if number != '':
             number = int(number)
             if number > 0 and number < 1001:
-                    payload = {'Command':command,'Number':number,'Redditor':reddit_name,'Discord':None}
-                    msg = await tree.routing(payload)
-                    return(msg)
+                payload = {'Command':command,'Number':number,'Redditor':reddit_name,'Discord':None}
+                msg = await tree.routing(payload)
+                return(msg)
             else:
                 return("That number is not between 1 and 1000")
         else:
