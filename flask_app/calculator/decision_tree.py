@@ -3,7 +3,7 @@ from decimal import Decimal
 from os import path
 from flask import current_app as app
 from peewee import *
-from models import *
+from shared.models import *
 from flask_app.calculator.ranges_files.ranges_calc import brc_calc
 
 async def routing(received):
@@ -189,6 +189,7 @@ async def steal(received):
                 game = Games.get(Games.Game_Number == game_no)
                 game.Runner = runner_num
                 game.R_Steal = int(received['Number'])
+                game.Steal_Timer = time.time()
                 game.save()
                 msg = (f"You are stealing {to_steal} with {int(received['Number'])}.")
                 return([msg,game,runner_name,to_steal])

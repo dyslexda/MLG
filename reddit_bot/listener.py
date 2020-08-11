@@ -43,6 +43,7 @@ async def listener():
             msg = await validate(item)
             item.reply(msg)
 
-
 if __name__ == "__main__":
-    asyncio.run(listener())
+#    asyncio.run(listener())
+    print(sys.path)
+    print(tree.__file__)

@@ -2,7 +2,7 @@ import discord, random, time, sys, json, datetime, os, inspect, aiohttp
 from discord.ext import commands
 from os import path
 from peewee import *
-from models import *
+from shared.models import *
 from flask_app.calculator.ranges_files.ranges_calc import brc_calc
 import flask_app.calculator.decision_tree as tree
 
@@ -35,6 +35,23 @@ async def steal_result(self,message,payload):
     await pitcher.dm_channel.send(msg)
     await catcher.dm_channel.send(msg)
     await runner.dm_channel.send(msg)
+
+async def steal_start(self,message,payload):
+    print('1')
+    game = Games.get(Games.Game_Number == payload['Game_Number'])
+    base = int(payload['Base'])
+    if base == 1:
+        runner_name = game.First_Base.Player_Name
+        to_steal = 'second base'
+    elif base == 2:
+        runner_name = game.Second_Base.Player_Name
+        to_steal = 'third base'
+    elif base == 3:
+        runner_name = game.Third_Base.Player_Name
+        to_steal = 'home plate'
+    catcher = await catcher_DM(self,game)
+    print([base,runner_name,to_steal])
+    await catcher.send(f"{runner_name} is stealing {to_steal} in {game.Game_ID}. Please submit a throw in the format 'm!throw [num]' between 1 and 1000.")
 
 async def next_PA(self,message,payload):
     game = Games.get(Games.Game_Number == payload['Game_Number'])
@@ -126,7 +143,7 @@ class GametimeCog(commands.Cog, name="Gametime"):
     @commands.Cog.listener()
     async def on_message(self,message):
         if message.webhook_id == 735342959943483403:
-            commands_dict = {'game_start':game_start,'swing_result':swing_result,'steal_result':steal_result,'next_PA':next_PA}
+            commands_dict = {'game_start':game_start,'swing_result':swing_result,'steal_result':steal_result,'next_PA':next_PA,'steal_start':steal_start}
             payload = json.loads(message.content)
             await commands_dict[payload['Command']](self,message,payload)
 

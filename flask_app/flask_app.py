@@ -2,7 +2,7 @@ import sys, os, logging
 sys.path.insert(0,os.path.dirname(os.path.dirname(__file__)))
 from flask import Flask, g
 from flask_assets import Environment
-from models import *
+from shared.models import *
 
 app = Flask(__name__,instance_relative_config=True)
 logging.basicConfig(filename='output.log',

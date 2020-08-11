@@ -2,7 +2,7 @@ import praw, random, logging
 import calculator.ranges_files.ranges_calc as ranges_calc
 from os import environ, path
 from dotenv import load_dotenv
-from models import All_PAs,Lineups,Players
+from shared.models import All_PAs,Lineups,Players
 from peewee import *
 
 basedir = path.dirname(path.abspath(path.dirname(__file__)))

@@ -1,7 +1,7 @@
 import json, requests
 from flask import current_app as app
 from discord import Webhook, RequestsWebhookAdapter
-from models import Lineups, Players, Users
+from shared.models import Lineups, Players, Users
 from peewee import *
 
 def game_start(game):
@@ -20,6 +20,10 @@ def steal_result(game,runner,msg):
 
 def next_PA(game):
     payload = {'Command':'next_PA','Game_Number':game.Game_Number,'Pitcher':game.Pitcher.Player_ID,'Batter':game.Batter.Player_ID}
+    webhook_send(json.dumps(payload))
+
+def steal_start(game,base):
+    payload = {'Command':'steal_start','Game_Number':game.Game_Number,'Base':base}
     webhook_send(json.dumps(payload))
 
 def get_batter(game):

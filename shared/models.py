@@ -1,5 +1,6 @@
 from peewee import *
 from playhouse.pool import PooledSqliteExtDatabase
+from playhouse.migrate import *
 from wtfpeewee.orm import model_form
 import wtforms, os, inspect, csv
 from flask_wtf import FlaskForm
@@ -48,7 +49,8 @@ class Games(BaseModel):
     id = AutoField(primary_key=True)
     Game_Number = IntegerField(unique=True)
     Game_ID = CharField()
-    Status = CharField(default='Staged') # 'Staged' is created; 'Init' means lineups are populated; 'Started' has been started, and sent messages to players; 'Final' means game has ended.
+    Status = CharField(default='Staged') # 'Staged' is created; 'Init' means lineups are populated; 'Started' has been started, and sent messages to players; 'Paused' means timers don't progress; 'Final' means game has ended.
+    Ump_Mode = CharField(default='Manual') # 'Manual' or 'Automatic' to determine how game progresses
     Season = IntegerField(null=True)
     Session = IntegerField(null=True)
     Away = ForeignKeyField(Teams,field='Team_Abbr',null=True)
@@ -67,6 +69,8 @@ class Games(BaseModel):
     Second_Base = ForeignKeyField(Players,field='Player_ID',null=True)
     Third_Base = ForeignKeyField(Players,field='Player_ID',null=True)
     Runner = IntegerField(null=True)
+    PA_Timer = TimestampField(utc=True,default=None,null=True)
+    Steal_Timer = TimestampField(utc=True,default=None,null=True)
     Pitch = IntegerField(null=True)
     Swing = IntegerField(null=True)
     C_Throw = IntegerField(null=True)
@@ -152,8 +156,8 @@ class All_PAs(BaseModel):
 
 def db_init():
     db.connect(reuse_if_open=True)
-    db.drop_tables([Users,Teams,Players,All_PAs,Games,Lineups])
-    db.create_tables([Users,Teams,Players,All_PAs,Games,Lineups])
+    db.drop_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs])
+    db.create_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs])
     db.close()
 
 def populate_test_data():
@@ -214,9 +218,7 @@ def populate_test_data():
 #    { 'User_ID':11, 'Player_ID':7018, 'Player_Name': 'Dairy Hitterbeard2', 'PPos': '2B', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
 #    { 'User_ID':11, 'Player_ID':7019, 'Player_Name': 'Dairy Hitterbeard3', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
 #    { 'User_ID':11, 'Player_ID':7020, 'Player_Name': 'Dairy Hitterbeard4', 'PPos': 'SS', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0}]
-#    test_games = [{'Game_Number':50002,'Game_ID':'SHHLPJ2','Season':5,'Session':2,'Away':'SHH','Home':'LPJ'},
-#                  {'Game_Number':50003,'Game_ID':'LPJSHH3','Season':5,'Session':3,'Away':'LPJ','Home':'SHH'},
-#                  {'Game_Number':50004,'Game_ID':'TT1TT24','Season':5,'Session':4,'Away':'TT1','Home':'TT2'}]
+
 
 
     with db.atomic():
@@ -225,6 +227,15 @@ def populate_test_data():
         Players.insert_many(test_players).execute()
         Games.insert_many(test_games).execute()
 
+def migration():
+    db.connect(reuse_if_open=True)
+    migrator = SqliteMigrator(db)
+    with db.transaction():
+        migrate(migrator.add_column('Games','Ump_Mode',CharField(default='Manual')))
+#            migrator.add_column('Games','Steal_Timer',TimestampField(utc=True,default=None,null=True))
+    db.close()
+
 if __name__ == "__main__":
+#    migration()
     db_init()
     populate_test_data()

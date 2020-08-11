@@ -7,43 +7,24 @@ import calculator.ranges_files.ranges_lookup as ranges_lookup
 import webhook_functions as webhook_functions
 from calculator.ranges_files.play_outcomes import play_outcomes
 from reddit_bot.sender import reddit_scorebug, reddit_resultbug, reddit_stealresultbug, reddit_boxscore_gen, edit_thread
-from games import games
+from shared.functions import stat_generator
 from peewee import *
-from models import *
+from shared.models import *
 
-def play_check(game):
+def play_check(game,auto=None):
+    brc = ranges_calc.brc_calc(game)
+    if auto == 'Pitcher':
+        result = 'AutoBB'
+        runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
+        result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
+                      game.Batter.Player_Name, game.Pitch, game.Swing, result, new_outcome]
+        next_PA(game,new_outcome)
+        return(result_msg)
     if game.C_Throw and game.R_Steal:
-        brc = ranges_calc.brc_calc(game)
         result,runner = resulting_steal(game)
-        lookup_play = (f"{str(brc)}_{str(game.Outs)}_{result}")
-        new_outcome = {}
-        if play_outcomes[lookup_play][0] not in ["", "0", "b4"]:
-            new_outcome[play_outcomes[lookup_play][0]] = game.Batter
-        if play_outcomes[lookup_play][1] not in ["", "0", "b4"]:
-            new_outcome[play_outcomes[lookup_play][1]] = game.First_Base
-        if play_outcomes[lookup_play][2] not in ["", "0", "b4"]:
-            new_outcome[play_outcomes[lookup_play][2]] = game.Second_Base
-        if play_outcomes[lookup_play][3] not in ["", "0", "b4"]:
-            new_outcome[play_outcomes[lookup_play][3]] = game.Third_Base
+        runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
         result_msg = [game.Inning, game.Outs, brc, "Steal", game.Catcher.Player_Name,
                       runner.Player_Name, game.C_Throw, game.R_Steal, result]
-        runs_scored = 0
-        outs = 0
-        index_base_map = {0:game.Batter,1:game.First_Base,2:game.Second_Base,3:game.Third_Base}
-        runners_scored = []
-        with db.atomic():
-            for base,outcome in enumerate(play_outcomes[lookup_play][0:4]):
-                if outcome == 'b4':
-                    runners_scored.append(index_base_map[base])
-                    runs_scored += 1
-                    if game.Inning[0] == 'T':
-                        game.A_Score += 1
-                    else:
-                        game.H_Score += 1
-                elif outcome == '0':
-                    outs += 1
-                    game.Outs += 1
-            game.save()
         result_msg.append(runs_scored)
         msg = steal_result_bug(game,result_msg)
         reddit_stealresultbug(game,result_msg)
@@ -52,37 +33,10 @@ def play_check(game):
         next_PA(game,new_outcome)
         return([result_msg,msg])
     elif game.Pitch and game.Swing and game.Runner == None:
-        brc = ranges_calc.brc_calc(game)
         result = resulting_swing(game)
-        lookup_play = (f"{str(brc)}_{str(game.Outs)}_{result}")
-        new_outcome = {}
-        if play_outcomes[lookup_play][0] not in ["", "0", "b4"]:
-            new_outcome[play_outcomes[lookup_play][0]] = game.Batter
-        if play_outcomes[lookup_play][1] not in ["", "0", "b4"]:
-            new_outcome[play_outcomes[lookup_play][1]] = game.First_Base
-        if play_outcomes[lookup_play][2] not in ["", "0", "b4"]:
-            new_outcome[play_outcomes[lookup_play][2]] = game.Second_Base
-        if play_outcomes[lookup_play][3] not in ["", "0", "b4"]:
-            new_outcome[play_outcomes[lookup_play][3]] = game.Third_Base
+        runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
         result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
                       game.Batter.Player_Name, game.Pitch, game.Swing, result]
-        runs_scored = 0
-        outs = 0
-        index_base_map = {0:game.Batter,1:game.First_Base,2:game.Second_Base,3:game.Third_Base}
-        runners_scored = []
-        with db.atomic():
-            for base,outcome in enumerate(play_outcomes[lookup_play][0:4]):
-                if outcome == 'b4':
-                    runners_scored.append(index_base_map[base])
-                    runs_scored += 1
-                    if game.Inning[0] == 'T':
-                        game.A_Score += 1
-                    else:
-                        game.H_Score += 1
-                elif outcome == '0':
-                    outs += 1
-                    game.Outs += 1
-            game.save()
         result_msg.append(runs_scored)
         msg = swing_result_bug(game,result_msg)
         reddit_resultbug(game,result_msg)
@@ -92,6 +46,36 @@ def play_check(game):
         return([result_msg,msg])
     else:
         return([['','','','',game.Pitch,game.Swing,type(game.Runner)]])
+
+def play_outcome(game,brc,result):
+    lookup_play = (f"{str(brc)}_{str(game.Outs)}_{result}")
+    new_outcome = {}
+    if play_outcomes[lookup_play][0] not in ["", "0", "b4"]:
+        new_outcome[play_outcomes[lookup_play][0]] = game.Batter
+    if play_outcomes[lookup_play][1] not in ["", "0", "b4"]:
+        new_outcome[play_outcomes[lookup_play][1]] = game.First_Base
+    if play_outcomes[lookup_play][2] not in ["", "0", "b4"]:
+        new_outcome[play_outcomes[lookup_play][2]] = game.Second_Base
+    if play_outcomes[lookup_play][3] not in ["", "0", "b4"]:
+        new_outcome[play_outcomes[lookup_play][3]] = game.Third_Base
+    runs_scored = 0
+    outs = 0
+    index_base_map = {0:game.Batter,1:game.First_Base,2:game.Second_Base,3:game.Third_Base}
+    runners_scored = []
+    with db.atomic():
+        for base,outcome in enumerate(play_outcomes[lookup_play][0:4]):
+            if outcome == 'b4':
+                runners_scored.append(index_base_map[base])
+                runs_scored += 1
+                if game.Inning[0] == 'T':
+                    game.A_Score += 1
+                else:
+                    game.H_Score += 1
+            elif outcome == '0':
+                outs += 1
+                game.Outs += 1
+        game.save()
+    return(runs_scored,outs,runners_scored,new_outcome)
 
 def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runner=None):
     data = {}
@@ -167,6 +151,7 @@ def next_PA(game,new_outcome=None):
             game.C_Throw = None
             game.R_Steal = None
             game.Runner = None
+            game.Steal_Timer = None
         else:
             if game.Inning[0] == 'T':
                 if game.A_Bat_Pos == lineup_size:
@@ -195,9 +180,12 @@ def next_PA(game,new_outcome=None):
         active_players(game)
     if frame or not steal:
         msg = reddit_scorebug(game)
+        with db.atomic():
+            game.PA_Timer = time.time()
+            game.save()
     lineups = Lineups.select().where(Lineups.Game_Number == game.Game_Number).order_by(Lineups.Team, Lineups.Order.asc(), Lineups.Box.asc())
     game_pas = All_PAs.select().where(All_PAs.Game_No == game.Game_Number).order_by(All_PAs.Play_No.desc())
-    gamestats = games.stat_generator(game,lineups,game_pas)
+    gamestats = stat_generator(game,lineups,game_pas)
     boxscore = reddit_boxscore_gen(game,lineups,game_pas,gamestats)
     edit_thread(game.Reddit_Thread,boxscore)
     webhook_functions.next_PA(game)
