@@ -1,4 +1,4 @@
-from models import *
+from shared.models import *
 from peewee import *
 
 

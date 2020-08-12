@@ -44,6 +44,4 @@ async def listener():
             item.reply(msg)
 
 if __name__ == "__main__":
-#    asyncio.run(listener())
-    print(sys.path)
-    print(tree.__file__)
+    asyncio.run(listener())

@@ -22,7 +22,7 @@ def reddit_connect():
 #state = str(random.randint(0, 65000))
 #url = r.auth.url(["*"], state, "permanent")
 #print(url)
-#print(r.auth.authorize(''))
+#print(r.auth.authorize('3PwDDPTsloYyHa7x1o61LkkM2E4'))
 #print(environ.get('REFRESH_TOKEN')
 
 
