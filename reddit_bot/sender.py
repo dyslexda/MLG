@@ -71,7 +71,7 @@ def reddit_resultbug(game,result_msg):
     pitch_line = (f"    Pitch:  {game.Pitch}\n")
     swing_line = (f"    Swing:  {game.Swing}\n")
     diff_line = (f"    Diff:   {ranges_calc.calc_diff(game.Pitch, game.Swing)}\n")
-    result_line = (f"    Result: {result_msg[8]}\n")
+    result_line = (f"    Result: {result_msg[9]}\n")
     outs_line = (f"    Outs:   {game.Outs}\n")
     score_line = (f"    {game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}")
     msg = pitch_line + swing_line + diff_line + result_line + outs_line + score_line
@@ -88,10 +88,27 @@ def reddit_stealresultbug(game,result_msg):
     throw_line = (f"    Throw:  {game.C_Throw}\n")
     steal_line = (f"    Steal:  {game.R_Steal}\n")
     diff_line = (f"    Diff:   {ranges_calc.calc_diff(game.C_Throw, game.R_Steal)}\n")
-    result_line = (f"    Result: {result_msg[8]}\n")
+    result_line = (f"    Result: {result_msg[9]}\n")
     outs_line = (f"    Outs:   {game.Outs}\n")
     score_line = (f"    {game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}")
     msg = throw_line + steal_line + diff_line + result_line + outs_line + score_line
+    for comment in thread.comments: 
+        if comment.is_submitter:
+            reply_comment = comment
+            break
+    reply_comment.reply(msg)
+
+def reddit_autoresultbug(game,result_msg):
+    r = reddit_connect()
+    thread = r.submission(id=game.Reddit_Thread)
+    thread.comment_sort = "new"
+    pitch_line = (f"    Pitch:  -\n")
+    swing_line = (f"    Swing:  -\n")
+    diff_line = (f"    Diff:   -\n")
+    result_line = (f"    Result: {result_msg[9]}\n")
+    outs_line = (f"    Outs:   {game.Outs}\n")
+    score_line = (f"    {game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}")
+    msg = pitch_line + swing_line + diff_line + result_line + outs_line + score_line
     for comment in thread.comments: 
         if comment.is_submitter:
             reply_comment = comment

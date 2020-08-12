@@ -1,5 +1,5 @@
 import random, time, sys
-from os import path
+from os import environ, path
 from flask import Blueprint, render_template, g, session, request, redirect, url_for, flash
 from flask import current_app as app
 from shared.models import Teams, Players, Games, All_PAs, Lineups, db
@@ -14,7 +14,6 @@ from reddit_bot.sender import edit_thread, reddit_boxscore_gen, create_gamethrea
 from dotenv import load_dotenv
 basedir = path.dirname(path.dirname(path.dirname(__file__)))
 load_dotenv(path.join(basedir, '.env'))
-print(calc.__file__)
 
 
 # Blueprint Configuration

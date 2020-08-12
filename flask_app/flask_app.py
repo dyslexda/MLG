@@ -1,5 +1,6 @@
 import sys, os, logging
-sys.path.insert(0,os.path.dirname(os.path.dirname(__file__)))
+from os import path
+sys.path.insert(0,path.dirname(path.abspath(path.dirname(__file__))))
 from flask import Flask, g
 from flask_assets import Environment
 from shared.models import *
@@ -19,6 +20,7 @@ with app.app_context():
     from auth import auth
     from admin import admin
     from games import games
+
 
 
     app.register_blueprint(index.index_bp)

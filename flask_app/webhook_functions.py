@@ -1,8 +1,13 @@
 import json, requests
-from flask import current_app as app
+from os import environ, path
+from dotenv import load_dotenv
+#from flask import current_app as app
 from discord import Webhook, RequestsWebhookAdapter
 from shared.models import Lineups, Players, Users
 from peewee import *
+
+basedir = path.dirname(path.abspath(path.dirname(__file__)))
+load_dotenv(path.join(basedir, '.env'))
 
 def game_start(game):
     pitcher = get_pitcher(game)
@@ -52,5 +57,5 @@ def get_pitcher(game):
 
 def webhook_send(message):
     with requests.Session() as s:
-        webhook = Webhook.partial(app.config['WEBHOOK_ID'], app.config['WEBHOOK_TOKEN'], adapter=RequestsWebhookAdapter(s))
+        webhook = Webhook.partial(environ.get('WEBHOOK_ID'), environ.get('WEBHOOK_TOKEN'), adapter=RequestsWebhookAdapter(s))
         webhook.send(message)

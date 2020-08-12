@@ -1,30 +1,44 @@
-import random, time, sys, json, os
+import random, time, sys, json, os, pprint
 from decimal import Decimal
-from os import path
+from os import environ, path
 from flask import current_app as app
 import shared.calculator.ranges_files.ranges_calc as ranges_calc
 import shared.calculator.ranges_files.ranges_lookup as ranges_lookup
-import webhook_functions as webhook_functions
+import flask_app.webhook_functions as webhook_functions
 from shared.calculator.ranges_files.play_outcomes import play_outcomes
-from reddit_bot.sender import reddit_scorebug, reddit_resultbug, reddit_stealresultbug, reddit_boxscore_gen, edit_thread
+from reddit_bot.sender import reddit_scorebug, reddit_resultbug, reddit_stealresultbug, reddit_autoresultbug, reddit_boxscore_gen, edit_thread
 from shared.functions import stat_generator
 from peewee import *
 from shared.models import *
+from dotenv import load_dotenv
+basedir = path.dirname(path.dirname(path.dirname(__file__)))
+load_dotenv(path.join(basedir, '.env'))
 
 def play_check(game,auto=None):
     brc = ranges_calc.brc_calc(game)
-    if auto == 'Pitcher':
-        result = 'AutoBB'
+    if auto:
+        if auto == 'Pitcher':
+            result = 'AutoBB'
+        elif auto == 'Batter':
+            result = 'AutoK'
+        elif auto == 'Catcher10h':
+            base = int(game.Runner) + 1
+            result = 'AutoSB' + str(base)
         runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
         result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
-                      game.Batter.Player_Name, game.Pitch, game.Swing, result, new_outcome]
+                      game.Batter.Player_Name, '', '', '', result]
+        result_msg.append(runs_scored)
+        msg = auto_result_bug(game,result_msg)
+        reddit_autoresultbug(game,result_msg)
+        webhook_functions.swing_result(game,msg)
+        scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored)
         next_PA(game,new_outcome)
-        return(result_msg)
-    if game.C_Throw and game.R_Steal:
+        return([result_msg,msg])
+    elif game.C_Throw and game.R_Steal:
         result,runner = resulting_steal(game)
         runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
         result_msg = [game.Inning, game.Outs, brc, "Steal", game.Catcher.Player_Name,
-                      runner.Player_Name, game.C_Throw, game.R_Steal, result]
+                      runner.Player_Name, game.C_Throw, game.R_Steal, ranges_calc.calc_diff(game.C_Throw,game.R_Steal), result]
         result_msg.append(runs_scored)
         msg = steal_result_bug(game,result_msg)
         reddit_stealresultbug(game,result_msg)
@@ -36,7 +50,7 @@ def play_check(game,auto=None):
         result = resulting_swing(game)
         runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
         result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
-                      game.Batter.Player_Name, game.Pitch, game.Swing, result]
+                      game.Batter.Player_Name, game.Pitch, game.Swing, ranges_calc.calc_diff(game.Pitch,game.Swing), result]
         result_msg.append(runs_scored)
         msg = swing_result_bug(game,result_msg)
         reddit_resultbug(game,result_msg)
@@ -94,7 +108,7 @@ def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runn
         data['Pitch_No'] = result_msg[6]
         data['Batter'] = result_msg[5]
         data['Swing_No'] = result_msg[7]
-        data['Diff'] = ranges_calc.calc_diff(game.Pitch,game.Swing)
+        data['Diff'] = result_msg[8]
         data['Pitcher_ID'] = game.Pitcher.Player_ID
         data['Batter_ID'] = game.Batter.Player_ID
     elif data['Play_Type'] == 'Steal':
@@ -102,7 +116,7 @@ def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runn
         data['Throw_No'] = result_msg[6]
         data['Runner'] = result_msg[5]
         data['Steal_No'] = result_msg[7]
-        data['Diff'] = ranges_calc.calc_diff(game.C_Throw,game.R_Steal)
+        data['Diff'] = result_msg[8]
         data['Pitcher_ID'] = game.Pitcher.Player_ID
         data['Catcher_ID'] = game.Catcher.Player_ID
         data['Runner_ID'] = runner.Player_ID
@@ -132,8 +146,8 @@ def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runn
 def next_PA(game,new_outcome=None):
     steal,frame = None,None
     with db.atomic():
-        lineup_size = int(app.config['LINEUP_SIZE'])
-#        lineup_size = 4
+#        lineup_size = int(app.config['LINEUP_SIZE'])
+        lineup_size = int(environ.get('LINEUP_SIZE'))
         try:
             game.First_Base = new_outcome['first_base']
         except:
@@ -289,11 +303,21 @@ def resulting_swing(game):
         print(game.Outs, game.Pitcher.Player_Name, game.Batter.Player_Name, firstb, secondb, thirdb, ranges)
     return result
 
+def auto_result_bug(game,result_msg):
+    pitch_line = (f"Pitch:  -\n")
+    swing_line = (f"Swing:  -\n")
+    diff_line = (f"Diff:   -\n")
+    result_line = (f"Result: {result_msg[9]}\n")
+    outs_line = (f"Outs:   {game.Outs}\n")
+    score_line = (f"{game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}")
+    msg = "```" + pitch_line + swing_line + diff_line + result_line + outs_line + score_line + "```"
+    return msg
+
 def steal_result_bug(game,result_msg):
     throw_line = (f"Throw:  {game.C_Throw}\n")
     steal_line = (f"Steal:  {game.R_Steal}\n")
     diff_line = (f"Diff:   {ranges_calc.calc_diff(game.C_Throw, game.R_Steal)}\n")
-    result_line = (f"Result: {result_msg[8]}\n")
+    result_line = (f"Result: {result_msg[9]}\n")
     outs_line = (f"Outs:   {game.Outs}\n")
     score_line = (f"{game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}")
     msg = "```" + throw_line + steal_line + diff_line + result_line + outs_line + score_line + "```"
@@ -303,7 +327,7 @@ def swing_result_bug(game,result_msg):
     pitch_line = (f"Pitch:  {game.Pitch}\n")
     swing_line = (f"Swing:  {game.Swing}\n")
     diff_line = (f"Diff:   {ranges_calc.calc_diff(game.Pitch, game.Swing)}\n")
-    result_line = (f"Result: {result_msg[8]}\n")
+    result_line = (f"Result: {result_msg[9]}\n")
     outs_line = (f"Outs:   {game.Outs}\n")
     score_line = (f"{game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}")
     msg = "```" + pitch_line + swing_line + diff_line + result_line + outs_line + score_line + "```"
