@@ -2,7 +2,7 @@ import praw, sys, asyncio
 from os import environ, path
 sys.path.insert(0,path.dirname(path.dirname(__file__)))
 from dotenv import load_dotenv
-import flask_app.calculator.decision_tree as tree
+import shared.calculator.decision_tree as tree
 
 basedir = path.dirname(path.abspath(path.dirname(__file__)))
 load_dotenv(path.join(basedir, '.env'))

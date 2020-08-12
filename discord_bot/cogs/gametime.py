@@ -3,8 +3,8 @@ from discord.ext import commands
 from os import path
 from peewee import *
 from shared.models import *
-from flask_app.calculator.ranges_files.ranges_calc import brc_calc
-import flask_app.calculator.decision_tree as tree
+from shared.calculator.ranges_files.ranges_calc import brc_calc
+import shared.calculator.decision_tree as tree
 
 
 async def createDM(user):

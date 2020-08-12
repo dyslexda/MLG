@@ -7,14 +7,14 @@ from shared.forms import LineupBoxForm, GameStatusForm
 from auth.auth import login_required
 from peewee import *
 import webhook_functions as webhook_functions
-import calculator.calculator as calc
+import shared.calculator.calculator as calc
 from shared.functions import stat_generator
-from calculator.ranges_files.ranges_calc import brc_calc
+from shared.calculator.ranges_files.ranges_calc import brc_calc
 from reddit_bot.sender import edit_thread, reddit_boxscore_gen, create_gamethread, reddit_threadURL, reddit_scorebug
 from dotenv import load_dotenv
 basedir = path.dirname(path.dirname(path.dirname(__file__)))
 load_dotenv(path.join(basedir, '.env'))
-
+print(calc.__file__)
 
 
 # Blueprint Configuration

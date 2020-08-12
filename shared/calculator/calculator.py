@@ -2,10 +2,10 @@ import random, time, sys, json, os
 from decimal import Decimal
 from os import path
 from flask import current_app as app
-import calculator.ranges_files.ranges_calc as ranges_calc
-import calculator.ranges_files.ranges_lookup as ranges_lookup
+import shared.calculator.ranges_files.ranges_calc as ranges_calc
+import shared.calculator.ranges_files.ranges_lookup as ranges_lookup
 import webhook_functions as webhook_functions
-from calculator.ranges_files.play_outcomes import play_outcomes
+from shared.calculator.ranges_files.play_outcomes import play_outcomes
 from reddit_bot.sender import reddit_scorebug, reddit_resultbug, reddit_stealresultbug, reddit_boxscore_gen, edit_thread
 from shared.functions import stat_generator
 from peewee import *

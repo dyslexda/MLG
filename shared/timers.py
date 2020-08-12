@@ -2,10 +2,10 @@ import time, asyncio, sys
 from os import path
 basedir = path.dirname(path.abspath(path.dirname(__file__)))
 sys.path.insert(0,basedir)
-sys.path.insert(1,path.join(basedir,"flask_app"))
+#sys.path.insert(1,path.join(basedir,"flask_app"))
 from datetime import timezone
-from flask_app.calculator.calculator import play_check
-from models import *
+from shared.calculator.calculator import play_check
+from shared.models import *
 from peewee import *
 
 async def curtime():

@@ -1,5 +1,5 @@
 import praw, random, logging
-import calculator.ranges_files.ranges_calc as ranges_calc
+import shared.calculator.ranges_files.ranges_calc as ranges_calc
 from os import environ, path
 from dotenv import load_dotenv
 from shared.models import All_PAs,Lineups,Players

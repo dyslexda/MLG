@@ -4,7 +4,7 @@ from os import path
 from flask import current_app as app
 from peewee import *
 from shared.models import *
-from flask_app.calculator.ranges_files.ranges_calc import brc_calc
+from shared.calculator.ranges_files.ranges_calc import brc_calc
 
 async def routing(received):
     commands_dict = {'pitch':pitch,'swing':swing,'steal':steal,'throw':throw}
