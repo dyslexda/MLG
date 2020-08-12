@@ -1,4 +1,5 @@
-import random, time
+import random, time, sys
+from os import path
 from flask import Blueprint, render_template, g, session, request, redirect, url_for, flash
 from flask import current_app as app
 from shared.models import Teams, Players, Games, All_PAs, Lineups, db
@@ -10,6 +11,10 @@ import calculator.calculator as calc
 from shared.functions import stat_generator
 from calculator.ranges_files.ranges_calc import brc_calc
 from reddit_bot.sender import edit_thread, reddit_boxscore_gen, create_gamethread, reddit_threadURL, reddit_scorebug
+from dotenv import load_dotenv
+basedir = path.dirname(path.dirname(path.dirname(__file__)))
+load_dotenv(path.join(basedir, '.env'))
+
 
 
 # Blueprint Configuration
@@ -50,8 +55,8 @@ def game_populate(game):
 def validate_lineups(raw_lineups,game):
     #builds list of lineup errors, such that each error is flashed to user if it isn't valid
     valid, errors = True, []
-    req_positions = list(app.config['REQ_POSITIONS'].split(","))
-#    req_positions = ['P','C','2B','CF']
+#    req_positions = list(app.config['REQ_POSITIONS'].split(","))
+    req_positions = list(environ.get('REQ_POSITIONS').split(","))
     for team in [game.Away,game.Home]:
         #Make sure initial lineup is clean, i.e. 1 box numbers for everyone
         if game.Status == 'Init':
