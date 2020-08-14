@@ -2,7 +2,7 @@ from peewee import *
 from playhouse.pool import PooledSqliteExtDatabase
 from playhouse.migrate import *
 from wtfpeewee.orm import model_form
-import wtforms, os, inspect, csv
+import wtforms, os, inspect, csv, json
 from flask_wtf import FlaskForm
 from wtforms import Form, FieldList, FormField, SelectField, HiddenField, validators
 
@@ -18,8 +18,8 @@ class BaseModel(Model):
 class Users(BaseModel):
     id = AutoField(primary_key=True)
     Reddit_Name = CharField(unique=True)
-    Discord_Name = CharField()
-    Discord_ID = CharField()
+    Discord_Name = CharField(null=True)
+    Discord_ID = CharField(unique=True)
     Roles = CharField(default='Player')
 
 class Teams(BaseModel):
@@ -88,9 +88,6 @@ class Games(BaseModel):
     Reddit_Thread = CharField(null=True)
     Notes = CharField(null=True)
 
-GameCreationForm = model_form(Games)
-
-
 class Lineups(BaseModel):
     id = AutoField(primary_key=True)
     Game_Number = ForeignKeyField(Games,field='Game_Number',null=True)
@@ -154,10 +151,26 @@ class All_PAs(BaseModel):
     Catcher_ID = ForeignKeyField(Players,field='Player_ID',null=True)
     Runner_ID = ForeignKeyField(Players,field='Player_ID',null=True)
 
+class ListField(Field):
+    field_type = 'list'
+
+    def db_value(self,value):
+        return json.dumps(value)
+
+    def python_value(self,value):
+        return json.loads(value)
+
+class List_Nums(BaseModel):
+    id = AutoField(primary_key=True)
+    Player_ID = ForeignKeyField(Players,field='Player_ID')
+    Game_Number = ForeignKeyField(Games,field='Game_Number')
+    Position = CharField() # P, C, or B (batter)
+    List = ListField()
+
 def db_init():
     db.connect(reuse_if_open=True)
-    db.drop_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs])
-    db.create_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs])
+    db.drop_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs,List_Nums])
+    db.create_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs,List_Nums])
     db.close()
 
 def populate_test_data():
@@ -236,6 +249,9 @@ def migration():
     db.close()
 
 if __name__ == "__main__":
+    db.connect()
+    db.create_tables([List_Nums])
+    db.close()
 #    migration()
-    db_init()
-    populate_test_data()
+#    db_init()
+#    populate_test_data()
