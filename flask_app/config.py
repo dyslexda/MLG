@@ -12,7 +12,7 @@ class Config:
     SECRET_KEY = environ.get('SECRET_KEY')
     FLASK_ENV = environ.get('FLASK_ENV')
     FLASK_APP = environ.get('FLASK_APP')
-    SESSION_COOKIE_SECURE = environ.get('SESSION_COOKIE_SECURE')
+    SESSION_COOKIE_SECURE = environ.get('SESSION_COOKIE_SECURE', '').lower() == 'true'
 
     # Static Assets
     STATIC_FOLDER = 'static'

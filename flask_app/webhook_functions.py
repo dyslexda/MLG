@@ -3,7 +3,7 @@ from os import environ, path
 from dotenv import load_dotenv
 #from flask import current_app as app
 from discord import Webhook, RequestsWebhookAdapter
-from shared.models import Lineups, Players, Users
+from shared.models import *
 from peewee import *
 
 basedir = path.dirname(path.abspath(path.dirname(__file__)))
@@ -12,7 +12,8 @@ load_dotenv(path.join(basedir, '.env'))
 def game_start(game):
     pitcher = get_pitcher(game)
     batter = get_batter(game)
-    payload = {'Command':'game_start','Game_Number':game.Game_Number,'Pitcher':pitcher,'Batter':batter}
+    a_catcher,h_catcher = get_catchers(game)
+    payload = {'Command':'game_start','Game_Number':game.Game_Number,'Pitcher':pitcher,'Batter':batter,'A_Catcher':a_catcher,'H_Catcher':h_catcher}
     webhook_send(json.dumps(payload))
 
 def swing_result(game,msg):
@@ -30,6 +31,48 @@ def next_PA(game):
 def steal_start(game,base):
     payload = {'Command':'steal_start','Game_Number':game.Game_Number,'Base':base}
     webhook_send(json.dumps(payload))
+
+def get_catchers(game):
+    max_a_c_box = (Lineups
+     .select(fn.MAX(Lineups.Box))
+     .where((Lineups.Game_Number == game.Game_Number) & 
+            (Lineups.Team == game.Away.Team_Abbr) & 
+            (Lineups.Position == 'C')
+            )).scalar()
+    max_h_c_box = (Lineups
+     .select(fn.MAX(Lineups.Box))
+     .where((Lineups.Game_Number == game.Game_Number) & 
+            (Lineups.Team == game.Home.Team_Abbr) & 
+            (Lineups.Position == 'C')
+            )).scalar()
+    a_catcher = (Lineups
+         .select().join(Games).switch(Lineups).join(Players).join(Users)
+         .where((Lineups.Game_Number == game.Game_Number) & 
+                (Lineups.Team == game.Away.Team_Abbr) & 
+                (Lineups.Position == 'C') & 
+                (Lineups.Box == max_a_c_box)
+                )).objects()[0]
+    h_catcher = (Lineups
+         .select().join(Games).switch(Lineups).join(Players).join(Users)
+         .where((Lineups.Game_Number == game.Game_Number) & 
+                (Lineups.Team == game.Home.Team_Abbr) & 
+                (Lineups.Position == 'C') & 
+                (Lineups.Box == max_h_c_box)
+                )).objects()[0]
+    return(a_catcher.Player.User_ID.Discord_ID,h_catcher.Player.User_ID.Discord_ID)
+#    try:
+#        a_c_list = List_Nums.get((List_Nums.Player_ID == a_catcher.Player_ID) &
+#                                 (List_Nums.Game_Number == game.Game_Number) &
+#                                 (List_Nums.Position == 'C'))
+#    except:
+#        a_c_list = None
+#    try:
+#        h_c_list = List_Nums.get((List_Nums.Player_ID == h_catcher.Player_ID) &
+#                                 (List_Nums.Game_Number == game.Game_Number) &
+#                                 (List_Nums.Position == 'C'))
+#    except:
+#        h_c_list = None
+
 
 def get_batter(game):
     if game.Inning[0] == 'T':

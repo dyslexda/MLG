@@ -146,7 +146,7 @@ def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runn
 def next_PA(game,new_outcome=None):
     steal,frame = None,None
     with db.atomic():
-#        lineup_size = int(app.config['LINEUP_SIZE'])
+# Can't use app.config because this function is accessed outside of the Flask app
         lineup_size = int(environ.get('LINEUP_SIZE'))
         try:
             game.First_Base = new_outcome['first_base']
@@ -194,15 +194,49 @@ def next_PA(game,new_outcome=None):
         active_players(game)
     if frame or not steal:
         msg = reddit_scorebug(game)
+        webhook_functions.next_PA(game)
         with db.atomic():
             game.PA_Timer = time.time()
             game.save()
+            check_for_lists(game)
     lineups = Lineups.select().where(Lineups.Game_Number == game.Game_Number).order_by(Lineups.Team, Lineups.Order.asc(), Lineups.Box.asc())
     game_pas = All_PAs.select().where(All_PAs.Game_No == game.Game_Number).order_by(All_PAs.Play_No.desc())
     gamestats = stat_generator(game,lineups,game_pas)
     boxscore = reddit_boxscore_gen(game,lineups,game_pas,gamestats)
     edit_thread(game.Reddit_Thread,boxscore)
-    webhook_functions.next_PA(game)
+
+def check_for_lists(game):
+    try:
+        pitcher_list = List_Nums.get((List_Nums.Game_Number == game.Game_Number) &
+                                     (List_Nums.Player_ID == game.Pitcher.Player_ID) &
+                                     (List_Nums.Position == 'P'))
+    except:
+        pitcher_list = None
+    try:
+        batter_list = List_Nums.get((List_Nums.Game_Number == game.Game_Number) &
+                                    (List_Nums.Player_ID == game.Batter.Player_ID) &
+                                    (List_Nums.Position == 'B'))
+    except:
+        batter_list = None
+    if pitcher_list:
+        to_use = pitcher_list.List[0]
+        game.Pitch = to_use
+        if len(pitcher_list.List) > 1:
+            remaining = pitcher_list.List[1:]
+            pitcher_list.List = remaining
+            pitcher_list.save()
+        else:
+            pitcher_list.delete_instance()
+    if batter_list:
+        to_use = batter_list.List[0]
+        game.Swing = to_use
+        if len(batter_list.List) > 1:
+            remaining = batter_list.List[1:]
+            batter_list.List = remaining
+            batter_list.save()
+        else:
+            batter_list.delete_instance()
+    game.save()
 
 # Pulls currently active players in a given game based upon inning (T or B), then saves them in the gamestate
 def active_players(game):

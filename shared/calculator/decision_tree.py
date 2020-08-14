@@ -5,6 +5,8 @@ from flask import current_app as app
 from peewee import *
 from shared.models import *
 from shared.calculator.ranges_files.ranges_calc import brc_calc
+import flask_app.webhook_functions as webhook_functions
+
 
 async def routing(received):
     commands_dict = {'pitch':pitch,'swing':swing,'steal':steal,'throw':throw,'lists':lists}
@@ -187,12 +189,14 @@ async def steal(received):
                 elif runner_num == 3:
                     to_steal = 'home plate'
                 game = Games.get(Games.Game_Number == game_no)
+                game.Steal_Timer = time.time()
                 game.Runner = runner_num
                 game.R_Steal = int(received['Number'])
-                game.Steal_Timer = time.time()
                 game.save()
+                webhook_functions.steal_start(game,runner_num)
                 msg = (f"You are stealing {to_steal} with {int(received['Number'])}.")
-                return([msg,game,runner_name,to_steal])
+#                return([msg,game,runner_name,to_steal])
+                return(msg)
             else:
                 return("You are not in a position to steal currently.")
 

@@ -9,7 +9,7 @@ from wtforms import Form, FieldList, FormField, SelectField, HiddenField, valida
 # Builds absolute path relative to this models.py file so other directories (like bots) can find the same database when importing
 db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'mlg.s')
 #db = SqliteDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1})
-db = PooledSqliteExtDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1},max_connections=30,stale_timeout=3600)
+db = PooledSqliteExtDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1},max_connections=30,stale_timeout=500)
 
 class BaseModel(Model):
     class Meta:

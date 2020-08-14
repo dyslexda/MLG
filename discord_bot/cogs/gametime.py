@@ -16,8 +16,12 @@ async def createDM(user):
 async def game_start(self,message,payload):
     game = Games.get(Games.Game_Number == payload['Game_Number'])
     msg,pitcher,batter = await pitcher_batter_DMs(self,game)
+    a_catcher,h_catcher = await catchers_DM(self,game,payload['A_Catcher'],payload['H_Catcher'])
     await pitcher.dm_channel.send(f"{game.Game_ID} has started, and you are on the mound! Please send a pitch using 'm!pitch [num]', with a number from 1 to 1000.\n {msg}")
     await batter.dm_channel.send(f"{game.Game_ID} has started, and you are up to bat! Please send a swing using 'm!swing [num]', with a number from 1 to 1000.\n {msg}")
+    catcher_msg = (f"{game.Game_ID} has started and you are a starting catcher. Please send a list of numbers to be used on any steal attemps, in the format 'm!list submit;C;<num>,<num>,<num>'. Use 'm!help list' for more information.")
+    await a_catcher.dm_channel.send(catcher_msg)
+    await h_catcher.dm_channel.send(catcher_msg)
 
 async def swing_result(self,message,payload):
     msg = payload['msg']
@@ -51,6 +55,11 @@ async def steal_start(self,message,payload):
     catcher = await catcher_DM(self,game)
     await catcher.send(f"{runner_name} is stealing {to_steal} in {game.Game_ID}. Please submit a throw in the format 'm!throw [num]' between 1 and 1000.")
 
+async def catcher_list(self,game):
+    catcher = (Players
+                .get(Players.Player_ID == game.Catcher.Player_ID)
+                ).objects()[0]
+
 async def next_PA(self,message,payload):
     game = Games.get(Games.Game_Number == payload['Game_Number'])
     msg,pitcher,batter = await pitcher_batter_DMs(self,game)
@@ -65,6 +74,13 @@ async def runner_DM(self,game,runner_id):
     runner = self.bot.get_user(int(runner_q[0].User_ID.Discord_ID))
     await createDM(runner)
     return(runner)
+
+async def catchers_DM(self,game,a_catcher_id,h_catcher_id):
+    a_catcher = self.bot.get_user(int(a_catcher_id))
+    h_catcher = self.bot.get_user(int(h_catcher_id))
+    await createDM(a_catcher)
+    await createDM(h_catcher)
+    return(a_catcher,h_catcher)
 
 async def catcher_DM(self,game):
     catcher_q = (Players
@@ -178,12 +194,13 @@ class GametimeCog(commands.Cog, name="Gametime"):
         if number > 0 and number < 1001:
             payload = {'Command':'steal','Number':number,'Redditor':None,'Discord':snowflake}
             msg = await tree.routing(payload)
-            if type(msg) == list:
-                catcher = await catcher_DM(self,msg[1])
-                await catcher.send(f"{msg[2]} is stealing {msg[3]} in {msg[1].Game_ID}. Please submit a throw in the format 'm!throw [num]' between 1 and 1000.")
-                await ctx.send(msg[0])
-            else:
-                await ctx.send(msg) 
+            await ctx.send(msg)
+#            if type(msg) == list:
+#                catcher = await catcher_DM(self,msg[1])
+#                await catcher.send(f"{msg[2]} is stealing {msg[3]} in {msg[1].Game_ID}. Please submit a throw in the format 'm!throw [num]' between 1 and 1000.")
+#                await ctx.send(msg[0])
+#            else:
+#                await ctx.send(msg) 
         else:
             await ctx.send("Please send a number between 1 and 1000.")
 
