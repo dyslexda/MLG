@@ -2,9 +2,9 @@ import discord, random, time, sys, json, datetime, os, inspect, aiohttp
 from discord.ext import commands
 from os import path
 from peewee import *
-from models import *
-from flask_app.calculator.ranges_files.ranges_calc import brc_calc
-import flask_app.calculator.decision_tree as tree
+from shared.models import *
+from shared.calculator.ranges_files.ranges_calc import brc_calc
+import shared.calculator.decision_tree as tree
 
 
 async def createDM(user):
@@ -16,8 +16,12 @@ async def createDM(user):
 async def game_start(self,message,payload):
     game = Games.get(Games.Game_Number == payload['Game_Number'])
     msg,pitcher,batter = await pitcher_batter_DMs(self,game)
+    a_catcher,h_catcher = await catchers_DM(self,game,payload['A_Catcher'],payload['H_Catcher'])
     await pitcher.dm_channel.send(f"{game.Game_ID} has started, and you are on the mound! Please send a pitch using 'm!pitch [num]', with a number from 1 to 1000.\n {msg}")
     await batter.dm_channel.send(f"{game.Game_ID} has started, and you are up to bat! Please send a swing using 'm!swing [num]', with a number from 1 to 1000.\n {msg}")
+    catcher_msg = (f"{game.Game_ID} has started and you are a starting catcher. Please send a list of numbers to be used on any steal attemps, in the format 'm!list submit;C;<num>,<num>,<num>'. Use 'm!help list' for more information.")
+    await a_catcher.dm_channel.send(catcher_msg)
+    await h_catcher.dm_channel.send(catcher_msg)
 
 async def swing_result(self,message,payload):
     msg = payload['msg']
@@ -36,6 +40,26 @@ async def steal_result(self,message,payload):
     await catcher.dm_channel.send(msg)
     await runner.dm_channel.send(msg)
 
+async def steal_start(self,message,payload):
+    game = Games.get(Games.Game_Number == payload['Game_Number'])
+    base = int(payload['Base'])
+    if base == 1:
+        runner_name = game.First_Base.Player_Name
+        to_steal = 'second base'
+    elif base == 2:
+        runner_name = game.Second_Base.Player_Name
+        to_steal = 'third base'
+    elif base == 3:
+        runner_name = game.Third_Base.Player_Name
+        to_steal = 'home plate'
+    catcher = await catcher_DM(self,game)
+    await catcher.send(f"{runner_name} is stealing {to_steal} in {game.Game_ID}. Please submit a throw in the format 'm!throw [num]' between 1 and 1000.")
+
+async def catcher_list(self,game):
+    catcher = (Players
+                .get(Players.Player_ID == game.Catcher.Player_ID)
+                ).objects()[0]
+
 async def next_PA(self,message,payload):
     game = Games.get(Games.Game_Number == payload['Game_Number'])
     msg,pitcher,batter = await pitcher_batter_DMs(self,game)
@@ -50,6 +74,13 @@ async def runner_DM(self,game,runner_id):
     runner = self.bot.get_user(int(runner_q[0].User_ID.Discord_ID))
     await createDM(runner)
     return(runner)
+
+async def catchers_DM(self,game,a_catcher_id,h_catcher_id):
+    a_catcher = self.bot.get_user(int(a_catcher_id))
+    h_catcher = self.bot.get_user(int(h_catcher_id))
+    await createDM(a_catcher)
+    await createDM(h_catcher)
+    return(a_catcher,h_catcher)
 
 async def catcher_DM(self,game):
     catcher_q = (Players
@@ -117,6 +148,8 @@ async def gamestatus_check(game):
         async with session.post(url,json=payload) as resp:
             await resp.text()
 
+
+
 class GametimeCog(commands.Cog, name="Gametime"):
 
     def __init__(self, bot):
@@ -126,7 +159,7 @@ class GametimeCog(commands.Cog, name="Gametime"):
     @commands.Cog.listener()
     async def on_message(self,message):
         if message.webhook_id == 735342959943483403:
-            commands_dict = {'game_start':game_start,'swing_result':swing_result,'steal_result':steal_result,'next_PA':next_PA}
+            commands_dict = {'game_start':game_start,'swing_result':swing_result,'steal_result':steal_result,'next_PA':next_PA,'steal_start':steal_start}
             payload = json.loads(message.content)
             await commands_dict[payload['Command']](self,message,payload)
 
@@ -161,12 +194,13 @@ class GametimeCog(commands.Cog, name="Gametime"):
         if number > 0 and number < 1001:
             payload = {'Command':'steal','Number':number,'Redditor':None,'Discord':snowflake}
             msg = await tree.routing(payload)
-            if type(msg) == list:
-                catcher = await catcher_DM(self,msg[1])
-                await catcher.send(f"{msg[2]} is stealing {msg[3]} in {msg[1].Game_ID}. Please submit a throw in the format 'm!throw [num]' between 1 and 1000.")
-                await ctx.send(msg[0])
-            else:
-                await ctx.send(msg) 
+            await ctx.send(msg)
+#            if type(msg) == list:
+#                catcher = await catcher_DM(self,msg[1])
+#                await catcher.send(f"{msg[2]} is stealing {msg[3]} in {msg[1].Game_ID}. Please submit a throw in the format 'm!throw [num]' between 1 and 1000.")
+#                await ctx.send(msg[0])
+#            else:
+#                await ctx.send(msg) 
         else:
             await ctx.send("Please send a number between 1 and 1000.")
 
@@ -181,8 +215,84 @@ class GametimeCog(commands.Cog, name="Gametime"):
         else:
             await ctx.send("Please send a number between 1 and 1000.")
 
+    @commands.command(name='list')
+    @commands.dm_only()
+    async def list(self, ctx, *, arg):
+        """Example commands:
+            m!list submit;50102;P;250,750
+            m!list submit;C;780,992,800,311,80
+            m!list reset;B
+        
+        To manage lists, use:
+            m!list submit;<player_id>;<game>;<position>;<num1>,<num2>,<num3> - Submits numbers for list
+            m!list show;<player_id>;<game>;<position> - Returns numbers in list
+            m!list reset;<player_id>;<game>;<position> - Empties list
+        
+        <position> is required, and the following are acceptable:
+            p,P,pitcher,Pitcher
+            c,C,catcher,Catcher
+            b,B,batter,Batter
+        
+        <game> is optional, as the bot will search for any active game you are in.
+        However, if you are in multiple games, without designating the correct game
+        it will simply set the list for the first retrieved game. Additionally, if the game
+        you are submitting for has not yet started, it will not be able to store the list properly.
+        Set the game number using the ID code, most easily found on the website (e.g., '50201').
+        
+        <player_id> is optional and likely should never be used outside of testing.
+        
+        Up to five numbers are accepted at the end of the submit command. Any invalid numbers
+        will be discarded and the rest of the list used. Please separate numbers using commas.
+        """
+        arg_list = arg.split(';')
+        if arg_list[0] not in ['submit','show','reset']:
+            await ctx.send("Please use the 'submit', 'show', or 'reset' subcommands. Use 'm!help list' for detailed help.")
+        else:
+            try:
+                player_id = int(arg_list[1])
+                player = Players.get(Players.Player_ID == player_id)
+                arg_list.pop(1)
+            except:
+                player_id = None
+            try:
+                game_number = int(arg_list[1])
+                game = Games.get(Games.Game_Number == game_number)
+                arg_list.pop(1)
+            except:
+                game_number = None
+            if arg_list[1].upper() in ['P','PITCHER']:
+                position = 'P'
+                arg_list.pop(1)
+            elif arg_list[1].upper() in ['C','CATCHER']:
+                position = 'C'
+                arg_list.pop(1)
+            elif arg_list[1].upper() in ['B','BATTER']:
+                position = 'B'
+                arg_list.pop(1)
+            else:
+                position = None
+                await ctx.send("I didn't recognize the position; please use 'm!help list' for detailed help.")
+            snowflake = ctx.author.id
+            if position:
+                if arg_list[0] == 'submit':
+                    payload = {'Command':'lists','Subcommand':'submit','Redditor':None,'Discord':snowflake,
+                               'Game_Number':game_number,'Position':position,'Player_ID':player_id,'Numbers':arg_list[1]}
+                    msg = await tree.routing(payload)
+                    await ctx.send(msg)
+                elif arg_list[0] == 'show':
+                    payload = {'Command':'lists','Subcommand':'show','Redditor':None,'Discord':snowflake,
+                               'Game_Number':game_number,'Position':position,'Player_ID':player_id}
+                    msg = await tree.routing(payload)
+                    await ctx.send(msg)
+                elif arg_list[0] == 'reset':
+                    payload = {'Command':'lists','Subcommand':'reset','Redditor':None,'Discord':snowflake,
+                               'Game_Number':game_number,'Position':position,'Player_ID':player_id}
+                    msg = await tree.routing(payload)
+                    await ctx.send(msg)
+
     @commands.command(name='test')
     async def test(self,ctx):
+        """Test help???"""
         await ctx.send('yep')
 
 def setup(bot):

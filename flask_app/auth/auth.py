@@ -3,7 +3,7 @@ import praw, requests, json
 import functools
 from flask import Blueprint, render_template, Flask, session, redirect, url_for, request, g
 from flask import current_app as app
-from models import Users
+from shared.models import Users
 
 # Blueprint Configuration
 auth_bp = Blueprint(

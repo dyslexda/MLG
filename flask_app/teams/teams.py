@@ -1,7 +1,7 @@
 """General page routes."""
 from flask import Blueprint, render_template, g
 from flask import current_app as app
-from models import Teams, Players
+from shared.models import Teams, Players
 
 
 # Blueprint Configuration

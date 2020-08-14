@@ -1,14 +1,15 @@
 from peewee import *
 from playhouse.pool import PooledSqliteExtDatabase
+from playhouse.migrate import *
 from wtfpeewee.orm import model_form
-import wtforms, os, inspect, csv
+import wtforms, os, inspect, csv, json
 from flask_wtf import FlaskForm
 from wtforms import Form, FieldList, FormField, SelectField, HiddenField, validators
 
 # Builds absolute path relative to this models.py file so other directories (like bots) can find the same database when importing
 db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'mlg.s')
 #db = SqliteDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1})
-db = PooledSqliteExtDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1},max_connections=30,stale_timeout=3600)
+db = PooledSqliteExtDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1},max_connections=30,stale_timeout=500)
 
 class BaseModel(Model):
     class Meta:
@@ -17,8 +18,8 @@ class BaseModel(Model):
 class Users(BaseModel):
     id = AutoField(primary_key=True)
     Reddit_Name = CharField(unique=True)
-    Discord_Name = CharField()
-    Discord_ID = CharField()
+    Discord_Name = CharField(null=True)
+    Discord_ID = CharField(unique=True)
     Roles = CharField(default='Player')
 
 class Teams(BaseModel):
@@ -48,7 +49,8 @@ class Games(BaseModel):
     id = AutoField(primary_key=True)
     Game_Number = IntegerField(unique=True)
     Game_ID = CharField()
-    Status = CharField(default='Staged') # 'Staged' is created; 'Init' means lineups are populated; 'Started' has been started, and sent messages to players; 'Final' means game has ended.
+    Status = CharField(default='Staged') # 'Staged' is created; 'Init' means lineups are populated; 'Started' has been started, and sent messages to players; 'Paused' means timers don't progress; 'Final' means game has ended.
+    Ump_Mode = CharField(default='Manual') # 'Manual' or 'Automatic' to determine how game progresses
     Season = IntegerField(null=True)
     Session = IntegerField(null=True)
     Away = ForeignKeyField(Teams,field='Team_Abbr',null=True)
@@ -67,6 +69,8 @@ class Games(BaseModel):
     Second_Base = ForeignKeyField(Players,field='Player_ID',null=True)
     Third_Base = ForeignKeyField(Players,field='Player_ID',null=True)
     Runner = IntegerField(null=True)
+    PA_Timer = TimestampField(utc=True,default=None,null=True)
+    Steal_Timer = TimestampField(utc=True,default=None,null=True)
     Pitch = IntegerField(null=True)
     Swing = IntegerField(null=True)
     C_Throw = IntegerField(null=True)
@@ -83,9 +87,6 @@ class Games(BaseModel):
     Umpires = CharField(null=True)
     Reddit_Thread = CharField(null=True)
     Notes = CharField(null=True)
-
-GameCreationForm = model_form(Games)
-
 
 class Lineups(BaseModel):
     id = AutoField(primary_key=True)
@@ -150,10 +151,26 @@ class All_PAs(BaseModel):
     Catcher_ID = ForeignKeyField(Players,field='Player_ID',null=True)
     Runner_ID = ForeignKeyField(Players,field='Player_ID',null=True)
 
+class ListField(Field):
+    field_type = 'list'
+
+    def db_value(self,value):
+        return json.dumps(value)
+
+    def python_value(self,value):
+        return json.loads(value)
+
+class List_Nums(BaseModel):
+    id = AutoField(primary_key=True)
+    Player_ID = ForeignKeyField(Players,field='Player_ID')
+    Game_Number = ForeignKeyField(Games,field='Game_Number')
+    Position = CharField() # P, C, or B (batter)
+    List = ListField()
+
 def db_init():
     db.connect(reuse_if_open=True)
-    db.drop_tables([Users,Teams,Players,All_PAs,Games,Lineups])
-    db.create_tables([Users,Teams,Players,All_PAs,Games,Lineups])
+    db.drop_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs,List_Nums])
+    db.create_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs,List_Nums])
     db.close()
 
 def populate_test_data():
@@ -214,9 +231,7 @@ def populate_test_data():
 #    { 'User_ID':11, 'Player_ID':7018, 'Player_Name': 'Dairy Hitterbeard2', 'PPos': '2B', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
 #    { 'User_ID':11, 'Player_ID':7019, 'Player_Name': 'Dairy Hitterbeard3', 'PPos': 'CF', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
 #    { 'User_ID':11, 'Player_ID':7020, 'Player_Name': 'Dairy Hitterbeard4', 'PPos': 'SS', 'SPos': '', 'Hand': 'R', 'Team': 'TT2', 'Contact':3, 'Eye':3, 'Power':3, 'Speed':3, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0}]
-#    test_games = [{'Game_Number':50002,'Game_ID':'SHHLPJ2','Season':5,'Session':2,'Away':'SHH','Home':'LPJ'},
-#                  {'Game_Number':50003,'Game_ID':'LPJSHH3','Season':5,'Session':3,'Away':'LPJ','Home':'SHH'},
-#                  {'Game_Number':50004,'Game_ID':'TT1TT24','Season':5,'Session':4,'Away':'TT1','Home':'TT2'}]
+
 
 
     with db.atomic():
@@ -225,6 +240,18 @@ def populate_test_data():
         Players.insert_many(test_players).execute()
         Games.insert_many(test_games).execute()
 
+def migration():
+    db.connect(reuse_if_open=True)
+    migrator = SqliteMigrator(db)
+    with db.transaction():
+        migrate(migrator.add_column('Games','Ump_Mode',CharField(default='Manual')))
+#            migrator.add_column('Games','Steal_Timer',TimestampField(utc=True,default=None,null=True))
+    db.close()
+
 if __name__ == "__main__":
-    db_init()
-    populate_test_data()
+    db.connect()
+    db.create_tables([List_Nums])
+    db.close()
+#    migration()
+#    db_init()
+#    populate_test_data()
