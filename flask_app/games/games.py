@@ -54,8 +54,8 @@ def game_populate(game):
 def validate_lineups(raw_lineups,game):
     #builds list of lineup errors, such that each error is flashed to user if it isn't valid
     valid, errors = True, []
-#    req_positions = list(app.config['REQ_POSITIONS'].split(","))
     req_positions = list(environ.get('REQ_POSITIONS').split(","))
+    lineup_size = int(environ.get('LINEUP_SIZE'))
     for team in [game.Away,game.Home]:
         #Make sure initial lineup is clean, i.e. 1 box numbers for everyone
         if game.Status == 'Init':
@@ -82,7 +82,7 @@ def validate_lineups(raw_lineups,game):
                     errors.append(f'{team.Team_Abbr} has duplicate boxes for the {pos} position')
                     valid = False
         #Do same as for positions, but now for order
-        for order in range(1,4):
+        for order in range(1,lineup_size+1):
             order_count = ([entry['Order'] for entry in raw_lineups[team.Team_Abbr]]).count(order)
             if order_count == 0:
                 errors.append(f'{team.Team_Abbr} is missing someone in the {order} spot')
@@ -325,6 +325,7 @@ def game_start(game_number):
             reddit_thread = create_gamethread(game,msg)
             game.Reddit_Thread = reddit_thread
             game.PA_Timer = time.time()
+            game.Step = 1
             game.save()
             msg2 = reddit_scorebug(game)
             webhook_functions.game_start(game)

@@ -11,6 +11,15 @@ db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'mlg.s')
 #db = SqliteDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1})
 db = PooledSqliteExtDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1},max_connections=30,stale_timeout=500)
 
+class ListField(Field):
+    field_type = 'list'
+
+    def db_value(self,value):
+        return json.dumps(value)
+
+    def python_value(self,value):
+        return json.loads(value)
+
 class BaseModel(Model):
     class Meta:
         database = db
@@ -50,7 +59,9 @@ class Games(BaseModel):
     Game_Number = IntegerField(unique=True)
     Game_ID = CharField()
     Status = CharField(default='Staged') # 'Staged' is created; 'Init' means lineups are populated; 'Started' has been started, and sent messages to players; 'Paused' means timers don't progress; 'Final' means game has ended.
+    Step = IntegerField(default=1) # Step 1 is pinging players; step 2 is reviewing and processing results
     Ump_Mode = CharField(default='Manual') # 'Manual' or 'Automatic' to determine how game progresses
+    Umpires = ListField(null=True)
     Season = IntegerField(null=True)
     Session = IntegerField(null=True)
     Away = ForeignKeyField(Teams,field='Team_Abbr',null=True)
@@ -84,9 +95,16 @@ class Games(BaseModel):
     HM1 = ForeignKeyField(Players,field='Player_ID',null=True)
     HM2 = ForeignKeyField(Players,field='Player_ID',null=True)
     HM3 = ForeignKeyField(Players,field='Player_ID',null=True)
-    Umpires = CharField(null=True)
     Reddit_Thread = CharField(null=True)
     Notes = CharField(null=True)
+
+class Umpires(BaseModel):
+    id = AutoField(primary_key=True)
+    Crew_Name = CharField()
+    Ump1 = ForeignKeyField(Users)
+    Ump2 = ForeignKeyField(Users,null=True)
+    Ump3 = ForeignKeyField(Users,null=True)
+    Ump4 = ForeignKeyField(Users,null=True)
 
 class Lineups(BaseModel):
     id = AutoField(primary_key=True)
@@ -151,15 +169,6 @@ class All_PAs(BaseModel):
     Catcher_ID = ForeignKeyField(Players,field='Player_ID',null=True)
     Runner_ID = ForeignKeyField(Players,field='Player_ID',null=True)
 
-class ListField(Field):
-    field_type = 'list'
-
-    def db_value(self,value):
-        return json.dumps(value)
-
-    def python_value(self,value):
-        return json.loads(value)
-
 class List_Nums(BaseModel):
     id = AutoField(primary_key=True)
     Player_ID = ForeignKeyField(Players,field='Player_ID')
@@ -169,8 +178,8 @@ class List_Nums(BaseModel):
 
 def db_init():
     db.connect(reuse_if_open=True)
-    db.drop_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs,List_Nums])
-    db.create_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs,List_Nums])
+    db.drop_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs,List_Nums,Umpires])
+    db.create_tables([Users,Teams,Players,All_PAs,Games,Lineups,All_PAs,List_Nums,Umpires])
     db.close()
 
 def populate_test_data():
@@ -195,8 +204,11 @@ def populate_test_data():
     {'Reddit_Name':'xbijin', 'Discord_Name': 'xbijin#3776', 'Discord_ID': 398235187634503702, 'Roles': 'player'},
     {'Reddit_Name':'Ashbymtg','Discord_Name': 'Keyo', 'Discord_ID': 114529305219956739, 'Roles': 'player'},
     {'Reddit_Name':'Druidicdwarf','Discord_Name': 'LefLop#4771', 'Discord_ID': 246762932703068162, 'Roles': 'player'},
-    {'Reddit_Name':'FT_Blasit', 'Discord_Name': 'dairy_test_user#5360', 'Discord_ID': 679869242954350644, 'Roles': 'player'},
+    {'Reddit_Name':'FT_Blasit', 'Discord_Name': 'dairy_test_user#5360', 'Discord_ID': 679869242954350644, 'Roles': 'player, umpire'},
     {'Reddit_Name':'Juniped', 'Discord_Name': 'Juniped#0711', 'Discord_ID': 121871011091185664, 'Roles': 'player'}]
+
+    test_umpires = [
+    {'Crew_Name':'FT_Blasit','Ump1':3,'Ump2':11}]
 
     with open('test_players.csv') as file:
         test_players = []
@@ -205,10 +217,10 @@ def populate_test_data():
         for row in reader:
             player = dict(zip(keys,row))
             test_players.append(player)
-    test_games = [{'Game_Number':50101,'Game_ID':'CURJAM1','Season':5,'Session':1,'Away':'CUR','Home':'JAM'},
-                  {'Game_Number':50102,'Game_ID':'STLTRI1','Season':5,'Session':1,'Away':'STL','Home':'TRI'},
-                  {'Game_Number':50201,'Game_ID':'JAMSTL2','Season':5,'Session':2,'Away':'JAM','Home':'STL'},
-                  {'Game_Number':50202,'Game_ID':'TRICUR2','Season':5,'Session':2,'Away':'TRI','Home':'CUR'}]
+    test_games = [{'Game_Number':50101,'Game_ID':'CURJAM1','Season':5,'Session':1,'Away':'CUR','Home':'JAM','Umpires':['dyslexda','FT_Blasit']},
+                  {'Game_Number':50102,'Game_ID':'STLTRI1','Season':5,'Session':1,'Away':'STL','Home':'TRI','Umpires':['dyslexda','FT_Blasit']},
+                  {'Game_Number':50201,'Game_ID':'JAMSTL2','Season':5,'Session':2,'Away':'JAM','Home':'STL','Umpires':['dyslexda','FT_Blasit']},
+                  {'Game_Number':50202,'Game_ID':'TRICUR2','Season':5,'Session':2,'Away':'TRI','Home':'CUR','Umpires':['dyslexda','FT_Blasit']}]
 
 #    test_players = [
 #    { 'User_ID':1, 'Player_ID':7001, 'Player_Name': 'JZ', 'PPos': 'C', 'SPos': 'CIF', 'Hand': 'R', 'Team': 'SHH', 'Contact':3, 'Eye':1, 'Power':3, 'Speed':5, 'Movement':0, 'Command':0, 'Velocity':0, 'Awareness':0},
@@ -239,6 +251,7 @@ def populate_test_data():
         Users.insert_many(test_users).execute()
         Players.insert_many(test_players).execute()
         Games.insert_many(test_games).execute()
+        Umpires.insert_many(test_umpires).execute()
 
 def migration():
     db.connect(reuse_if_open=True)
@@ -249,9 +262,9 @@ def migration():
     db.close()
 
 if __name__ == "__main__":
-    db.connect()
-    db.create_tables([List_Nums])
-    db.close()
+#    db.connect()
+#    db.create_tables([List_Nums])
+#    db.close()
 #    migration()
-#    db_init()
-#    populate_test_data()
+    db_init()
+    populate_test_data()
