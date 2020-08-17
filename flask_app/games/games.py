@@ -216,18 +216,21 @@ def game_manage(game_number):
     if request.method == 'POST':
         form = GameStatusForm()
         if form.validate_on_submit():
-            with db.atomic():
-                if form.runner.data == '':
-                    form.runner.data = None
-                game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data}
-                Games.update(game_update).where(Games.Game_Number == game.Game_Number).execute()
-                game = Games.get(Games.Game_Number == game_number)
-            result = calc.play_check(game)
-            if form.runner.data and not game.C_Throw:
-                webhook_functions.steal_start(game,form.runner.data)
+            if game.Step == 1:
+                pass
+            elif game.Step == 2:
                 with db.atomic():
-                    game.Steal_Timer = time.time()
-                    game.save()
+                    if form.runner.data == '':
+                        form.runner.data = None
+                    game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data}
+                    Games.update(game_update).where(Games.Game_Number == game.Game_Number).execute()
+                    game = Games.get(Games.Game_Number == game_number)
+                result = calc.play_check(game,url=url_for('games_bp.game_manage',game_number=game_number,_external=True))
+                if form.runner.data and not game.C_Throw:
+                    webhook_functions.steal_start(game,form.runner.data)
+                    with db.atomic():
+                        game.Steal_Timer = time.time()
+                        game.save()
         return redirect(url_for('games_bp.game_manage',game_number=game_number))
     else:
         form = GameStatusForm(data=game_populate(game))
@@ -325,7 +328,7 @@ def game_start(game_number):
             reddit_thread = create_gamethread(game,msg)
             game.Reddit_Thread = reddit_thread
             game.PA_Timer = time.time()
-            game.Step = 1
+            game.Step = 2
             game.save()
             msg2 = reddit_scorebug(game)
             webhook_functions.game_start(game)
@@ -338,7 +341,8 @@ def game_check():
     if request.method == 'POST':
         payload = request.get_json()
         game = Games.get(Games.Game_Number == payload['Game_Number'])
-        result = calc.play_check(game)
+#        result = calc.play_check(game)
+        result = calc.play_check(game,url=url_for('games_bp.game_manage',game_number=game.Game_Number,_external=True))
         if result[0][3] == 'Steal':
             result = calc.play_check(game)
     return redirect(url_for('index_bp.index'))

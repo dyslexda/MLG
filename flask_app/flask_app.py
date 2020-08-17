@@ -1,7 +1,7 @@
 import sys, os, logging
 from os import path
 sys.path.insert(0,path.dirname(path.abspath(path.dirname(__file__))))
-from flask import Flask, g
+from flask import Flask, session, g
 from flask_assets import Environment
 from shared.models import *
 
@@ -31,15 +31,19 @@ with app.app_context():
     app.register_blueprint(games.games_bp)
 
 
-#@app.before_request
-#def before_request():
-#    g.db = db
-#    g.db.connect()
-#
-#@app.teardown_request
-#def after_request(response):
-#    g.db.close()
-#    return response
+@app.before_request
+def before_request():
+    db.connect()
+    username = session.get('username')
+    if username is None:
+        g.user = None
+    else:
+        g.user = Users.get(Users.Reddit_Name == username)
+
+@app.teardown_request
+def after_request(response):
+    db.close()
+    return response
 
 
 if __name__ == "__main__":

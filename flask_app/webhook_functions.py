@@ -9,6 +9,10 @@ from peewee import *
 basedir = path.dirname(path.abspath(path.dirname(__file__)))
 load_dotenv(path.join(basedir, '.env'))
 
+def ump_ping(game,msg):
+    payload = {'Command':'ump_ping','Game_Number':game.Game_Number,'Message':msg}
+    webhook_send(json.dumps(payload))
+
 def game_start(game):
     pitcher = get_pitcher(game)
     batter = get_batter(game)

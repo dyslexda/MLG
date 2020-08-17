@@ -86,6 +86,7 @@ class Games(BaseModel):
     Swing = IntegerField(null=True)
     C_Throw = IntegerField(null=True)
     R_Steal = IntegerField(null=True)
+    Ump_Flavor = TextField(null=True)
     Win = ForeignKeyField(Teams,field='Team_Abbr',null=True)
     Loss = ForeignKeyField(Teams,field='Team_Abbr',null=True)
     WP = ForeignKeyField(Players,field='Player_ID',null=True)

@@ -66,14 +66,6 @@ def revokeToken(token, tokentype):
                       headers = {'User-agent':app.config['USER_AGENT'],'Content-Type':'application/x-www-form-urlencoded'},
                       data = {'token':token,'token_type_hint':tokentype})
 
-@auth_bp.before_app_request
-def load_logged_in_user():
-    username = session.get('username')
-    if username is None:
-        g.user = None
-    else:
-        g.user = Users.get(Users.Reddit_Name == username)
-
 def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):

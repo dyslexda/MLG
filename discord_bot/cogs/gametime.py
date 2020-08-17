@@ -13,6 +13,18 @@ async def createDM(user):
     else:
         await user.create_dm()
 
+async def ump_ping(self,message,payload):
+    game = Games.get(Games.Game_Number == payload['Game_Number'])
+    umpires = game.Umpires
+    for ump in umpires:
+        ump_q = (Users
+            .select()
+            .where(Users.Reddit_Name == ump)
+            ).objects()
+        umpire = self.bot.get_user(int(ump_q[0].Discord_ID))
+        await createDM(umpire)
+        await umpire.dm_channel.send(payload['Message'])
+
 async def game_start(self,message,payload):
     game = Games.get(Games.Game_Number == payload['Game_Number'])
     msg,pitcher,batter = await pitcher_batter_DMs(self,game)
@@ -159,7 +171,7 @@ class GametimeCog(commands.Cog, name="Gametime"):
     @commands.Cog.listener()
     async def on_message(self,message):
         if message.webhook_id == 735342959943483403:
-            commands_dict = {'game_start':game_start,'swing_result':swing_result,'steal_result':steal_result,'next_PA':next_PA,'steal_start':steal_start}
+            commands_dict = {'game_start':game_start,'swing_result':swing_result,'steal_result':steal_result,'next_PA':next_PA,'steal_start':steal_start,'ump_ping':ump_ping}
             payload = json.loads(message.content)
             await commands_dict[payload['Command']](self,message,payload)
 

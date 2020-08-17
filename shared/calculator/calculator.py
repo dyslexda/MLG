@@ -1,7 +1,6 @@
 import random, time, sys, json, os, pprint
 from decimal import Decimal
 from os import environ, path
-from flask import current_app as app
 import shared.calculator.ranges_files.ranges_calc as ranges_calc
 import shared.calculator.ranges_files.ranges_lookup as ranges_lookup
 import flask_app.webhook_functions as webhook_functions
@@ -14,7 +13,8 @@ from dotenv import load_dotenv
 basedir = path.dirname(path.dirname(path.dirname(__file__)))
 load_dotenv(path.join(basedir, '.env'))
 
-def play_check(game,auto=None):
+
+def play_check_old(game,auto=None):
     brc = ranges_calc.brc_calc(game)
     if auto:
         if auto == 'Pitcher':
@@ -60,6 +60,83 @@ def play_check(game,auto=None):
         return([result_msg,msg])
     else:
         return([['','','','',game.Pitch,game.Swing,type(game.Runner)]])
+
+
+def play_process(game,auto=None):
+    brc = ranges_calc.brc_calc(game)
+    if game.Step == 1:
+        pass
+
+def play_check(game,url=None,auto=None):
+    brc = ranges_calc.brc_calc(game)
+    if game.Ump_Mode == 'Manual':
+        if auto:
+            if auto == 'Pitcher':
+                result = 'AutoBB'
+            elif auto == 'Batter':
+                result = 'AutoK'
+            elif auto == 'Catcher10h':
+                base = int(game.Runner) + 1
+                result = 'AutoSB' + str(base)
+            msg = (f"Game {game.Game_ID} has an {result}.")
+            if url:
+                msg += (f"Please visit {url} to manage this game.")
+            webhook_functions.ump_ping(game,msg)
+        elif game.C_Throw and game.R_Steal:
+            msg = (f"Steal and throw are in for game {game.Game_ID}. ")
+            if url:
+                msg += (f"Please visit {url} to manage this game.")
+            webhook_functions.ump_ping(game,msg)
+        elif game.Pitch and game.Swing and game.Runner == None:
+            msg = (f"Pitch and swing are in for game {game.Game_ID}. ")
+            if url:
+                msg += (f"Please visit {url} to manage this game.")
+            webhook_functions.ump_ping(game,msg)
+    else:
+        if auto:
+            if auto == 'Pitcher':
+                result = 'AutoBB'
+            elif auto == 'Batter':
+                result = 'AutoK'
+            elif auto == 'Catcher10h':
+                base = int(game.Runner) + 1
+                result = 'AutoSB' + str(base)
+            runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
+            result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
+                          game.Batter.Player_Name, '', '', '', result]
+            result_msg.append(runs_scored)
+            msg = auto_result_bug(game,result_msg)
+            reddit_autoresultbug(game,result_msg)
+            webhook_functions.swing_result(game,msg)
+            scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored)
+            next_PA(game,new_outcome)
+            return([result_msg,msg])
+        elif game.C_Throw and game.R_Steal:
+            result,runner = resulting_steal(game)
+            runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
+            result_msg = [game.Inning, game.Outs, brc, "Steal", game.Catcher.Player_Name,
+                          runner.Player_Name, game.C_Throw, game.R_Steal, ranges_calc.calc_diff(game.C_Throw,game.R_Steal), result]
+            result_msg.append(runs_scored)
+            msg = steal_result_bug(game,result_msg)
+            reddit_stealresultbug(game,result_msg)
+            webhook_functions.steal_result(game,runner,msg)
+            scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runner)
+            next_PA(game,new_outcome)
+            return([result_msg,msg])
+        elif game.Pitch and game.Swing and game.Runner == None:
+            result = resulting_swing(game)
+            runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
+            result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
+                          game.Batter.Player_Name, game.Pitch, game.Swing, ranges_calc.calc_diff(game.Pitch,game.Swing), result]
+            result_msg.append(runs_scored)
+            msg = swing_result_bug(game,result_msg)
+            reddit_resultbug(game,result_msg)
+            webhook_functions.swing_result(game,msg)
+            scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored)
+            next_PA(game,new_outcome)
+            return([result_msg,msg])
+        else:
+            return([['','','','',game.Pitch,game.Swing,type(game.Runner)]])
 
 def play_outcome(game,brc,result):
     lookup_play = (f"{str(brc)}_{str(game.Outs)}_{result}")

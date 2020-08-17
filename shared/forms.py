@@ -1,6 +1,6 @@
 from peewee import *
 from flask_wtf import FlaskForm
-from wtforms import Form, FieldList, FormField, SelectField, IntegerField, StringField, HiddenField, validators
+from wtforms import Form, FieldList, FormField, SelectField, IntegerField, StringField, HiddenField, TextAreaField, validators
 
 class BoxOrderPosForm(Form):
     box_choices = []
@@ -30,3 +30,4 @@ class GameStatusForm(FlaskForm):
     swing = IntegerField(validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])
     r_steal = IntegerField(label='Steal',validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])
     c_throw = IntegerField(label='Throw',validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])
+    flavor = TextAreaField(label='Flavor',validators=[validators.optional()])
