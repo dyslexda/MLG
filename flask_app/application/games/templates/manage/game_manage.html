@@ -40,7 +40,8 @@
       <a href="/games/manage/{{game.Game_Number}}/lineups">Manage Lineup</a><br />
       {% elif game.Status == 'Final' %} Game Over!<br />
       {% endif %}
-        {{ form.hidden_tag() }}
+      {{ form.hidden_tag() }}
+      {% if game.Status == 'Started' %}
         {% if game.Step == 1 %}
         {% include 'manage/step_one.html' %}
         {% elif game.Step == 2 %}
@@ -48,6 +49,7 @@
         {% elif game.Step == 3 %}
         {% include 'manage/step_three.html' %}
         {% endif %}
+      {% endif %}
       </form><br />
 
 

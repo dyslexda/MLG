@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, g, session, request, redirect, url
 from flask import current_app as app
 from shared.models import Teams, Players, Games, All_PAs, Lineups, db
 from shared.forms import LineupBoxForm, GameStatusForm
-from auth.auth import login_required
+from application.auth.auth import login_required
 from peewee import *
 import webhook_functions as webhook_functions
 import shared.calculator.calculator as calc
