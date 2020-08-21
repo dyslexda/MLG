@@ -7,7 +7,6 @@ from shared.forms import LineupBoxForm, GameStatusForm
 import shared.calculator.calculator as calc
 import shared.calculator.ranges_files.ranges_calc as ranges_calc
 import shared.calculator.ranges_files.ranges_lookup as ranges_lookup
-from auth.auth import login_required
 from peewee import *
 from dotenv import load_dotenv
 basedir = path.dirname(path.dirname(path.dirname(__file__)))
