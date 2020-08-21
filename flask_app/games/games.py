@@ -49,13 +49,16 @@ def game_populate(game):
     data['swing'] = game.Swing
     data['c_throw'] = game.C_Throw
     data['r_steal'] = game.R_Steal
+    data['flavor'] = game.Ump_Flavor
+    data['step'] = game.Step
+    data['ump_mode'] = game.Ump_Mode
     return data
 
 def validate_lineups(raw_lineups,game):
     #builds list of lineup errors, such that each error is flashed to user if it isn't valid
     valid, errors = True, []
-#    req_positions = list(app.config['REQ_POSITIONS'].split(","))
     req_positions = list(environ.get('REQ_POSITIONS').split(","))
+    lineup_size = int(environ.get('LINEUP_SIZE'))
     for team in [game.Away,game.Home]:
         #Make sure initial lineup is clean, i.e. 1 box numbers for everyone
         if game.Status == 'Init':
@@ -82,7 +85,7 @@ def validate_lineups(raw_lineups,game):
                     errors.append(f'{team.Team_Abbr} has duplicate boxes for the {pos} position')
                     valid = False
         #Do same as for positions, but now for order
-        for order in range(1,4):
+        for order in range(1,lineup_size+1):
             order_count = ([entry['Order'] for entry in raw_lineups[team.Team_Abbr]]).count(order)
             if order_count == 0:
                 errors.append(f'{team.Team_Abbr} is missing someone in the {order} spot')
@@ -216,18 +219,34 @@ def game_manage(game_number):
     if request.method == 'POST':
         form = GameStatusForm()
         if form.validate_on_submit():
-            with db.atomic():
-                if form.runner.data == '':
-                    form.runner.data = None
-                game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data}
-                Games.update(game_update).where(Games.Game_Number == game.Game_Number).execute()
-                game = Games.get(Games.Game_Number == game_number)
-            result = calc.play_check(game)
-            if form.runner.data and not game.C_Throw:
-                webhook_functions.steal_start(game,form.runner.data)
-                with db.atomic():
-                    game.Steal_Timer = time.time()
+            auto = None
+            game.Ump_Mode = form.ump_mode.data
+            if form.status.data != '': game.Status = form.status.data
+            if form.step.data != '': game.Step = int(form.step.data)
+            game.save()
+            if game.Step == 1:
+                if form.flavor.data != '':
+                    with db.atomic():
+                        game.Ump_Flavor = form.flavor.data
+                        game.save()
+            elif game.Step == 2:
+                if form.auto_options.data == 'Reset Timer':
+                    game.Situation = None
+                    if game.Steal_Timer:
+                        game.Steal_Timer = time.time()
+                    else:
+                        game.PA_Timer = time.time()
                     game.save()
+                elif form.auto_options.data == 'Process Result':
+                    auto = game.Situation
+                else:
+                    with db.atomic():
+                        if form.runner.data == '':
+                            form.runner.data = None
+                        game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data, 'Ump_Flavor':form.flavor.data, 'Step':int(form.step.data)}
+                        Games.update(game_update).where(Games.Game_Number == game.Game_Number).execute()
+                        game = Games.get(Games.Game_Number == game_number)
+            calc.play_process(game,auto)
         return redirect(url_for('games_bp.game_manage',game_number=game_number))
     else:
         form = GameStatusForm(data=game_populate(game))
@@ -325,6 +344,7 @@ def game_start(game_number):
             reddit_thread = create_gamethread(game,msg)
             game.Reddit_Thread = reddit_thread
             game.PA_Timer = time.time()
+            game.Step = 2
             game.save()
             msg2 = reddit_scorebug(game)
             webhook_functions.game_start(game)
@@ -337,7 +357,8 @@ def game_check():
     if request.method == 'POST':
         payload = request.get_json()
         game = Games.get(Games.Game_Number == payload['Game_Number'])
-        result = calc.play_check(game)
-        if result[0][3] == 'Steal':
-            result = calc.play_check(game)
+#        result = calc.play_check(game)
+        calc.play_check(game,url=url_for('games_bp.game_manage',game_number=game.Game_Number,_external=True))
+#        if result[0][3] == 'Steal':
+#            result = calc.play_check(game)
     return redirect(url_for('index_bp.index'))

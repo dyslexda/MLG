@@ -59,7 +59,9 @@ def reddit_scorebug(game):
     msg = line1
     msg += line2
     msg += (f"On the mound: [{pitcher.Player_Name}](/u/{pitcher.User_ID.Reddit_Name})\n\n")
-    msg += (f"Up to bat:    [{batter.Player_Name}](/u/{batter.User_ID.Reddit_Name})")
+    msg += (f"Up to bat:    [{batter.Player_Name}](/u/{batter.User_ID.Reddit_Name})\n\n")
+    if game.Ump_Flavor != '' and game.Ump_Flavor:
+        msg += game.Ump_Flavor
     comment = thread.reply(msg)
     comment.mod.lock()
     return(msg)
@@ -73,8 +75,10 @@ def reddit_resultbug(game,result_msg):
     diff_line = (f"    Diff:   {ranges_calc.calc_diff(game.Pitch, game.Swing)}\n")
     result_line = (f"    Result: {result_msg[9]}\n")
     outs_line = (f"    Outs:   {game.Outs}\n")
-    score_line = (f"    {game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}")
+    score_line = (f"    {game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}\n\n")
     msg = pitch_line + swing_line + diff_line + result_line + outs_line + score_line
+    if game.Ump_Flavor:
+        msg += game.Ump_Flavor
     for comment in thread.comments: 
         if comment.is_submitter:
             reply_comment = comment
@@ -90,8 +94,10 @@ def reddit_stealresultbug(game,result_msg):
     diff_line = (f"    Diff:   {ranges_calc.calc_diff(game.C_Throw, game.R_Steal)}\n")
     result_line = (f"    Result: {result_msg[9]}\n")
     outs_line = (f"    Outs:   {game.Outs}\n")
-    score_line = (f"    {game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}")
+    score_line = (f"    {game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}\n\n")
     msg = throw_line + steal_line + diff_line + result_line + outs_line + score_line
+    if game.Ump_Flavor:
+        msg += game.Ump_Flavor
     for comment in thread.comments: 
         if comment.is_submitter:
             reply_comment = comment

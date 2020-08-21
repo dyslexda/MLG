@@ -1,7 +1,6 @@
-import random, time, sys, json, os, pprint
+import random, time, sys, json, os
 from decimal import Decimal
 from os import environ, path
-from flask import current_app as app
 import shared.calculator.ranges_files.ranges_calc as ranges_calc
 import shared.calculator.ranges_files.ranges_lookup as ranges_lookup
 import flask_app.webhook_functions as webhook_functions
@@ -14,52 +13,148 @@ from dotenv import load_dotenv
 basedir = path.dirname(path.dirname(path.dirname(__file__)))
 load_dotenv(path.join(basedir, '.env'))
 
-def play_check(game,auto=None):
+# Everything will feed in through play_check, which will determine if the mode is manual or automatic and if numbers are submitted.
+# It will then call play_process to appropriately take actions depending on current game step.
+
+def play_check(game,url=None,auto=None):
     brc = ranges_calc.brc_calc(game)
-    if auto:
-        if auto == 'Pitcher':
-            result = 'AutoBB'
-        elif auto == 'Batter':
-            result = 'AutoK'
-        elif auto == 'Catcher10h':
-            base = int(game.Runner) + 1
-            result = 'AutoSB' + str(base)
-        runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
-        result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
-                      game.Batter.Player_Name, '', '', '', result]
-        result_msg.append(runs_scored)
-        msg = auto_result_bug(game,result_msg)
-        reddit_autoresultbug(game,result_msg)
-        webhook_functions.swing_result(game,msg)
-        scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored)
-        next_PA(game,new_outcome)
-        return([result_msg,msg])
-    elif game.C_Throw and game.R_Steal:
-        result,runner = resulting_steal(game)
-        runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
-        result_msg = [game.Inning, game.Outs, brc, "Steal", game.Catcher.Player_Name,
-                      runner.Player_Name, game.C_Throw, game.R_Steal, ranges_calc.calc_diff(game.C_Throw,game.R_Steal), result]
-        result_msg.append(runs_scored)
-        msg = steal_result_bug(game,result_msg)
-        reddit_stealresultbug(game,result_msg)
-        webhook_functions.steal_result(game,runner,msg)
-        scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runner)
-        next_PA(game,new_outcome)
-        return([result_msg,msg])
-    elif game.Pitch and game.Swing and game.Runner == None:
-        result = resulting_swing(game)
-        runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
-        result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
-                      game.Batter.Player_Name, game.Pitch, game.Swing, ranges_calc.calc_diff(game.Pitch,game.Swing), result]
-        result_msg.append(runs_scored)
-        msg = swing_result_bug(game,result_msg)
-        reddit_resultbug(game,result_msg)
-        webhook_functions.swing_result(game,msg)
-        scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored)
-        next_PA(game,new_outcome)
-        return([result_msg,msg])
+    if game.Ump_Mode == 'Manual':
+        if auto:
+            if auto == 'Pitcher':
+                result = 'AutoBB'
+            elif auto == 'Batter':
+                result = 'AutoK'
+            elif auto == 'Catcher':
+                base = int(game.Runner) + 1
+                result = 'AutoSB' + str(base)
+            game.Situation = result
+            game.save()
+            msg = (f"Game {game.Game_ID} has an {result}.")
+            if url:
+                msg += (f"Please visit {url} to manage this game.")
+            webhook_functions.ump_ping(game,msg)
+        elif game.C_Throw and game.R_Steal:
+            msg = (f"Steal and throw are in for game {game.Game_ID}. ")
+            if url:
+                msg += (f"Please visit {url} to manage this game.")
+            webhook_functions.ump_ping(game,msg)
+        elif game.Pitch and game.Swing and game.Runner == None:
+            msg = (f"Pitch and swing are in for game {game.Game_ID}. ")
+            if url:
+                msg += (f"Please visit {url} to manage this game.")
+            webhook_functions.ump_ping(game,msg)
     else:
-        return([['','','','',game.Pitch,game.Swing,type(game.Runner)]])
+        play_process(game,auto)
+        if game.Step == 3:
+            play_process_end_PA(game)
+        if game.Step == 1:
+            play_process_start_PA(game)
+        if game.Step == 2 and game.Pitch and game.Swing and game.Runner == None:
+            play_process(game)
+            play_process_end_PA(game)
+            play_process_start_PA(game)
+
+def play_process(game,auto=None):
+    brc = ranges_calc.brc_calc(game)
+    if game.Step == 1:
+        play_process_start_PA(game)
+    elif game.Step == 2:
+        if auto:
+            if auto == 'Pitcher':
+                result = 'AutoBB'
+            elif auto == 'Batter':
+                result = 'AutoK'
+            elif auto == 'Catcher10h':
+                base = int(game.Runner) + 1
+                result = 'AutoSB' + str(base)
+            runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
+            result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
+                          game.Batter.Player_Name, '', '', '', result]
+            result_msg.append(runs_scored)
+            msg = auto_result_bug(game,result_msg)
+            reddit_autoresultbug(game,result_msg)
+            webhook_functions.swing_result(game,msg)
+            scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored)
+            game.Step = 3
+            game.Situation = None
+            game.save()
+        elif game.C_Throw and game.R_Steal:
+            result,runner = resulting_steal(game)
+            result_msg = [game.Inning, game.Outs, brc, "Steal", game.Catcher.Player_Name,
+                          runner.Player_Name, game.C_Throw, game.R_Steal, ranges_calc.calc_diff(game.C_Throw,game.R_Steal), result]
+            runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
+            result_msg.append(runs_scored)
+            msg = steal_result_bug(game,result_msg)
+            reddit_stealresultbug(game,result_msg)
+            webhook_functions.steal_result(game,runner,msg)
+            scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runner)
+            game.Step = 3
+            game.save()
+        elif game.Pitch and game.Swing and game.Runner == None:
+            result = resulting_swing(game)
+            result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
+                          game.Batter.Player_Name, game.Pitch, game.Swing, ranges_calc.calc_diff(game.Pitch,game.Swing), result]
+            runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
+            result_msg.append(runs_scored)
+            msg = swing_result_bug(game,result_msg)
+            reddit_resultbug(game,result_msg)
+            webhook_functions.swing_result(game,msg)
+            scorebook_line = save_play_result(game,result_msg,runs_scored,outs,result,runners_scored)
+            game.Step = 3
+            game.save()
+    elif game.Step == 3:
+        play_process_end_PA(game)
+
+def play_process_start_PA(game):
+    msg = reddit_scorebug(game)
+    webhook_functions.next_PA(game)
+    game.PA_Timer = time.time()
+    game.Ump_Flavor = None
+    game.Step = 2
+    game.save()
+    play_process_check_lists(game)
+
+def play_process_end_PA(game):
+    to_ping = next_PA(game)
+    if game.Status != 'Final':
+        if to_ping:
+            game.Step = 1
+        else:
+            game.Step = 2
+    else:
+        game.Step = 4
+    game.save()
+
+def play_process_check_lists(game):
+    try:
+        pitcher_list = List_Nums.get((List_Nums.Game_Number == game.Game_Number) &
+                                     (List_Nums.Player_ID == game.Pitcher.Player_ID) &
+                                     (List_Nums.Position == 'P'))
+    except:
+        pitcher_list = None
+    try:
+        batter_list = List_Nums.get((List_Nums.Game_Number == game.Game_Number) &
+                                    (List_Nums.Player_ID == game.Batter.Player_ID) &
+                                    (List_Nums.Position == 'B'))
+    except:
+        batter_list = None
+    if pitcher_list:
+        game.Pitch = pitcher_list.List[0]
+        if len(pitcher_list.List) > 1:
+            remaining = pitcher_list.List[1:]
+            pitcher_list.List = remaining
+            pitcher_list.save()
+        else:
+            pitcher_list.delete_instance()
+    if batter_list:
+        game.Swing = batter_list.List[0]
+        if len(batter_list.List) > 1:
+            remaining = batter_list.List[1:]
+            batter_list.List = remaining
+            batter_list.save()
+        else:
+            batter_list.delete_instance()
+    game.save()
 
 def play_outcome(game,brc,result):
     lookup_play = (f"{str(brc)}_{str(game.Outs)}_{result}")
@@ -88,6 +183,18 @@ def play_outcome(game,brc,result):
             elif outcome == '0':
                 outs += 1
                 game.Outs += 1
+        try:
+            game.First_Base = new_outcome['first_base']
+        except:
+            game.First_Base = None
+        try:
+            game.Second_Base = new_outcome['second_base']
+        except:
+            game.Second_Base = None
+        try:
+            game.Third_Base = new_outcome['third_base']
+        except:
+            game.Third_Base = None
         game.save()
     return(runs_scored,outs,runners_scored,new_outcome)
 
@@ -143,100 +250,76 @@ def save_play_result(game,result_msg,runs_scored,outs,result,runners_scored,runn
             All_PAs.update(Run_Scored = 1).where((All_PAs.Batter_ID == r_scored.Player_ID) & (All_PAs.Play_Type == 'Swing')).order_by(All_PAs.Play_No.desc()).limit(1).execute()
     return data
 
-def next_PA(game,new_outcome=None):
+def next_PA(game):
     steal,frame = None,None
-    with db.atomic():
 # Can't use app.config because this function is accessed outside of the Flask app
-        lineup_size = int(environ.get('LINEUP_SIZE'))
-        try:
-            game.First_Base = new_outcome['first_base']
-        except:
-            game.First_Base = None
-        try:
-            game.Second_Base = new_outcome['second_base']
-        except:
-            game.Second_Base = None
-        try:
-            game.Third_Base = new_outcome['third_base']
-        except:
-            game.Third_Base = None
-        if game.R_Steal:
-            steal = True
-            game.C_Throw = None
-            game.R_Steal = None
-            game.Runner = None
-            game.Steal_Timer = None
-        else:
-            if game.Inning[0] == 'T':
-                if game.A_Bat_Pos == lineup_size:
-                    game.A_Bat_Pos = 1
-                else:
-                    game.A_Bat_Pos += 1
-            else:
-                if game.H_Bat_Pos == lineup_size:
-                    game.H_Bat_Pos = 1
-                else:
-                    game.H_Bat_Pos += 1
-            game.Pitch = None
-            game.Swing = None
-        if game.Outs == 3:
-            game.Outs = 0
-            if game.Inning[0] == 'T':
-                frame = 'B'
-                inning_no = int(game.Inning[1:])
-            else:
-                frame = 'T'
-                inning_no = int(game.Inning[1:]) + 1
-            game.Inning = frame + str(inning_no)
-            game.Pitch = None
-            game.Swing = None
-        game.save()
-        active_players(game)
-    if frame or not steal:
-        msg = reddit_scorebug(game)
-        webhook_functions.next_PA(game)
-        with db.atomic():
-            game.PA_Timer = time.time()
+    lineup_size = int(environ.get('LINEUP_SIZE'))
+    game_length = int(environ.get('GAME_LENGTH'))
+# Check for wins
+    with db.atomic():
+        if game.Inning[0] == 'B' and int(game.Inning[1:]) >= game_length and game.H_Score > game.A_Score:
+             # Home team wins with walkoff
+            game.Status = 'Final'
+            game.Win = game.Home.Team_Abbr
+            game.Loss = game.Away.Team_Abbr
             game.save()
-            check_for_lists(game)
+        elif game.Outs == 3:
+            if game.Inning[0] == 'T' and int(game.Inning[1:]) >= game_length and game.H_Score > game.A_Score:
+                # Home team wins after top of inning ends
+                game.Status = 'Final'
+                game.Win = game.Home.Team_Abbr
+                game.Loss = game.Away.Team_Abbr
+                game.save()
+            elif game.Inning[0] == 'B' and int(game.Inning[1:]) >= game_length and game.A_Score > game.H_Score:
+                # Away team wins after inning ends
+                game.Status = 'Final'
+                game.Win = game.Away.Team_Abbr
+                game.Loss = game.Home.Team_Abbr
+                game.save()
+    if game.Status != 'Final':
+        with db.atomic():
+            if game.R_Steal:
+                steal = True
+                game.C_Throw = None
+                game.R_Steal = None
+                game.Runner = None
+                game.Steal_Timer = None
+            else:
+                if game.Inning[0] == 'T':
+                    if game.A_Bat_Pos == lineup_size:
+                        game.A_Bat_Pos = 1
+                    else:
+                        game.A_Bat_Pos += 1
+                else:
+                    if game.H_Bat_Pos == lineup_size:
+                        game.H_Bat_Pos = 1
+                    else:
+                        game.H_Bat_Pos += 1
+                game.Pitch = None
+                game.Swing = None
+            if game.Outs == 3:
+                game.Outs = 0
+                if game.Inning[0] == 'T':
+                    frame = 'B'
+                    inning_no = int(game.Inning[1:])
+                else:
+                    frame = 'T'
+                    inning_no = int(game.Inning[1:]) + 1
+                game.Inning = frame + str(inning_no)
+                game.Pitch = None
+                game.Swing = None
+            game.save()
+            active_players(game)
     lineups = Lineups.select().where(Lineups.Game_Number == game.Game_Number).order_by(Lineups.Team, Lineups.Order.asc(), Lineups.Box.asc())
     game_pas = All_PAs.select().where(All_PAs.Game_No == game.Game_Number).order_by(All_PAs.Play_No.desc())
     gamestats = stat_generator(game,lineups,game_pas)
     boxscore = reddit_boxscore_gen(game,lineups,game_pas,gamestats)
     edit_thread(game.Reddit_Thread,boxscore)
-
-def check_for_lists(game):
-    try:
-        pitcher_list = List_Nums.get((List_Nums.Game_Number == game.Game_Number) &
-                                     (List_Nums.Player_ID == game.Pitcher.Player_ID) &
-                                     (List_Nums.Position == 'P'))
-    except:
-        pitcher_list = None
-    try:
-        batter_list = List_Nums.get((List_Nums.Game_Number == game.Game_Number) &
-                                    (List_Nums.Player_ID == game.Batter.Player_ID) &
-                                    (List_Nums.Position == 'B'))
-    except:
-        batter_list = None
-    if pitcher_list:
-        to_use = pitcher_list.List[0]
-        game.Pitch = to_use
-        if len(pitcher_list.List) > 1:
-            remaining = pitcher_list.List[1:]
-            pitcher_list.List = remaining
-            pitcher_list.save()
-        else:
-            pitcher_list.delete_instance()
-    if batter_list:
-        to_use = batter_list.List[0]
-        game.Swing = to_use
-        if len(batter_list.List) > 1:
-            remaining = batter_list.List[1:]
-            batter_list.List = remaining
-            batter_list.save()
-        else:
-            batter_list.delete_instance()
-    game.save()
+    if frame or not steal:
+        to_ping = True
+    else:
+        to_ping = False
+    return(to_ping)
 
 # Pulls currently active players in a given game based upon inning (T or B), then saves them in the gamestate
 def active_players(game):

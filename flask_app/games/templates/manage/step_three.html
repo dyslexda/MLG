@@ -1,0 +1,28 @@
+        <div class="row">
+          <div class="col">
+            <h6>Last play: </h6>
+            <table class="table table-sm table-hover table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Play Number</th>
+                  <th>Inning</th>
+                  <th>Outs</th>
+                  <th>BRC</th>
+                  <th>Play Type</th>
+                  <th>Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{{ game_pas[0].Play_No }}</td>
+                  <td>{{ game_pas[0].Inning }}</td>
+                  <td>{{ game_pas[0].Outs }}</td>
+                  <td>{{ game_pas[0].BRC }}</td>
+                  <td>{{ game_pas[0].Play_Type }}</td>
+                  <td>{{ game_pas[0].Result }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div><br />
+        <input type="submit" value="Update gamestate and move to next play">

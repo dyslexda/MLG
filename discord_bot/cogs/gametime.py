@@ -13,6 +13,18 @@ async def createDM(user):
     else:
         await user.create_dm()
 
+async def ump_ping(self,message,payload):
+    game = Games.get(Games.Game_Number == payload['Game_Number'])
+    umpires = game.Umpires
+    for ump in umpires:
+        ump_q = (Users
+            .select()
+            .where(Users.Reddit_Name == ump)
+            ).objects()
+        umpire = self.bot.get_user(int(ump_q[0].Discord_ID))
+        await createDM(umpire)
+        await umpire.dm_channel.send(payload['Message'])
+
 async def game_start(self,message,payload):
     game = Games.get(Games.Game_Number == payload['Game_Number'])
     msg,pitcher,batter = await pitcher_batter_DMs(self,game)
@@ -53,7 +65,16 @@ async def steal_start(self,message,payload):
         runner_name = game.Third_Base.Player_Name
         to_steal = 'home plate'
     catcher = await catcher_DM(self,game)
-    await catcher.send(f"{runner_name} is stealing {to_steal} in {game.Game_ID}. Please submit a throw in the format 'm!throw [num]' between 1 and 1000.")
+    try:
+        catcher_list = List_Nums.get((List_Nums.Game_Number == game.Game_Number) &
+                                    (List_Nums.Player_ID == game.Catcher.Player_ID) &
+                                    (List_Nums.Position == 'C'))
+    except:
+        catcher_list = None
+    if catcher_list:
+        await catcher.send(f"{runner_name} is stealing {to_steal} in {game.Game_ID}. You have 30 minutes to submit a number. If you don't, your first list number of {catcher_list.List[0]} will be used.")
+    else:
+        await catcher.send(f"{runner_name} is stealing {to_steal} in {game.Game_ID}. Please submit a throw in the format 'm!throw [num]' between 1 and 1000. You do not have a list submitted, so if you do not submit a number now, an auto-steal will result.")
 
 async def catcher_list(self,game):
     catcher = (Players
@@ -159,7 +180,7 @@ class GametimeCog(commands.Cog, name="Gametime"):
     @commands.Cog.listener()
     async def on_message(self,message):
         if message.webhook_id == 735342959943483403:
-            commands_dict = {'game_start':game_start,'swing_result':swing_result,'steal_result':steal_result,'next_PA':next_PA,'steal_start':steal_start}
+            commands_dict = {'game_start':game_start,'swing_result':swing_result,'steal_result':steal_result,'next_PA':next_PA,'steal_start':steal_start,'ump_ping':ump_ping}
             payload = json.loads(message.content)
             await commands_dict[payload['Command']](self,message,payload)
 
@@ -195,12 +216,6 @@ class GametimeCog(commands.Cog, name="Gametime"):
             payload = {'Command':'steal','Number':number,'Redditor':None,'Discord':snowflake}
             msg = await tree.routing(payload)
             await ctx.send(msg)
-#            if type(msg) == list:
-#                catcher = await catcher_DM(self,msg[1])
-#                await catcher.send(f"{msg[2]} is stealing {msg[3]} in {msg[1].Game_ID}. Please submit a throw in the format 'm!throw [num]' between 1 and 1000.")
-#                await ctx.send(msg[0])
-#            else:
-#                await ctx.send(msg) 
         else:
             await ctx.send("Please send a number between 1 and 1000.")
 

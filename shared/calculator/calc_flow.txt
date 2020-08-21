@@ -1,0 +1,33 @@
+Step		
+		
+0	Start	View game after setting lineups
+	Input	Umpire hits "Start Game"
+	Output	Reddit thread created with boxscore
+	Output	First pitcher/batter pinged for numbers
+	Output	Posts Reddit TLC
+	Goto	Step 2
+		
+1	Start	View pitcher/batter/gamestate after last PA/at game start
+	Input	PA flavor from ump.
+	Input	Umpire hits "Submit"
+	Output	Pings pitcher/batter on Discord (with ump flavor, if any)
+	Output	Posts Reddit TLC (with ump flavor, if any)
+	Goto	Step 2
+		
+2	Start	PA in progress.
+	Input	Checks for pitcher/batter lists. 
+	Input	Listens for Discord/Reddit number submissions, updates gamestate.
+	Check	Checks if play is ready to proceed; if so, pings umpire.
+	Input	Umpire includes flavor for writeup
+	Input	Umpire hits "Submit" after review of numbers and result.
+	Output	Sends resultbug to pitcher/batter on Discord
+	Output	Posts Reddit comment with result (with ump flavor, if any)
+	Output	Update scorebook
+	Goto	Step 3
+		
+3	Start	After previous PA
+	Check	Game end
+	Check	Inning change
+	Input	Umpire views next game state and hits "Submit"
+	Output	Calculate pitcher/batter/gamestate for next PA, or set game finish if end
+	Goto	Step 1
