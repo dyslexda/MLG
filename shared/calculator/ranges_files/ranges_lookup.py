@@ -351,7 +351,7 @@ steal_dict = {
 -4: 17,
 -5: 16}
 }
-base = ['FO','PO','GO','K']
+base = ['PO','GO','K']
 go_order_dict = {
 '0_0': base,
 '0_1': base,

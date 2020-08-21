@@ -59,7 +59,7 @@ class Games(BaseModel):
     Game_Number = IntegerField(unique=True)
     Game_ID = CharField()
     Status = CharField(default='Staged') # 'Staged' is created; 'Init' means lineups are populated; 'Started' has been started, and sent messages to players; 'Paused' means timers don't progress; 'Final' means game has ended.
-    Step = IntegerField(default=1) # Step 1 is pinging players; step 2 is reviewing and processing results
+    Step = IntegerField(default=1) # Step 1 is pinging players; step 2 is reviewing and processing results, step 3 is ending the PA and routing back to step 1 or 2, and step 4 is game over
     Ump_Mode = CharField(default='Manual') # 'Manual' or 'Automatic' to determine how game progresses
     Umpires = ListField(null=True)
     Season = IntegerField(null=True)

@@ -39,7 +39,7 @@ def calc_handedness(pitcher,batter):
     return handedness
 
 def stat_checker(b,p):
-    stat_diff = (b - p)
+    stat_diff = (int(b) - int(p))
     if(stat_diff > 5):
         stat_diff = 5
     elif(stat_diff < -5):
@@ -75,17 +75,23 @@ def calc_steal(game,steal_dict,diff):
     return(result,runner)
 
 def calc_ranges(obr_dict,modifiers_dict,pitcher,batter,handedness):
+    # First get overall raw base hit range from Contact vs Movement
     raw_base_hit = obr_dict['HIT'][handedness][stat_checker(batter.Contact,pitcher.Movement)]
+    # There is a Speed vs Awareness modifier to help make the two attributes more valuable
     mod_SvA = modifiers_dict['SvA'][stat_checker(batter.Speed,pitcher.Awareness)]
+    # There is a small, flat Awareness modifier to make Awareness more valuable
     mod_PitAwa = modifiers_dict['PitAwa'][pitcher.Awareness]
     final_base_hit = raw_base_hit + mod_SvA + mod_PitAwa
+    # Get individual ranges for HR, 3B, 2B, IF1B, BB
     range_hr = obr_dict['HR'][handedness][stat_checker(batter.Power,pitcher.Velocity)]
     range_3b = obr_dict['3B'][handedness][stat_checker(batter.Speed,pitcher.Awareness)]
     range_2b = obr_dict['2B'][handedness][stat_checker(batter.Speed,pitcher.Awareness)]
     range_if1b = obr_dict['IF1B'][handedness][stat_checker(batter.Speed,pitcher.Awareness)]
     range_bb = obr_dict['BB'][handedness][stat_checker(batter.Eye,pitcher.Command)]
+    # 1B range is the remainder of the final base hit range (plus five)
     range_1b = (final_base_hit - range_hr - range_3b - range_2b) + 5
     range_on_base = range_hr + range_3b + range_2b + range_if1b + range_bb + range_1b - 1
+    # Complicated formulas for PO and FO, but basically it's a percentage of the remaining range based on Power vs Velocity
     range_po = int(Decimal(((500 - range_on_base) * obr_dict['FO'][handedness][stat_checker(batter.Power,pitcher.Velocity)]) * obr_dict['PO'][handedness][stat_checker(batter.Power,pitcher.Velocity)]).quantize(Decimal('1.'),rounding='ROUND_HALF_UP') + 1)
     range_fo = int(Decimal(((500 - range_on_base) * obr_dict['FO'][handedness][stat_checker(batter.Power,pitcher.Velocity)]) - range_po).quantize(Decimal('1.'),rounding='ROUND_HALF_UP'))
     range_k = obr_dict['K'][handedness][stat_checker(batter.Contact,pitcher.Movement)]
@@ -217,10 +223,12 @@ def go_calc(game,result_dict,go_order_dict):
         # DP
         dp_fraction = ((-0.1*game.Batter.Speed)+0.8)*1.15
         result_dict['DP21'] = int(Decimal(dp_fraction/2 * go_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP'))
-        result_dict['DP31'] = result_dict['DP21']
+#        result_dict['DP31'] = result_dict['DP21']
         # FC
         result_dict['FC'] = int((result_dict['GO']-result_dict['GORA']-result_dict['DP21']*2)/2)
         result_dict['FC3rd'] = result_dict['FC']
+        # DP31 takes any remaining numbers after rounding
+        result_dict['DP31'] = int(result_dict['GO']-result_dict['GORA']-result_dict['DP21']-result_dict['FC']*2)
         if game.Outs == 0:
             result_dict['DP31'] = result_dict['DP31'] - 3
             result_dict['TP'] = 3
@@ -261,5 +269,4 @@ def go_calc(game,result_dict,go_order_dict):
         if game.Outs == 0:
             result_dict['DPH1'] = result_dict['DPH1'] - 3
             result_dict['TP'] = 3
-
     return(result_dict)

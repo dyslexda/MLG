@@ -20,7 +20,7 @@ with app.app_context():
     from auth import auth
     from admin import admin
     from games import games
-
+    from calc_routes import calc_routes
 
 
     app.register_blueprint(index.index_bp)
@@ -29,6 +29,7 @@ with app.app_context():
     app.register_blueprint(auth.auth_bp)
     app.register_blueprint(admin.admin_bp)
     app.register_blueprint(games.games_bp)
+    app.register_blueprint(calc_routes.calc_bp)
 
 
 @app.before_request

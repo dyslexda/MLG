@@ -1,7 +1,9 @@
         <div class="row">
-          <div class="col-md-4 order-md-2 mb-4">
+          {% if game.Situation == None %}
+          <div class="col">
+            <h5 class="my-1">Pitch/Swing/Steal</h5><br />
             <ul class="list-group mb-3">
-              {% for field in [form.status, form.pitch, form.swing] %}
+              {% for field in [form.pitch, form.swing, form.runner, form.r_steal, form.c_throw] %}
               <li class="list-group-item d-flex justify-content-between lh-condensed">
                 <div>
                   <h6 class="my-0">{{field.label}}:</h6>
@@ -11,18 +13,23 @@
               {% endfor %}
             </ul>
           <input type="button" value="Random Swing" onclick="RandomSwing();" />
+          <input type="button" value="Random Steal" onclick="RandomSteal();" /><br />
+          <button class="btn btn-light" type="button">Preview Swing Result</button><br />
           </div>
-          <div class="col-md-4 order-md-2 mb-4">
-            <ul class="list-group mb-3">
-              {% for field in [form.runner, form.r_steal, form.c_throw] %}
-              <li class="list-group-item d-flex justify-content-between lh-condensed">
-                <div>
-                  <h6 class="my-0">{{field.label}}:</h6>
-                </div>
-                <span class="clearfix">{{ field }}</span>
-              </li>
-              {% endfor %}
-            </ul>
-          <input type="button" value="Random Steal" onclick="RandomSteal();" />
+          {% else %}
+          <div class="col">
+            <h5 class="my-1">Timer Expired; Auto!</h5><br />
+            {% for subfield in form.auto_options %}
+              <label class="btn btn-outline-secondary">{{ subfield }}{{ subfield.label }}</label>
+            {% endfor %}
           </div>
-        </div>
+          {% endif %}
+          <div id="flavor" class="col">
+            <h5 class="my-1">Play Writeup Flavor</h5><br />
+            <div class="form-group form-group-lg">
+              <textarea class="form-control input-lg" id="flavor" name="flavor" placeholder="Optional flavor for the play" rows=5></textarea>
+            </div>
+          </div>
+          <div id="results_div" class="col"></div>
+        </div><br />
+        <input type="submit" value="Submit numbers and calculate play result">

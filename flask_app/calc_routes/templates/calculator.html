@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+        <br />
+        <div class="row">
+          <div class="col-6">
+            <form id="status-form" action="/calculator/api" method="POST" role="form">
+              <div class="container">
+                <div class="row justify-content-md-left">
+                  <div class="col-1"></div>
+                  <div class="col-1">Hand</div>
+                  <div class="col-1">MOV</div>
+                  <div class="col-1">COM</div>
+                  <div class="col-1">VEL</div>
+                  <div class="col-1">AWA</div>
+                </div>
+                <div class="row justify-content-md-left">
+                  <div class="col-1">Pitcher</div>
+                  <div class="col-1"><input id="p_hand" name="p_hand" type="text" value="R"></div>
+                  <div class="col-1"><input id="p_mov" name="p_mov" type="text" value="3"></div>
+                  <div class="col-1"><input id="p_com" name="p_com" type="text" value="3"></div>
+                  <div class="col-1"><input id="p_vel" name="p_vel" type="text" value="3"></div>
+                  <div class="col-1"><input id="p_awa" name="p_awa" type="text" value="3"></div>
+                </div>
+                <div class="row justify-content-md-left">
+                  <div class="col-1">Batter</div>
+                  <div class="col-1"><input id="b_hand" name="b_hand" type="text" value="R"></div>
+                  <div class="col-1"><input id="b_con" name="b_con" type="text" value="3"></div>
+                  <div class="col-1"><input id="b_eye" name="b_eye" type="text" value="3"></div>
+                  <div class="col-1"><input id="b_pow" name="b_pow" type="text" value="3"></div>
+                  <div class="col-1"><input id="b_spe" name="b_spe" type="text" value="3"></div>
+                </div>
+                <div class="row justify-content-md-left">
+                  <div class="col-1"></div>
+                  <div class="col-1">Hand</div>
+                  <div class="col-1">CON</div>
+                  <div class="col-1">EYE</div>
+                  <div class="col-1">POW</div>
+                  <div class="col-1">SPE</div>
+                </div><br />
+                <div class="row justify-content-md-left">
+                  <div class="col-2">First Base</div>
+                  <div class="col-1"><input id="first_base" name="first_base" type="text" placeholder="None"></div>
+                </div>
+                <div class="row justify-content-md-left">
+                  <div class="col-2">Second Base</div>
+                  <div class="col-1"><input id="second_base" name="second_base" type="text" placeholder="None"></div>
+                </div>
+                <div class="row justify-content-md-left">
+                  <div class="col-2">Third Base</div>
+                  <div class="col-1"><input id="third_base" name="third_base" type="text" placeholder="None"></div>
+                </div><br />
+                <div class="row justify-content-md-left">
+                  <div class="col-2">Outs</div>
+                  <div class="col-1"><input id="outs" name="outs" type="text" value="0"></div>
+                </div><br />
+              </div>
+              <button class="btn" type="button">Preview </button>
+            </form>
+          </div>
+          <div class="col-2">
+            <div class="container">
+              <div id="place_for_preview"></div>
+            </div>
+          </div>
+        </div>
+<script src="calc_routes/static/calc.js"></script>
+{% endblock %}
