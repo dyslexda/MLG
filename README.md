@@ -131,11 +131,13 @@ user=[user]
 autostart=true
 autorestart=true
 sopasgroup=true
-killasgroup=true```
+killasgroup=true
+```
 
 Create an nginx configuration file in /etc/nginx/sites-available and link to sites-enabled:
 
-```server {
+```
+server {
     # listen on port 80 (http)
     listen 80;
     server_name majorleagueguessball.com;
