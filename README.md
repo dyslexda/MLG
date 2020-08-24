@@ -29,6 +29,7 @@ The basic game screen, showing teams, score, inning, game state, box score, and 
 Numbers can be submitted through Discord DM using the "m!" prefix.
 
 ![Reddit Ping](https://i.imgur.com/MjgWLO3.png)
+
 ![Reddit Swing](https://i.imgur.com/GMtYB8s.png)
 
 Numbers can also be submitted through Reddit DM.
