@@ -1,6 +1,8 @@
 # MLG_app
 Major League Guessball demonstration website
 
+www.majorleagueguessball.com
+
 **Table of Contents**
 
  - [Key Features](#key-features)
@@ -14,6 +16,7 @@ Major League Guessball demonstration website
  - Combination of Flask backend, Discord bot for pinging and receiving input, and Reddit bot for managing game threads and receiving input
  - Simultaneous pinging of both pitcher and batter, resulting in much faster play times
  - Numbers can be input through Discord DM, Reddit DM, or directly on the website (for umpires)
+ - Reddit logins on the website avoid any account creation or password management
  - Both automatic and manual modes for running games, depending on umpire discretion
  - Optional writeup flavor, both for pings and results
  - Support for steals, storing and using lists (pitcher, catcher, and batter), and timers
@@ -21,22 +24,29 @@ Major League Guessball demonstration website
 ## Usage
 
 ![Game Screen](https://i.imgur.com/NkqVBlB.png)
+
 The basic game screen, showing teams, score, inning, game state, box score, and all plays
 
 ![Discord Ping](https://i.imgur.com/E5j0VM3.png)
+
 Numbers can be submitted through Discord DM using the "m!" prefix.
 
 ![Reddit Ping](https://i.imgur.com/MjgWLO3.png)
+
 ![Reddit Swing](https://i.imgur.com/GMtYB8s.png)
+
 Numbers can also be submitted through Reddit DM.
 
 ![Reddit Play](https://i.imgur.com/EqJbxME.png)
+
 All plays are posted to Reddit and locked by the ump account (to prevent users from accidentally replying in the thread). Results are then posted as replies to that top level comment. Umps can add flavorful writeups to both pings and results.
 
 ![Umpire View](https://i.imgur.com/EricgXp.png)
+
 One of the umpire views after numbers have come in. A Preview button shows the ranges for the matchup, and if numbers have been submitted, shows the result to aid in flavor writeups. 
 
 ![Lineup Management](https://i.imgur.com/zgex29Q.png)
+
 Umpires can easily manage lineups, which are then reflected in the box score. 
 
 ## Installation
@@ -124,11 +134,13 @@ user=[user]
 autostart=true
 autorestart=true
 sopasgroup=true
-killasgroup=true```
+killasgroup=true
+```
 
 Create an nginx configuration file in /etc/nginx/sites-available and link to sites-enabled:
 
-```server {
+```
+server {
     # listen on port 80 (http)
     listen 80;
     server_name majorleagueguessball.com;
@@ -161,6 +173,7 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
-}```
+}
+```
 
 Launch with "sudo supervisorctl reload".
