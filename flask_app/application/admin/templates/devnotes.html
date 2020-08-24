@@ -12,6 +12,12 @@ Dev Notes
         <li>Hook in calculator</li>
         <li>Install game management for selected umpires (validated via Reddit login)</li>
         <li>Finish game viewing information (scores, all plays, game state, etc); only box score is available now.</li>
+        <li>Add more description in ump ping to distinguish different plays (add pitcher/batter names?)</li>
+        <li>Add logfile of all received Reddit/Discord communications - sender and message, and what actions were taken</li>
+        <li>Add general logging capability to track actions taken in the calc</li>
+        <li>Lock down logins and page access based on being correct umpire or commissioner</li>
+        <li>Enable redirect for games/manage if not an umpire</li>
+        <li>Add a "status check" for game to see what step it is, and what numbers are submitted</li>
       <br /><br />
       <h2>Done</h2>
       <hr />
@@ -23,6 +29,11 @@ Dev Notes
         <li>7/20/20 - Lineups are now implemented using a DB model. When a game is created, lineups must first be initialized (assuming games get created early in the season, but rosters can change by the game date). Once initialized, the lineups management page properly pulls existing lineup information (box, order, position), and can POST it back to update the DB.</li>
         <li>Reddit login saves username as session cookie</li>
         <li>Basic models (Users, Teams, Players, All PAs) implemented and accessible</li>
+      <h2>Bugs</h2>
+      <hr />
+        <li>Swing submitted, steal submitted, pitch submitted, throw submitted = Swing stayed, but pitch wiped out?</li>
+        <li>Catcher auto lists not working. Just grabs the list without setting the throw in the gamestate.</li>
+        <li>Stop steal timer from sending DMs every two minutes to ump when timer expires</li>
     </div>
 
 

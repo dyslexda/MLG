@@ -119,10 +119,12 @@ def play_process_end_PA(game):
     if game.Status != 'Final':
         if to_ping:
             game.Step = 1
+            game.PA_Timer = None
         else:
             game.Step = 2
     else:
         game.Step = 4
+    game.Ump_Flavor = None
     game.save()
 
 def play_process_check_lists(game):

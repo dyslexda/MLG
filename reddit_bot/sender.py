@@ -29,7 +29,7 @@ def reddit_connect():
 def reddit_threadURL(game):
     r = reddit_connect()
     thread = r.submission(id=game.Reddit_Thread)
-    return(thread.url)
+    return(thread.url+'?sort=new')
 
 def reddit_scorebug(game):
     r = reddit_connect()

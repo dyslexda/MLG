@@ -221,8 +221,8 @@ def game_manage(game_number):
         if form.validate_on_submit():
             auto = None
             game.Ump_Mode = form.ump_mode.data
-            if form.status.data != '': game.Status = form.status.data
-            if form.step.data != '': game.Step = int(form.step.data)
+            if form.status.data != '' and form.step.data != None: game.Status = form.status.data
+            if form.step.data != '' and form.step.data != None: game.Step = int(form.step.data)
             game.save()
             if game.Step == 1:
                 if form.flavor.data != '':
@@ -243,7 +243,7 @@ def game_manage(game_number):
                     with db.atomic():
                         if form.runner.data == '':
                             form.runner.data = None
-                        game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data, 'Ump_Flavor':form.flavor.data, 'Step':int(form.step.data)}
+                        game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data, 'Ump_Flavor':form.flavor.data}
                         Games.update(game_update).where(Games.Game_Number == game.Game_Number).execute()
                         game = Games.get(Games.Game_Number == game_number)
             calc.play_process(game,auto)
