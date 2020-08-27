@@ -1,7 +1,7 @@
         <div class="row">
           {% if game.Situation == None %}
           <div class="col">
-            <h5 class="my-1">Pitch/Swing/Steal</h5><br />
+            <h5 class="my-1">Pitch/Swing/Steal</h5>
             <ul class="list-group mb-3">
               {% for field in [form.pitch, form.swing, form.runner, form.r_steal, form.c_throw] %}
               <li class="list-group-item d-flex justify-content-between lh-condensed">
@@ -25,9 +25,13 @@
           </div>
           {% endif %}
           <div id="flavor" class="col">
-            <h5 class="my-1">Play Writeup Flavor</h5><br />
+            <h5 class="my-1">Play Writeup Flavor</h5>
             <div class="form-group form-group-lg">
-              <textarea class="form-control input-lg" id="flavor" name="flavor" placeholder="Optional flavor for the play" rows=5></textarea>
+              <textarea class="form-control input-lg" id="ump_flavor" name="ump_flavor" placeholder="Optional flavor for the play" rows=4></textarea>
+            </div>
+            <h5 class="my-1">Batter Submitted Flavor</h5>
+            <div class="form-group form-group-lg">
+              <textarea class="form-control input-lg" id="b_flavor" name="b_flavor" placeholder={{game.B_Flavor}} rows=4></textarea>
             </div>
           </div>
           <div id="results_div" class="col"></div>

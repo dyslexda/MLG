@@ -34,5 +34,6 @@ class GameStatusForm(FlaskForm):
     swing = IntegerField(validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])
     r_steal = IntegerField(label='Steal',validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])
     c_throw = IntegerField(label='Throw',validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])
-    flavor = TextAreaField(label='Flavor',validators=[validators.optional()])
+    ump_flavor = TextAreaField(label='Ump Flavor',validators=[validators.optional()])
+    b_flavor = TextAreaField(label='Batter Flavor',validators=[validators.optional()])
     auto_options = RadioField(label='Auto',choices=[('Process Auto','Process Auto'),('Reset Timer','Reset Timer')],validators=[validators.optional()])

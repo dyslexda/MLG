@@ -13,8 +13,8 @@ from dotenv import load_dotenv
 basedir = path.dirname(path.dirname(path.dirname(__file__)))
 load_dotenv(path.join(basedir, '.env'))
 
-# Everything will feed in through play_check, which will determine if the mode is manual or automatic and if numbers are submitted.
-# It will then call play_process to appropriately take actions depending on current game step.
+# All commands through Discord and Reddit call play_check, which then either 
+# pings the ump or calls play_process. Any submission from the website calls play_process directly.
 
 def play_check(game,url=None,auto=None):
     brc = ranges_calc.brc_calc(game)
@@ -299,6 +299,7 @@ def next_PA(game):
                         game.H_Bat_Pos += 1
                 game.Pitch = None
                 game.Swing = None
+                game.B_Flavor = None
             if game.Outs == 3:
                 game.Outs = 0
                 if game.Inning[0] == 'T':

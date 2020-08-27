@@ -199,10 +199,10 @@ class GametimeCog(commands.Cog, name="Gametime"):
 
     @commands.command(name='swing')
     @commands.dm_only()
-    async def swing(self, ctx, number: int = None):
+    async def swing(self, ctx, number: int = None, *, arg=None):
         snowflake = ctx.author.id
         if number > 0 and number < 1001:
-            payload = {'Command':'swing','Number':number,'Redditor':None,'Discord':snowflake}
+            payload = {'Command':'swing','Number':number,'Redditor':None,'Discord':snowflake,'Flavor':arg}
             msg = await tree.routing(payload)
             await ctx.send(msg)
         else:
@@ -306,9 +306,11 @@ class GametimeCog(commands.Cog, name="Gametime"):
                     await ctx.send(msg)
 
     @commands.command(name='test')
-    async def test(self,ctx):
+    async def test(self,ctx,number: int = None,*,arg=None):
         """Test help???"""
-        await ctx.send('yep')
+#        print(type(arg))
+        await ctx.send(number)
+        await ctx.send(arg)
 
 def setup(bot):
     bot.add_cog(GametimeCog(bot))

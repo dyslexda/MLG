@@ -15,8 +15,8 @@ async def routing(received):
 
 async def gamestatus_check(game):
     payload = {'Game_Number':game.Game_Number}
-#    url = (f"http://167.71.181.99:5000/games/manage/check")
-    url = (f"https://majorleagueguessball.com/games/manage/check")
+    url = (f"http://167.71.181.99:5000/games/manage/check")
+#    url = (f"https://majorleagueguessball.com/games/manage/check")
     async with aiohttp.ClientSession() as session:
         async with session.post(url,json=payload) as resp:
             await resp.text()
@@ -40,6 +40,7 @@ async def swing(received):
         for entry in batters:
             with db.atomic():
                 entry.Swing = int(received['Number'])
+                entry.B_Flavor = received['Flavor']
                 entry.save()
             await gamestatus_check(entry)
             msg = (f"Your swing of {int(received['Number'])} has been submitted in {entry.Game_ID}.")

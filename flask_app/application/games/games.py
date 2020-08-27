@@ -49,7 +49,8 @@ def game_populate(game):
     data['swing'] = game.Swing
     data['c_throw'] = game.C_Throw
     data['r_steal'] = game.R_Steal
-    data['flavor'] = game.Ump_Flavor
+    data['ump_flavor'] = game.Ump_Flavor
+    data['b_flavor'] = game.B_Flavor
     data['step'] = game.Step
     data['ump_mode'] = game.Ump_Mode
     return data
@@ -225,9 +226,9 @@ def game_manage(game_number):
             if form.step.data != '' and form.step.data != None: game.Step = int(form.step.data)
             game.save()
             if game.Step == 1:
-                if form.flavor.data != '':
+                if form.ump_flavor.data != '':
                     with db.atomic():
-                        game.Ump_Flavor = form.flavor.data
+                        game.Ump_Flavor = form.ump_flavor.data
                         game.save()
             elif game.Step == 2:
                 if form.auto_options.data == 'Reset Timer':
@@ -243,7 +244,7 @@ def game_manage(game_number):
                     with db.atomic():
                         if form.runner.data == '':
                             form.runner.data = None
-                        game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data, 'Ump_Flavor':form.flavor.data}
+                        game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data, 'Ump_Flavor':form.ump_flavor.data,'B_Flavor':form.b_flavor.data}
                         Games.update(game_update).where(Games.Game_Number == game.Game_Number).execute()
                         game = Games.get(Games.Game_Number == game_number)
             calc.play_process(game,auto)
