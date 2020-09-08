@@ -18,7 +18,8 @@ www.majorleagueguessball.com
  - Numbers can be input through Discord DM, Reddit DM, or directly on the website (for umpires)
  - Reddit logins on the website avoid any account creation or password management
  - Both automatic and manual modes for running games, depending on umpire discretion
- - Optional writeup flavor, both for pings and results
+ - Optional umpire writeup flavor, both for pings and results
+ - Optional batter swing flavor
  - Support for steals, storing and using lists (pitcher, catcher, and batter), and timers
 
 ## Usage
