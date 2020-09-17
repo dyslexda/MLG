@@ -35,15 +35,16 @@ def authorized():
         access_token = getOAuthToken(code)
         reddit_name = getIdentity(access_token)
         session['username'] = reddit_name
-        user = Users.get(Users.Reddit_Name == reddit_name)
-        if 'umpire' in user.Roles:
-            session['umpire'] = True
-        else:
-            session['umpire'] = False
-        if 'commissioner' in user.Roles:
-            session['commissioner'] = True
-        else:
-            session['commissioner'] = False
+        user = Users.get_or_none(Users.Reddit_Name == reddit_name)
+        if user:
+            if 'umpire' in user.Roles:
+                session['umpire'] = True
+            else:
+                session['umpire'] = False
+            if 'commissioner' in user.Roles:
+                session['commissioner'] = True
+            else:
+                session['commissioner'] = False
         revokeToken(access_token,"access_token")
     return redirect(url_for('index_bp.index'))
 

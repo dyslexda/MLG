@@ -39,7 +39,7 @@ def create_app():
             if username is None:
                 g.user = None
             else:
-                g.user = Users.get(Users.Reddit_Name == username)
+                g.user = Users.get_or_none(Users.Reddit_Name == username)
         
         @app.teardown_request
         def after_request(response):
