@@ -18,6 +18,9 @@
           {% if session['umpire'] or session['commissioner'] %}
           <a class="dropdown-item" href="/games/manage">Manage Game</a>
           {% endif %}
+          {% if session['commissioner'] %}
+          <a class="dropdown-item" href="/games/create">Create Game</a>
+          {% endif %}
         </div>
       </li>
       <li class="nav-item">

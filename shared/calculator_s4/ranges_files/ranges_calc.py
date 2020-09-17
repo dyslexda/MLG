@@ -116,8 +116,8 @@ def wh_calc(game,result_dict):
         if game.Second_Base.Speed > game.First_Base.Speed:
             lead_speed = game.Second_Base.Speed
             lagg_speed = game.First_Base.Speed
-            lead_multiplier = wh_multiplier(lead_speed,game)
-            lagg_multiplier = wh_multiplier(lagg_speed,game)
+            lead_multiplier = wh_multiplier(lead_speed)
+            lagg_multiplier = wh_multiplier(lagg_speed)
             range_1bwh = int(Decimal(lagg_multiplier * result_dict['1B']).quantize(Decimal('1.'),rounding='ROUND_DOWN')) + 1
             range_1bwh2 = int(Decimal(lead_multiplier * result_dict['1B']).quantize(Decimal('1.'),rounding='ROUND_DOWN')) + 1 - range_1bwh
             range_2bwh = int(Decimal(lagg_multiplier * result_dict['2B']).quantize(Decimal('1.'),rounding='ROUND_DOWN')) + 1
@@ -129,7 +129,7 @@ def wh_calc(game,result_dict):
             ordering = ['HR','3B','2BWH','2B','1BWH','1BWH2','1B','IF1B','BB']
         else:
             lead_speed = game.First_Base.Speed
-            lead_multiplier = wh_multiplier(lead_speed,game)
+            lead_multiplier = wh_multiplier(lead_speed)
             range_1bwh = int(Decimal(lead_multiplier * result_dict['1B']).quantize(Decimal('1.'),rounding='ROUND_DOWN')) + 1
             range_2bwh = int(Decimal(lead_multiplier * result_dict['2B']).quantize(Decimal('1.'),rounding='ROUND_DOWN')) + 1
             result_dict['1BWH'] = int(range_1bwh)
@@ -139,7 +139,7 @@ def wh_calc(game,result_dict):
             ordering = ['HR','3B','2BWH','2B','1BWH','1B','IF1B','BB']
     elif brc in [2,6]:
         lead_speed = game.Second_Base.Speed
-        lead_multiplier = wh_multiplier(lead_speed,game)
+        lead_multiplier = wh_multiplier(lead_speed)
         range_1bwh = int(Decimal(lead_multiplier * result_dict['1B']).quantize(Decimal('1.'),rounding='ROUND_DOWN')) + 1
         result_dict['1BWH'] = int(range_1bwh)
         result_dict['1B'] = result_dict['1B'] - result_dict['1BWH']
@@ -149,7 +149,7 @@ def wh_calc(game,result_dict):
             lead_speed = game.Second_Base.Speed
         else:
             lead_speed = game.First_Base.Speed
-        lead_multiplier = wh_multiplier(lead_speed,game)
+        lead_multiplier = wh_multiplier(lead_speed)
         range_1bwh = int(Decimal(lead_multiplier * result_dict['1B']).quantize(Decimal('1.'),rounding='ROUND_DOWN')) + 1
         range_2bwh = int(Decimal(lead_multiplier * result_dict['2B']).quantize(Decimal('1.'),rounding='ROUND_DOWN')) + 1
         result_dict['2BWH'] = int(range_2bwh)
@@ -159,13 +159,11 @@ def wh_calc(game,result_dict):
         ordering = ['HR','3B','2BWH','2B','1BWH','1B','IF1B','BB']
     return result_dict,ordering
 
-def wh_multiplier(speed,game):
+def wh_multiplier(speed):
     if speed > 2:
         multiplier = -0.06 + (speed * 0.07)
     else:
         multiplier = 0.045 + (speed * 0.035)
-    if game.Outs == 2:
-        multiplier = multiplier * 3
     return(multiplier)
 
 def dfo_calc(game,result_dict):

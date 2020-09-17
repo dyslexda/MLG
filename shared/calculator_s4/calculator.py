@@ -20,8 +20,14 @@ def play_check(game,url=None,auto=None):
     brc = ranges_calc.brc_calc(game)
     if game.Ump_Mode == 'Manual':
         if auto:
-            result = auto
-            game.Situation = auto
+            if auto == 'Pitcher':
+                result = 'AutoBB'
+            elif auto == 'Batter':
+                result = 'AutoK'
+            elif auto == 'Catcher':
+                base = int(game.Runner) + 1
+                result = 'AutoSB' + str(base)
+            game.Situation = result
             game.save()
             msg = (f"Game {game.Game_ID} has an {result}.")
             if url:
@@ -54,13 +60,15 @@ def play_process(game,auto=None):
         play_process_start_PA(game)
     elif game.Step == 2:
         if auto:
-            result = auto
+            if auto == 'Pitcher':
+                result = 'AutoBB'
+            elif auto == 'Batter':
+                result = 'AutoK'
+            elif auto == 'Catcher10h':
+                base = int(game.Runner) + 1
+                result = 'AutoSB' + str(base)
             runs_scored,outs,runners_scored,new_outcome = play_outcome(game,brc,result)
-            if result[0:6] == 'AutoSB':
-                play_type = 'Steal'
-            else:
-                play_type = 'Swing'
-            result_msg = [game.Inning, game.Outs, brc, play_type, game.Pitcher.Player_Name,
+            result_msg = [game.Inning, game.Outs, brc, "Swing", game.Pitcher.Player_Name,
                           game.Batter.Player_Name, '', '', '', result]
             result_msg.append(runs_scored)
             msg = auto_result_bug(game,result_msg)
@@ -380,7 +388,7 @@ def resulting_swing(game):
     handedness = ranges_calc.calc_handedness(game.Pitcher,game.Batter)
     ranges = ranges_calc.calc_ranges(ranges_lookup.obr_dict, ranges_lookup.modifiers_dict, game.Pitcher,
                                     game.Batter, handedness)
-    if (game.First_Base != None or game.Second_Base != None):
+    if game.Outs != 2 and (game.First_Base != None or game.Second_Base != None):
         ranges, obr_ordering = ranges_calc.wh_calc(game, ranges)
     else:
         obr_ordering = ['HR', '3B', '2B', '1B', 'IF1B', 'BB']
@@ -391,10 +399,7 @@ def resulting_swing(game):
         fo_ordering = ['FO']
     brc = ranges_calc.brc_calc(game)
     outs_ordering = ranges_lookup.go_order_dict[str(brc) + '_' + str(game.Outs)]
-    if outs_ordering[0] == 'GORA':
-        all_order = obr_ordering + ['GORA'] + fo_ordering + outs_ordering[1:]
-    else:
-        all_order = obr_ordering + fo_ordering + outs_ordering
+    all_order = obr_ordering + fo_ordering + outs_ordering
     result_list = []
     for result in all_order:
         for _ in range(ranges[result]):

@@ -68,7 +68,7 @@ def calc_api():
         handedness = calc.ranges_calc.calc_handedness(game.Pitcher,game.Batter)
         ranges = ranges_calc.calc_ranges(ranges_lookup.obr_dict, ranges_lookup.modifiers_dict, game.Pitcher,
                                          game.Batter, handedness)
-        if game.Outs != 2 and (game.First_Base != None or game.Second_Base != None):
+        if (game.First_Base != None or game.Second_Base != None):
             ranges, obr_ordering = ranges_calc.wh_calc(game, ranges)
         else:
             obr_ordering = ['HR', '3B', '2B', '1B', 'IF1B', 'BB']
@@ -108,7 +108,7 @@ def calc_api_ranges(game_number):
         handedness = ranges_calc.calc_handedness(game.Pitcher,game.Batter)
         ranges = ranges_calc.calc_ranges(ranges_lookup.obr_dict, ranges_lookup.modifiers_dict, game.Pitcher,
                                         game.Batter, handedness)
-        if game.Outs != 2 and (game.First_Base != None or game.Second_Base != None):
+        if (game.First_Base != None or game.Second_Base != None):
             ranges, obr_ordering = ranges_calc.wh_calc(game, ranges)
         else:
             obr_ordering = ['HR', '3B', '2B', '1B', 'IF1B', 'BB']
