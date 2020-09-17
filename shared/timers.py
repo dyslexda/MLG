@@ -34,16 +34,18 @@ async def main():
                                 catcher_list.delete_instance()
                             msg = play_check(game)
                         else:
-                            msg = play_check(game,auto='Catcher')
+                            base = int(game.Runner) + 1
+                            result = 'AutoSB' + str(base)
+                            msg = play_check(game,auto=result)
                 elif game.PA_Timer and not game.Pitch and not game.Swing:
                     timer_exp = game.PA_Timer.replace(tzinfo=timezone.utc).timestamp() + (60*60*12)
                     if timer_exp < now:
                         if not game.Pitch:
                             print('pitcher',game.Game_ID)
-                            msg = play_check(game,auto='Pitcher')
+                            msg = play_check(game,auto='AutoBB')
                         elif not game.Swing:
                             print('batter',game.Game_ID)
-                            msg = play_check(game,auto='Batter')
+                            msg = play_check(game,auto='AutoK')
         await asyncio.sleep(60*2)
 
 if __name__ == "__main__":

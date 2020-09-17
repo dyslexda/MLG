@@ -77,6 +77,8 @@ def reddit_resultbug(game,result_msg):
     outs_line = (f"    Outs:   {game.Outs}\n")
     score_line = (f"    {game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}\n\n")
     msg = pitch_line + swing_line + diff_line + result_line + outs_line + score_line
+    if game.B_Flavor:
+        msg += (f"{game.Batter.Player_Name}: {game.B_Flavor}\n\n")
     if game.Ump_Flavor:
         msg += game.Ump_Flavor
     for comment in thread.comments: 

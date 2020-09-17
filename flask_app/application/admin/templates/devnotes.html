@@ -5,7 +5,7 @@ Dev Notes
 {% endblock %}
 
 {% block content %}
-
+    <button class="btn" type="button" id="testbtn">Preview </button>
     <div class="container">
       <h2>To Do</h1>
       <hr />
@@ -21,6 +21,8 @@ Dev Notes
       <br /><br />
       <h2>Done</h2>
       <hr />
+        <li>9/17/20 - Fixed bug with steal timers, added game creation page for commissioners, added catcher ping on manual steal submission, updated calculator to S5 (new ranges, new 2 out advancing; no bunts yet)</li>
+        <li>9/14/20 - Added a JS table for the Players view that enables searching, sorting, and pagination.</li>
         <li>8/21/20 - Massive rewrite. Now has both automatic and manual game progression. Timers implemented, as well as autos. Minimal version of the calculator is accessible. Flavor writeups available for umps. List support is included for pitchers, batters, and catchers. </li>
         <li>8/10/20 - Whole bunch of improvements over last two weeks. Reddit and Discord bots are fully integrated, listening for commands, and outputting correctly.</li>
         <li>7/21/20 - Added a boxscore viewer (games/templates/boxscore.html) used both in game management and in basic viewing. Also redid lineup form generation to simply loop through all players in both lineups (previously had hardcoded portions of the form for away and home teams).</li>
@@ -36,5 +38,5 @@ Dev Notes
         <li>Stop steal timer from sending DMs every two minutes to ump when timer expires</li>
     </div>
 
-
+<script src="calc_routes/static/calc.js"></script>
 {% endblock %}

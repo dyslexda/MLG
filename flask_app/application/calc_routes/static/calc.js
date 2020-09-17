@@ -1,5 +1,5 @@
 $(function() {
-    $('button').click(function() {
+    $('button:not(#testbtn)').click(function() {
         $.ajax({
             url: '/calculator/api',
             data: $('form').serialize(),

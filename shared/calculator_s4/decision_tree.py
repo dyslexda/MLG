@@ -139,14 +139,17 @@ async def steal(received):
                 brc = brc_calc(entry) 
                 if (brc == 1 or brc == 5) and entry.First_Base.Player_ID == entry.Player_ID:
                     runner_num = 1
+                    runner_name = entry.First_Base.Player_Name
                     game_no = entry.Game_Number
                     break
                 elif (brc == 2 or brc == 4) and entry.Second_Base.Player_ID == entry.Player_ID:
                     runner_num = 2
+                    runner_name = entry.Second_Base.Player_Name
                     game_no = entry.Game_Number
                     break
                 elif entry.Third_Base.Player_ID == entry.Player_ID:
                     runner_num = 3
+                    runner_name = entry.Third_Base.Player_Name
                     game_no = entry.Game_Number
                     break
             if game_no:
@@ -163,6 +166,7 @@ async def steal(received):
                 game.save()
                 webhook_functions.steal_start(game,runner_num)
                 msg = (f"You are stealing {to_steal} with {int(received['Number'])}.")
+#                return([msg,game,runner_name,to_steal])
                 return(msg)
             else:
                 return("You are not in a position to steal currently.")

@@ -1,53 +1,82 @@
 {% extends 'base.html' %}
 
+{% block head %}
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
+{% endblock %}
+
 {% block title %}
 Players
 {% endblock %}
 
+{% block src %}
+    <script src="//cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script>
+    $(document).ready(function () {
+        var players = {{ player_dict|tojson|safe }};
+        var players_list = new Array();
+        for (let player in players) {
+            players_list.push(
+                {'player':"<a href=/players/"+players[player].Player_ID+">"+players[player].Player_Name+"</a>",
+                 'team':players[player].Team.Team_Abbr,
+                 'hand':players[player].Hand,
+                 'ppos':players[player].PPos,
+                 'spos':players[player].SPos,
+                 'con':players[player].Contact,
+                 'eye':players[player].Eye,
+                 'pow':players[player].Power,
+                 'spe':players[player].Speed,
+                 'mov':players[player].Movement,
+                 'com':players[player].Command,
+                 'vel':players[player].Velocity,
+                 'awa':players[player].Awareness});
+        }
+        console.log(players);
+        $('#player_table').DataTable( {
+            "destroy": true,
+            data: players_list,
+            columns: [
+                { data: 'player' },
+                { data: 'team' },
+                { data: 'hand' },
+                { data: 'ppos' },
+                { data: 'spos' },
+                { data: 'con' },
+                { data: 'eye' },
+                { data: 'pow' },
+                { data: 'spe' },
+                { data: 'mov' },
+                { data: 'com' },
+                { data: 'vel' },
+                { data: 'awa' }
+            ]
+        } );
+      })
+    </script>
+{% endblock %}
+
+
 {% block content %}
     <div class="container">
-      <h1>League Players</h1>
-      <hr />
-        <hr />
-        <div class="table-responsive-sm">
-          <table class="table table-striped table-hover table-sm table-bordered">
-            <thead class="thead-dark">
-              <tr>
-                <th>Player</th>
-                <th>Team</th>
-                <th>Hand</th>
-                <th>PPos</th>
-                <th>SPos</th>
-                <th>CON</th>
-                <th>EYE</th>
-                <th>POW</th>
-                <th>SPE</th>
-                <th>MOV</th>
-                <th>COM</th>
-                <th>VEL</th>
-                <th>AWA</th>
-              </tr>
-            </thead>
-            <tbody>
-            {% for player in player_list %}
-              <tr>
-                <td>{{player.Player_Name}}</td>
-                <td>{{player.Team.Team_Abbr}}</td>
-                <td>{{player.Hand}}</td>
-                <td>{{player.PPos}}</td>
-                <td>{{player.SPos}}</td>
-                <td>{{player.Contact}}</td>
-                <td>{{player.Eye}}</td>
-                <td>{{player.Power}}</td>
-                <td>{{player.Speed}}</td>
-                <td>{{player.Movement}}</td>
-                <td>{{player.Command}}</td>
-                <td>{{player.Velocity}}</td>
-                <td>{{player.Awareness}}</td>
-              </tr>
-            {% endfor %}
-            </tbody>
-          </table>
+      <div id="player_div" class="tabcontent dataTables_wrapper">
+        <table id='player_table' class="display dataTable" style="width:100%" role="grid">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Team</th>
+              <th>Hand</th>
+              <th>PPos</th>
+              <th>SPos</th>
+              <th>CON</th>
+              <th>EYE</th>
+              <th>POW</th>
+              <th>SPE</th>
+              <th>MOV</th>
+              <th>COM</th>
+              <th>VEL</th>
+              <th>AWA</th>
+            </tr>
+          </thead>
+        </table>
       </div>
     </div>
 

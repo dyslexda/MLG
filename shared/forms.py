@@ -1,4 +1,5 @@
 from peewee import *
+from shared.models import Teams, Games, Umpires
 from flask_wtf import FlaskForm
 from wtforms import Form, FieldList, FormField, SelectField, IntegerField, StringField, HiddenField, TextAreaField, RadioField, validators
 
@@ -34,5 +35,16 @@ class GameStatusForm(FlaskForm):
     swing = IntegerField(validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])
     r_steal = IntegerField(label='Steal',validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])
     c_throw = IntegerField(label='Throw',validators=[validators.optional(),validators.NumberRange(min=1,max=1000)])
-    flavor = TextAreaField(label='Flavor',validators=[validators.optional()])
+    ump_flavor = TextAreaField(label='Ump Flavor',validators=[validators.optional()])
+    b_flavor = TextAreaField(label='Batter Flavor',validators=[validators.optional()])
     auto_options = RadioField(label='Auto',choices=[('Process Auto','Process Auto'),('Reset Timer','Reset Timer')],validators=[validators.optional()])
+
+class GameCreationForm(FlaskForm):
+    teams = Teams.select(Teams)
+    team_choices = []
+    for team in teams: team_choices.append((team.Team_Abbr,team.Team_Abbr))
+    season = IntegerField(label='Season',default=5,validators=[validators.NumberRange(min=1,max=100)])
+    session = IntegerField(label='Session',default=1,validators=[validators.NumberRange(min=1,max=100)])
+    away = SelectField(label='Away Team',choices = team_choices)
+    home = SelectField(label='Home Team',choices = team_choices)
+    main_ump = TextAreaField(label='Main Ump',validators=[validators.optional()])

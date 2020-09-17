@@ -3,7 +3,7 @@ from os import environ, path
 from flask import Blueprint, render_template, g, session, request, redirect, url_for, flash
 from flask import current_app as app
 from shared.models import Teams, Players, Games, All_PAs, Lineups, db
-from shared.forms import LineupBoxForm, GameStatusForm
+from shared.forms import LineupBoxForm, GameStatusForm, GameCreationForm
 from application.auth.auth import login_required
 from peewee import *
 import webhook_functions as webhook_functions
@@ -49,7 +49,8 @@ def game_populate(game):
     data['swing'] = game.Swing
     data['c_throw'] = game.C_Throw
     data['r_steal'] = game.R_Steal
-    data['flavor'] = game.Ump_Flavor
+    data['ump_flavor'] = game.Ump_Flavor
+    data['b_flavor'] = game.B_Flavor
     data['step'] = game.Step
     data['ump_mode'] = game.Ump_Mode
     return data
@@ -169,10 +170,46 @@ def game_page(game_number):
         thread_url = thread_url
     )
 
-#@games_bp.route('/games/create',methods=['GET','POST'])
-#@login_required
-#def games_create():
-#    game = Games()
+def game_creation(form):
+    print(form)
+    print(form.season.data)
+    season = form.season.data
+    session = form.session.data
+    if len(str(form.session.data)) == 1:
+        session = '0' + str(form.session.data)
+    prefix = str(season) + str(session)
+    max_no = Games.select(fn.MAX(Games.Game_Number)).where(Games.Game_Number ** (prefix+"%")).tuples()[0][0]
+    if max_no == None:
+        game_number = prefix + '01'
+    else:
+        game_number = str(int(max_no)+1)
+    game_id = form.away.data + form.home.data + str(form.session.data)
+    game_dict = {
+        'Game_Number':game_number,
+        'Game_ID':game_id,
+        'Season':season,
+        'Session':session,
+        'Away':form.away.data,
+        'Home':form.home.data,
+        'Umpires':['dyslexda']} #hardcoded, need to fix
+    with db.atomic():
+        Games.create(**game_dict)
+    return(game_number)
+
+@games_bp.route('/games/create',methods=['GET','POST'])
+@login_required
+def games_create():
+    form = GameCreationForm()
+    if session['commissioner']:
+        if request.method == 'POST':
+            if form.validate_on_submit():
+                game_number = game_creation(form)
+                return redirect(url_for('games_bp.game_manage',game_number=game_number))
+    else:
+        return redirect(url_for('index_bp.index'))
+    return render_template(
+           'game_create.html',
+           form = form)
 #    if request.method == 'POST':
 #        form = GameCreationForm(request.form, obj=game)
 #        if form.validate():
@@ -225,9 +262,9 @@ def game_manage(game_number):
             if form.step.data != '' and form.step.data != None: game.Step = int(form.step.data)
             game.save()
             if game.Step == 1:
-                if form.flavor.data != '':
+                if form.ump_flavor.data != '':
                     with db.atomic():
-                        game.Ump_Flavor = form.flavor.data
+                        game.Ump_Flavor = form.ump_flavor.data
                         game.save()
             elif game.Step == 2:
                 if form.auto_options.data == 'Reset Timer':
@@ -237,13 +274,15 @@ def game_manage(game_number):
                     else:
                         game.PA_Timer = time.time()
                     game.save()
-                elif form.auto_options.data == 'Process Result':
+                elif form.auto_options.data == 'Process Auto':
                     auto = game.Situation
                 else:
+                    if form.r_steal.data != '' and form.runner.data != '' and not game.R_Steal:
+                        webhook_functions.steal_start(game,form.runner.data)
                     with db.atomic():
                         if form.runner.data == '':
                             form.runner.data = None
-                        game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data, 'Ump_Flavor':form.flavor.data}
+                        game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data, 'Ump_Flavor':form.ump_flavor.data,'B_Flavor':form.b_flavor.data}
                         Games.update(game_update).where(Games.Game_Number == game.Game_Number).execute()
                         game = Games.get(Games.Game_Number == game_number)
             calc.play_process(game,auto)

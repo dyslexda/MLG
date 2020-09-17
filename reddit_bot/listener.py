@@ -21,17 +21,22 @@ async def validate(item):
     message_body = item.body
     if message_body.startswith('m!') and message_body[2:7] in commands:
         command = message_body[2:7]
-        number = ''.join(filter(str.isdigit,message_body[8:]))
-        if number != '':
+        number = message_body.split(' ')[1]
+        try:
+            flavor = ' '.join(message_body.split(' ')[2:])
+        except:
+            flavor = None
+#        number = ''.join(filter(str.isdigit,message_body[8:]))
+        try:
             number = int(number)
-            if number > 0 and number < 1001:
-                payload = {'Command':command,'Number':number,'Redditor':reddit_name,'Discord':None}
-                msg = await tree.routing(payload)
-                return(msg)
-            else:
-                return("That number is not between 1 and 1000")
-        else:
+        except:
             return("I couldn't parse a number out of that. Please use the format 'm!pitch 123', for example.")
+        if number > 0 and number < 1001:
+            payload = {'Command':command,'Number':number,'Redditor':reddit_name,'Discord':None,'Flavor':flavor}
+            msg = await tree.routing(payload)
+            return(msg)
+        else:
+            return("That number is not between 1 and 1000")
     else:
         return("That isn't a recognizable command. Please use the format 'm!pitch 123', for example.")
 
