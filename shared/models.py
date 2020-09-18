@@ -191,65 +191,46 @@ def populate_test_data():
 #                  {'Team_Name':'TestTeam1','Team_Abbr':'TT1','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'},
 #                  {'Team_Name':'TestTeam2','Team_Abbr':'TT2','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'}
 
-    demo_teams = [{'Team_Name':'Curacao Couriers','Team_Abbr':'CUR'},
-                  {'Team_Name':'Jamaica Jammers','Team_Abbr':'JAM'},
-                  {'Team_Name':'St. Lucia Sharks','Team_Abbr':'STL'},
-                  {'Team_Name':'Trinidad Tridents','Team_Abbr':'TRI'}]
+#    demo_teams = [{'Team_Name':'Curacao Couriers','Team_Abbr':'CUR'},
+#                  {'Team_Name':'Jamaica Jammers','Team_Abbr':'JAM'},
+#                  {'Team_Name':'St. Lucia Sharks','Team_Abbr':'STL'},
+#                  {'Team_Name':'Trinidad Tridents','Team_Abbr':'TRI'}]
 
-    test_users = [
-    {'Reddit_Name':'Jzkitty21', 'Discord_Name': 'JZKITTY#3143', 'Discord_ID': 254774534274547713, 'Roles': 'player'},
-    {'Reddit_Name':'ghosthardware515', 'Discord_Name': 'sarah_#4781', 'Discord_ID': 167796704739983360, 'Roles': 'player'},
-    {'Reddit_Name':'dyslexda', 'Discord_Name': 'dyslexda#0531', 'Discord_ID': 202278109708419072, 'Roles': 'player, umpire, commissioner'},
-    {'Reddit_Name':'therealduke96', 'Discord_Name': 'Bigbosstone#5754', 'Discord_ID': 235564193112260608, 'Roles': 'player'},
-    {'Reddit_Name':'Kyounggun', 'Discord_Name': 'Kyounggun#0717', 'Discord_ID': 273639536804757514, 'Roles': 'player'},
-    {'Reddit_Name':'Am3yankees3', 'Discord_Name': 'Andrew3#2319', 'Discord_ID': 402249979651031052, 'Roles': 'player'},
-    {'Reddit_Name':'steelermade28', 'Discord_Name': 'steelermade28#8041', 'Discord_ID': 198821468317024256, 'Roles': 'player'},
-    {'Reddit_Name':'xbijin', 'Discord_Name': 'xbijin#3776', 'Discord_ID': 398235187634503702, 'Roles': 'player'},
-    {'Reddit_Name':'Ashbymtg','Discord_Name': 'Keyo', 'Discord_ID': 114529305219956739, 'Roles': 'player'},
-    {'Reddit_Name':'Druidicdwarf','Discord_Name': 'LefLop#4771', 'Discord_ID': 246762932703068162, 'Roles': 'player'},
-    {'Reddit_Name':'FT_Blasit', 'Discord_Name': 'dairy_test_user#5360', 'Discord_ID': 679869242954350644, 'Roles': 'player, umpire'},
-    {'Reddit_Name':'Juniped', 'Discord_Name': 'Juniped#0711', 'Discord_ID': 121871011091185664, 'Roles': 'player'}]
-#    {'Reddit_Name':'Petralikesbaseball']
+    scrim_teams = [{'Team_Name':'Buffalo Buffalo','Team_Abbr':'BUF'},
+                   {'Team_Name':'Portland Pioneers','Team_Abbr':'POR'}]
+
 
     test_umpires = [
-    {'Crew_Name':'FT_Blasit','Ump1':3,'Ump2':11}]
+    {'Crew_Name':'FT_Blasit','Ump1':15}]
 
-    with open('test_players.csv') as file:
-        test_players = []
+    with open('scrim_users.csv') as file:
+        scrim_users = []
+        keys = ['Reddit_Name','Discord_Name','Discord_ID','Roles']
+        reader = csv.reader(file)
+        for row in reader:
+            user = dict(zip(keys,row))
+            scrim_users.append(user)
+    with open('scrim_players.csv') as file:
+        scrim_players = []
         keys = ['User_ID','Player_ID','Player_Name','PPos','SPos','Hand','Team','Contact','Eye','Power','Speed','Movement','Command','Velocity','Awareness']
         reader = csv.reader(file)
         for row in reader:
             player = dict(zip(keys,row))
-            test_players.append(player)
-#    with open('demo_users.csv') as file:
-#        demo_users = []
-#        keys = ['Reddit_Name','Discord_Name','Discord_ID','Roles']
-#        reader = csv.reader(file)
-#        for row in reader:
-#            user = dict(zip(keys,row))
-#            demo_users.append(user)
+            scrim_players.append(player)
+
 
 #    demo_games = [{'Game_Number':50101,'Game_ID':'JAMTRI1','Season':5,'Session':1,'Away':'JAM','Home':'TRI','Umpires':['dyslexda','FT_Blasit']}]
-
-    test_games = [{'Game_Number':50101,'Game_ID':'CURJAM1','Season':5,'Session':1,'Away':'CUR','Home':'JAM','Umpires':['dyslexda','FT_Blasit']},
-                  {'Game_Number':50102,'Game_ID':'STLTRI1','Season':5,'Session':1,'Away':'STL','Home':'TRI','Umpires':['dyslexda','FT_Blasit']},
-                  {'Game_Number':50201,'Game_ID':'JAMSTL2','Season':5,'Session':2,'Away':'JAM','Home':'STL','Umpires':['dyslexda','FT_Blasit']},
-                  {'Game_Number':50202,'Game_ID':'TRICUR2','Season':5,'Session':2,'Away':'TRI','Home':'CUR','Umpires':['dyslexda','FT_Blasit']}]
+#    test_games = [{'Game_Number':50101,'Game_ID':'CURJAM1','Season':5,'Session':1,'Away':'CUR','Home':'JAM','Umpires':['dyslexda','FT_Blasit']},
+#                  {'Game_Number':50102,'Game_ID':'STLTRI1','Season':5,'Session':1,'Away':'STL','Home':'TRI','Umpires':['dyslexda','FT_Blasit']},
+#                  {'Game_Number':50201,'Game_ID':'JAMSTL2','Season':5,'Session':2,'Away':'JAM','Home':'STL','Umpires':['dyslexda','FT_Blasit']},
+#                  {'Game_Number':50202,'Game_ID':'TRICUR2','Season':5,'Session':2,'Away':'TRI','Home':'CUR','Umpires':['dyslexda','FT_Blasit']}]
 
     with db.atomic():
-        Teams.insert_many(demo_teams).execute()
-        Users.insert_many(test_users).execute()
-        Players.insert_many(test_players).execute()
-        Games.insert_many(test_games).execute()
+        Teams.insert_many(scrim_teams).execute()
+        Users.insert_many(scrim_users).execute()
+        Players.insert_many(scrim_players).execute()
+#        Games.insert_many(test_games).execute()
         Umpires.insert_many(test_umpires).execute()
-
-def migration():
-    db.connect(reuse_if_open=True)
-    migrator = SqliteMigrator(db)
-    with db.transaction():
-        migrate(migrator.add_column('Games','Ump_Mode',CharField(default='Manual')))
-#            migrator.add_column('Games','Steal_Timer',TimestampField(utc=True,default=None,null=True))
-    db.close()
 
 if __name__ == "__main__":
 #    db.connect()

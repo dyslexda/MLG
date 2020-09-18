@@ -9,7 +9,7 @@ from shared.models import *
 def create_app():
     app = Flask(__name__,instance_relative_config=True)
     logging.basicConfig(filename='output.log',
-                        level=logging.DEBUG)
+                        level=logging.WARNING)
     app.config.from_object('config.Config')
     assets = Environment()
     assets.init_app(app)

@@ -164,7 +164,8 @@ def score_bug(game):
 
 async def gamestatus_check(game):
     payload = {'Game_Number':game.Game_Number}
-    url = (f"http://167.71.181.99:5000/games/manage/check")
+#    url = (f"http://167.71.181.99:5000/games/manage/check")
+    url = (f"https://majorleagueguessball.com/games/manage/check")
     async with aiohttp.ClientSession() as session:
         async with session.post(url,json=payload) as resp:
             await resp.text()
