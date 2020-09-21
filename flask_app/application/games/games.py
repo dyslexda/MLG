@@ -171,8 +171,6 @@ def game_page(game_number):
     )
 
 def game_creation(form):
-    print(form)
-    print(form.season.data)
     season = form.season.data
     session = form.session.data
     if len(str(form.session.data)) == 1:
@@ -262,6 +260,7 @@ def game_manage(game_number):
             if form.step.data != '' and form.step.data != None: game.Step = int(form.step.data)
             game.save()
             if game.Step == 1:
+                print(form.ump_flavor.data)
                 if form.ump_flavor.data != '':
                     with db.atomic():
                         game.Ump_Flavor = form.ump_flavor.data

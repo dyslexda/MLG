@@ -1,11 +1,15 @@
 import random, time, sys, json, os, asyncio, aiohttp
 from decimal import Decimal
-from os import path
+from os import environ, path
+from dotenv import load_dotenv
 from flask import current_app as app
 from peewee import *
 from shared.models import *
 from shared.calculator.ranges_files.ranges_calc import brc_calc
 import flask_app.webhook_functions as webhook_functions
+basedir = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+load_dotenv(os.path.join(basedir, '.env'))
+website = environ.get('WEBSITE')
 
 
 async def routing(received):
@@ -16,7 +20,8 @@ async def routing(received):
 async def gamestatus_check(game):
     payload = {'Game_Number':game.Game_Number}
 #    url = (f"http://167.71.181.99:5000/games/manage/check")
-    url = (f"https://majorleagueguessball.com/games/manage/check")
+#    url = (f"https://majorleagueguessball.com/games/manage/check")
+    url = website
     async with aiohttp.ClientSession() as session:
         async with session.post(url,json=payload) as resp:
             await resp.text()
@@ -28,6 +33,7 @@ async def swing(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Reddit_Name == reddit_name) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Batter == Players.Player_ID)))
     elif received['Discord']:
         snowflake = received['Discord']
@@ -35,6 +41,7 @@ async def swing(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Discord_ID == snowflake) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Batter == Players.Player_ID)))
     if len(batters) > 0:
         for entry in batters:
@@ -83,6 +90,7 @@ async def pitch(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Reddit_Name == reddit_name) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Pitcher == Players.Player_ID)))
     elif received['Discord']:
         snowflake = received['Discord']
@@ -90,6 +98,7 @@ async def pitch(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Discord_ID == snowflake) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Pitcher == Players.Player_ID)))
     if len(pitchers) > 0:
         for entry in pitchers:
@@ -110,6 +119,7 @@ async def steal(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Reddit_Name == reddit_name) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (
                 ((Games.First_Base == Players.Player_ID) &
                 (Games.Second_Base.is_null(True))) |
@@ -124,6 +134,7 @@ async def steal(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Discord_ID == snowflake) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (
                 ((Games.First_Base == Players.Player_ID) &
                 (Games.Second_Base.is_null(True))) |
@@ -174,6 +185,7 @@ async def throw(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Reddit_Name == reddit_name) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Runner) &
                 (Games.Catcher == Players.Player_ID)
          )).objects()
@@ -183,6 +195,7 @@ async def throw(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Discord_ID == snowflake) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Runner) &
                 (Games.Catcher == Players.Player_ID)
          )).objects()

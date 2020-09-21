@@ -1,10 +1,14 @@
 import discord, random, time, sys, json, datetime, os, inspect, aiohttp
 from discord.ext import commands
-from os import path
+from os import environ, path
+from dotenv import load_dotenv
 from peewee import *
 from shared.models import *
 from shared.calculator.ranges_files.ranges_calc import brc_calc
 import shared.calculator.decision_tree as tree
+basedir = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+load_dotenv(os.path.join(basedir, '.env'))
+website = environ.get('WEBSITE')
 
 
 async def createDM(user):
@@ -165,7 +169,8 @@ def score_bug(game):
 async def gamestatus_check(game):
     payload = {'Game_Number':game.Game_Number}
 #    url = (f"http://167.71.181.99:5000/games/manage/check")
-    url = (f"https://majorleagueguessball.com/games/manage/check")
+#    url = (f"https://majorleagueguessball.com/games/manage/check")
+    url = website
     async with aiohttp.ClientSession() as session:
         async with session.post(url,json=payload) as resp:
             await resp.text()
