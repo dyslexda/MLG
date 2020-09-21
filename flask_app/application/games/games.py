@@ -260,7 +260,6 @@ def game_manage(game_number):
             if form.step.data != '' and form.step.data != None: game.Step = int(form.step.data)
             game.save()
             if game.Step == 1:
-                print(form.ump_flavor.data)
                 if form.ump_flavor.data != '':
                     with db.atomic():
                         game.Ump_Flavor = form.ump_flavor.data

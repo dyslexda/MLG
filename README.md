@@ -84,6 +84,7 @@ DISCORD_TOKEN = '' #Discord bot token
 REQ_POSITIONS = P,C,1B,2B,3B,SS,RF,CF,LF,DH
 LINEUP_SIZE = 9
 GAME_LENGTH = 6
+WEBSITE = '/games/manage/check' #Put the actual URL in here that leads to /games/manage/check
 ```
 Local branches cannot use the same bot as the master branch due to only one redirect URI being allowed (which is the IP address of the droplet). Must make a separate bot for this.
 
