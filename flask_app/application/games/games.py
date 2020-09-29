@@ -101,47 +101,6 @@ def validate_lineups(raw_lineups,game):
                     valid = False
     return(valid,errors)
 
-# Moved to shared/functions.py
-#def stat_generator(game,lineups,game_pas):
-#    gamestats = {}
-#    hits = ['HR','3B','2B','1B','IF1B','1BWH','1BWH2','2BWH']
-#    one_outs = ['FO','PO','GO','K','GORA','FC','FC3rd','DPRun','FCH','K','DFO','DSacF','SacF','CS2','CS3','CS4']
-#    two_outs = ['DP21','DP31','DPH1','DP']
-#    with db.atomic():
-#        for entry in lineups:
-#            test = '3'
-#            gamestats[entry.Player.Player_ID] = {}
-#            gamestats[entry.Player.Player_ID]['Pitching'] = {}
-#            gamestats[entry.Player.Player_ID]['Pitching']['IP'] = ip_calc(
-#                (game_pas.select().where((All_PAs.Result << one_outs) & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()) + 
-#                (game_pas.select().where((All_PAs.Result << two_outs) & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()*2) +
-#                (game_pas.select().where((All_PAs.Result == 'TP') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()*3))
-#            gamestats[entry.Player.Player_ID]['Pitching']['ER'] = none_to_zero(game_pas.select(fn.SUM(All_PAs.Run_Scored)).where(All_PAs.Pitcher_ID == entry.Player.Player_ID).scalar())
-#            gamestats[entry.Player.Player_ID]['Pitching']['H'] = game_pas.select().where((All_PAs.Result << hits) & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
-#            gamestats[entry.Player.Player_ID]['Pitching']['BB'] = game_pas.select().where((All_PAs.Result == 'BB') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
-#            gamestats[entry.Player.Player_ID]['Pitching']['K'] = game_pas.select().where((All_PAs.Result == 'K') & (All_PAs.Pitcher_ID == entry.Player.Player_ID)).count()
-#            gamestats[entry.Player.Player_ID]['Pitching']['ERA'] = ''
-#            gamestats[entry.Player.Player_ID]['Batting'] = {}
-#            gamestats[entry.Player.Player_ID]['Batting']['AB'] = game_pas.select().where((All_PAs.Result != 'BB') & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
-#            gamestats[entry.Player.Player_ID]['Batting']['R'] = game_pas.select().where((All_PAs.Batter_ID == entry.Player.Player_ID) & (All_PAs.Run_Scored == 1)).count()
-#            gamestats[entry.Player.Player_ID]['Batting']['H'] = game_pas.select().where((All_PAs.Result << hits) & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
-#            gamestats[entry.Player.Player_ID]['Batting']['RBI'] = none_to_zero(game_pas.select(fn.SUM(All_PAs.RBIs)).where(All_PAs.Batter_ID == entry.Player.Player_ID).scalar())
-#            gamestats[entry.Player.Player_ID]['Batting']['BB'] = game_pas.select().where((All_PAs.Result == 'BB') & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
-#            gamestats[entry.Player.Player_ID]['Batting']['K'] = game_pas.select().where((All_PAs.Result == 'K') & (All_PAs.Batter_ID == entry.Player.Player_ID)).count()
-#            gamestats[entry.Player.Player_ID]['Batting']['BA'] = ''
-#    return gamestats
-#
-#def ip_calc(outs):
-#    full = outs // 3
-#    partial = outs % 3
-#    ip = (f"{full}.{partial}")
-#    return(ip)
-#
-#def none_to_zero(data):
-#    if data == None:
-#        data = 0
-#    return(data)
-
 # Routes
 
 @games_bp.route('/games', methods=['GET'])
@@ -171,8 +130,6 @@ def game_page(game_number):
     )
 
 def game_creation(form):
-    print(form)
-    print(form.season.data)
     season = form.season.data
     session = form.session.data
     if len(str(form.session.data)) == 1:
@@ -210,23 +167,6 @@ def games_create():
     return render_template(
            'game_create.html',
            form = form)
-#    if request.method == 'POST':
-#        form = GameCreationForm(request.form, obj=game)
-#        if form.validate():
-#            form.populate_obj(game)
-#            game.save()
-#            flash('Successfully added %s' % game, 'success')
-#            return redirect(url_for('game_page', game_number=game.Game_Number))
-#    else:
-#        form = GameCreationForm(obj=game)
-#
-#    return render_template('game_create.html', game=game, form=form)
-##    if session['commissioner']:
-##        teams = Teams.select()
-##        return render_template(
-##            'game_create.html',
-##            teams=teams
-##        )
 
 @games_bp.route('/games/manage',methods=['GET'])
 @login_required
@@ -279,10 +219,20 @@ def game_manage(game_number):
                 else:
                     if form.r_steal.data != '' and form.runner.data != '' and not game.R_Steal:
                         webhook_functions.steal_start(game,form.runner.data)
+                    try:
+                        if form.bunt:
+                            bunt = True
+                    except:
+                        bunt = False
+                    try:
+                        if form.infield_in:
+                            infield_in = True
+                    except:
+                        infield_in = False
                     with db.atomic():
                         if form.runner.data == '':
                             form.runner.data = None
-                        game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data, 'Ump_Flavor':form.ump_flavor.data,'B_Flavor':form.b_flavor.data}
+                        game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data, 'Ump_Flavor':form.ump_flavor.data,'B_Flavor':form.b_flavor.data,'Bunt':bunt,'Infield_In':infield_in}
                         Games.update(game_update).where(Games.Game_Number == game.Game_Number).execute()
                         game = Games.get(Games.Game_Number == game_number)
             calc.play_process(game,auto)
@@ -296,7 +246,8 @@ def game_manage(game_number):
         brc = brc,
         lineups = lineups,
         game_pas = game_pas,
-        gamestats = gamestats
+        gamestats = gamestats,
+        user = g.user
     )
 
 @games_bp.context_processor
@@ -331,7 +282,7 @@ def lineup_manage(game_number):
                         Lineups.update(player_update).where((Lineups.Game_Number == game.Game_Number) & (Lineups.Player == player.Player_ID)).execute()
                     valid, errors = validate_lineups(raw_lineups,game)
                     if not valid:
-                        sp.rollback()
+#                        sp.rollback()
                         for error in errors: flash(error)
         return redirect(url_for('games_bp.game_manage',game_number=game_number))
     else:

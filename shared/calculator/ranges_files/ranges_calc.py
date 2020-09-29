@@ -110,6 +110,40 @@ def calc_ranges(obr_dict,modifiers_dict,pitcher,batter,handedness):
     result_dict['K'] = int(range_k)
     return result_dict
 
+def bunt_calc(game,result_dict,bunt_dict):
+    brc = brc_calc(game)
+    bunt_result_dict = {}
+    contact_range = result_dict['On Base'] - result_dict['BB']
+    in_play_out_range = 500 - result_dict['On Base'] - result_dict['K']
+    bunt_result_dict['B1BWH'] = 10
+    bunt_multiplier = bunt_dict['B1B'][int(game.Batter.Speed - game.Pitcher.Movement)]
+    bunt_result_dict['B1B'] = int(Decimal(contact_range * bunt_multiplier).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) - 9
+    bunt_result_dict['BB'] = result_dict['BB']
+    bunt_result_dict['K'] = result_dict['K']
+    ordering = ['B1BWH','B1B','BB','SacB','BFC','K','BDP']
+    if brc == 0:
+        ordering = ['B1BWH','B1B','BB','BGO','K']
+        bunt_result_dict['BGO'] = in_play_out_range
+        return(bunt_result_dict,ordering)
+    elif brc == 1:
+        runner_matchup = int((game.First_Base.Speed - game.Pitcher.Awareness))
+        base = '2'
+    elif brc in [2,4]:
+        runner_matchup = int((game.Second_Base.Speed - game.Pitcher.Awareness))
+        base = '3'
+    elif brc in [3,5,7]:
+        runner_matchup = int((game.Third_Base.Speed - game.Pitcher.Awareness))
+        base = 'H'
+    lead_multiplier = bunt_dict[base][runner_matchup]
+    dp_multiplier = bunt_dict['DP'][runner_matchup]
+    if game.Outs == 2 or brc == 5:
+        dp_multiplier = 0
+        ordering.pop()
+    bunt_result_dict['SacB'] = int(Decimal(in_play_out_range * lead_multiplier).quantize(Decimal('1.'),rounding='ROUND_HALF_UP'))
+    bunt_result_dict['BDP'] = int(Decimal(in_play_out_range * dp_multiplier).quantize(Decimal('1.'),rounding='ROUND_HALF_UP'))
+    bunt_result_dict['BFC'] = in_play_out_range - bunt_result_dict['SacB'] - bunt_result_dict['BDP']
+    return(bunt_result_dict,ordering)
+
 def wh_calc(game,result_dict):
     brc = brc_calc(game)
     if brc in [4,7]:

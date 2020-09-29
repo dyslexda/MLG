@@ -29,7 +29,10 @@ class Users(BaseModel):
     Reddit_Name = CharField(unique=True)
     Discord_Name = CharField(null=True)
     Discord_ID = CharField(unique=True)
-    Roles = CharField(default='Player')
+    Player = BooleanField(default=True)
+    Umpire = BooleanField(default=False)
+    Commissioner = BooleanField(default=False)
+#    Roles = CharField(default='Player')
 
 class Teams(BaseModel):
     id = AutoField(primary_key=True)
@@ -86,6 +89,8 @@ class Games(BaseModel):
     Swing = IntegerField(null=True)
     C_Throw = IntegerField(null=True)
     R_Steal = IntegerField(null=True)
+    Bunt = BooleanField(default=False)
+    Infield_In = BooleanField(default=False)
     Ump_Flavor = TextField(null=True)
     B_Flavor = TextField(null=True)
     P_Flavor = TextField(null=True)
@@ -191,32 +196,32 @@ def populate_test_data():
 #                  {'Team_Name':'TestTeam1','Team_Abbr':'TT1','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'},
 #                  {'Team_Name':'TestTeam2','Team_Abbr':'TT2','Logo':'/home/RLB_app/RLB_app/teams/static/SHH_Logo'}
 
-#    demo_teams = [{'Team_Name':'Curacao Couriers','Team_Abbr':'CUR'},
-#                  {'Team_Name':'Jamaica Jammers','Team_Abbr':'JAM'},
-#                  {'Team_Name':'St. Lucia Sharks','Team_Abbr':'STL'},
-#                  {'Team_Name':'Trinidad Tridents','Team_Abbr':'TRI'}]
+    demo_teams = [{'Team_Name':'Curacao Couriers','Team_Abbr':'CUR'},
+                  {'Team_Name':'Jamaica Jammers','Team_Abbr':'JAM'},
+                  {'Team_Name':'St. Lucia Sharks','Team_Abbr':'STL'},
+                  {'Team_Name':'Trinidad Tridents','Team_Abbr':'TRI'}]
 
     scrim_teams = [{'Team_Name':'Buffalo Buffalo','Team_Abbr':'BUF'},
                    {'Team_Name':'Portland Pioneers','Team_Abbr':'POR'}]
 
 
     test_umpires = [
-    {'Crew_Name':'FT_Blasit','Ump1':15}]
+    {'Crew_Name':'FT_Blasit','Ump1':3,'Ump2':11}]
 
-    with open('scrim_users.csv') as file:
-        scrim_users = []
-        keys = ['Reddit_Name','Discord_Name','Discord_ID','Roles']
+    with open('demo_users.csv') as file:
+        demo_users = []
+        keys = ['Reddit_Name','Discord_Name','Discord_ID','Player','Umpire','Commissioner']
         reader = csv.reader(file)
         for row in reader:
             user = dict(zip(keys,row))
-            scrim_users.append(user)
-    with open('scrim_players.csv') as file:
-        scrim_players = []
+            demo_users.append(user)
+    with open('test_players.csv') as file:
+        test_players = []
         keys = ['User_ID','Player_ID','Player_Name','PPos','SPos','Hand','Team','Contact','Eye','Power','Speed','Movement','Command','Velocity','Awareness']
         reader = csv.reader(file)
         for row in reader:
             player = dict(zip(keys,row))
-            scrim_players.append(player)
+            test_players.append(player)
 
 
 #    demo_games = [{'Game_Number':50101,'Game_ID':'JAMTRI1','Season':5,'Session':1,'Away':'JAM','Home':'TRI','Umpires':['dyslexda','FT_Blasit']}]
@@ -226,9 +231,9 @@ def populate_test_data():
 #                  {'Game_Number':50202,'Game_ID':'TRICUR2','Season':5,'Session':2,'Away':'TRI','Home':'CUR','Umpires':['dyslexda','FT_Blasit']}]
 
     with db.atomic():
-        Teams.insert_many(scrim_teams).execute()
-        Users.insert_many(scrim_users).execute()
-        Players.insert_many(scrim_players).execute()
+        Teams.insert_many(demo_teams).execute()
+        Users.insert_many(demo_users).execute()
+        Players.insert_many(test_players).execute()
 #        Games.insert_many(test_games).execute()
         Umpires.insert_many(test_umpires).execute()
 

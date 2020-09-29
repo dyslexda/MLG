@@ -1,22 +1,25 @@
 import random, time, sys, json, os, asyncio, aiohttp
 from decimal import Decimal
-from os import path
+from os import environ, path
+from dotenv import load_dotenv
 from flask import current_app as app
 from peewee import *
 from shared.models import *
 from shared.calculator.ranges_files.ranges_calc import brc_calc
 import flask_app.webhook_functions as webhook_functions
+basedir = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+load_dotenv(os.path.join(basedir, '.env'))
+website = environ.get('WEBSITE')
 
 
 async def routing(received):
-    commands_dict = {'pitch':pitch,'swing':swing,'steal':steal,'throw':throw,'lists':lists}
+    commands_dict = {'pitch':pitch,'swing':swing,'bunt':bunt,'steal':steal,'throw':throw,'lists':lists}
     msg = await commands_dict[received['Command']](received)
     return(msg)
 
 async def gamestatus_check(game):
     payload = {'Game_Number':game.Game_Number}
-#    url = (f"http://167.71.181.99:5000/games/manage/check")
-    url = (f"https://majorleagueguessball.com/games/manage/check")
+    url = website
     async with aiohttp.ClientSession() as session:
         async with session.post(url,json=payload) as resp:
             await resp.text()
@@ -28,6 +31,7 @@ async def swing(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Reddit_Name == reddit_name) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Batter == Players.Player_ID)))
     elif received['Discord']:
         snowflake = received['Discord']
@@ -35,6 +39,7 @@ async def swing(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Discord_ID == snowflake) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Batter == Players.Player_ID)))
     if len(batters) > 0:
         for entry in batters:
@@ -49,31 +54,32 @@ async def swing(received):
         msg = (f"You aren't up to bat in any games right now.")
         return(msg)
 
-# Old batter select code based on max box score instead of currently active batter
-#    elif received['Discord']:
-#        snowflake = received['Discord']
-#        batter = (Lineups
-#         .select(Lineups,Players,Games).join(Games).switch(Lineups).join(Players).join(Users)
-#         .where((Users.Discord_ID == snowflake) & 
-#                (Lineups.Game_Number.Status == 'Started') & 
-#                (Lineups.Order != 0)
-#                )).objects()
-#    if len(batter) > 0:
-#        for entry in batter:
-#            if ((entry.Game_Number.Inning[0] == 'T' and entry.Game_Number.Away.Team_Abbr == entry.Player.Team.Team_Abbr and entry.Game_Number.A_Bat_Pos == entry.Order) or
-#                (entry.Game_Number.Inning[0] == 'B' and entry.Game_Number.Home.Team_Abbr == entry.Player.Team.Team_Abbr and entry.Game_Number.H_Bat_Pos == entry.Order)):
-#                max_box = (Lineups
-#                 .select(fn.MAX(Lineups.Box))
-#                 .where((Lineups.Game_Number == entry.Game_Number.Game_Number) & 
-#                        (Lineups.Team == entry.Player.Team.Team_Abbr) & 
-#                        (Lineups.Position == entry.Position)
-#                        )).scalar()
-#                if entry.Box == max_box:
-#                    entry.Game_Number.Swing = int(received['Number'])
-#                    entry.Game_Number.save()
-#                    await gamestatus_check(entry.Game_Number)
-#                    msg = (f"Your swing of {int(received['Number'])} has been submitted in {entry.Game_Number.Game_ID}.")
-#                    return(msg)
+async def bunt(received):
+    if received['Redditor']:
+        reddit_name = received['Redditor']
+        snowflake = ''
+    elif received['Discord']:
+        reddit_name = ''
+        snowflake = received['Discord']
+    batters = (Games
+     .select(Games,Players).join(Lineups).join(Players).join(Users)
+     .where(((Users.Discord_ID == snowflake) or (Users.Reddit_Name == reddit_name)) &
+             (Games.Status == 'Started') & 
+             (Games.Step == 2) &
+             (Games.Batter == Players.Player_ID)))
+    if len(batters) > 0:
+        for entry in batters:
+            with db.atomic():
+                entry.Swing = int(received['Number'])
+                entry.B_Flavor = received['Flavor']
+                entry.Bunt = True
+                entry.save()
+            await gamestatus_check(entry)
+            msg = (f"Your bunt of {int(received['Number'])} has been submitted in {entry.Game_ID}.")
+            return(msg)
+    else:
+        msg = (f"You aren't up to bat in any games right now.")
+        return(msg)
 
 
 async def pitch(received):
@@ -83,6 +89,7 @@ async def pitch(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Reddit_Name == reddit_name) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Pitcher == Players.Player_ID)))
     elif received['Discord']:
         snowflake = received['Discord']
@@ -90,6 +97,7 @@ async def pitch(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Discord_ID == snowflake) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Pitcher == Players.Player_ID)))
     if len(pitchers) > 0:
         for entry in pitchers:
@@ -110,6 +118,7 @@ async def steal(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Reddit_Name == reddit_name) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (
                 ((Games.First_Base == Players.Player_ID) &
                 (Games.Second_Base.is_null(True))) |
@@ -124,6 +133,7 @@ async def steal(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Discord_ID == snowflake) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (
                 ((Games.First_Base == Players.Player_ID) &
                 (Games.Second_Base.is_null(True))) |
@@ -174,6 +184,7 @@ async def throw(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Reddit_Name == reddit_name) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Runner) &
                 (Games.Catcher == Players.Player_ID)
          )).objects()
@@ -183,6 +194,7 @@ async def throw(received):
          .select(Games,Players).join(Lineups).join(Players).join(Users)
          .where((Users.Discord_ID == snowflake) &
                 (Games.Status == 'Started') &
+                (Games.Step == 2) &
                 (Games.Runner) &
                 (Games.Catcher == Players.Player_ID)
          )).objects()

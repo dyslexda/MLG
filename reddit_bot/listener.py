@@ -16,9 +16,10 @@ def reddit_connect():
     return(r)
 
 async def validate(item):
-    commands = ['pitch','swing','steal','throw']
+    commands = ['pitch','swing','bunt ','steal','throw']
     reddit_name = item.author.name
     message_body = item.body
+    # Bunts probably don't work this way yet; will need to strip off whitespace and whatnot
     if message_body.startswith('m!') and message_body[2:7] in commands:
         command = message_body[2:7]
         number = message_body.split(' ')[1]
@@ -26,7 +27,6 @@ async def validate(item):
             flavor = ' '.join(message_body.split(' ')[2:])
         except:
             flavor = None
-#        number = ''.join(filter(str.isdigit,message_body[8:]))
         try:
             number = int(number)
         except:

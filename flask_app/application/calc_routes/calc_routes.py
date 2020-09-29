@@ -28,6 +28,7 @@ class GameState():
         self.First_Base = kwargs['First_Base'] 
         self.Second_Base = kwargs['Second_Base'] 
         self.Third_Base = kwargs['Third_Base'] 
+        self.Bunt = kwargs['Bunt']
 
 class PlayerCard():
 
@@ -52,6 +53,45 @@ def calc_page():
     return render_template(
         'calculator.html')
 
+def calc_code(game):
+    handedness = calc.ranges_calc.calc_handedness(game.Pitcher,game.Batter)
+    ranges = ranges_calc.calc_ranges(ranges_lookup.obr_dict, ranges_lookup.modifiers_dict, game.Pitcher,
+                                     game.Batter, handedness)
+    if game.Bunt:
+        ranges, all_order = ranges_calc.bunt_calc(game, ranges, ranges_lookup.bunt_dict)
+    else:
+        if (game.First_Base != None or game.Second_Base != None):
+            ranges, obr_ordering = ranges_calc.wh_calc(game, ranges)
+        else:
+            obr_ordering = ['HR', '3B', '2B', '1B', 'IF1B', 'BB']
+        ranges = ranges_calc.go_calc(game, ranges, ranges_lookup.go_order_dict)
+        if game.Outs != 2 and (game.Second_Base != None or game.Third_Base != None):
+            ranges, fo_ordering = ranges_calc.dfo_calc(game, ranges)
+        else:
+            fo_ordering = ['FO']
+        brc = ranges_calc.brc_calc(game)
+        outs_ordering = ranges_lookup.go_order_dict[str(brc) + '_' + str(game.Outs)]
+        all_order = obr_ordering + fo_ordering + outs_ordering
+    result_list = []
+    for result in all_order:
+        for _ in range(ranges[result]):
+            result_list.append(result)
+    current = 0
+    results = []
+    for outcome in all_order:
+        window = ranges[outcome]
+        start = current
+        end = current + window - 1
+        line = {}
+        line['Outcome'] = outcome
+        line['Range'] = window
+        line['Start'] = start
+        line['End'] = end
+        results.append(line)
+        current = end + 1
+    ranges_html = gen_ranges_html(results)
+    return(ranges_html,result_list)
+
 @calc_bp.route('/calculator/api', methods=['GET','POST'])
 def calc_api():
     if request.method == 'POST':
@@ -64,40 +104,12 @@ def calc_api():
             thirdb = PlayerCard(Speed=request.form['third_base'])
         pitcher = PlayerCard(Hand=request.form['p_hand'],Movement=request.form['p_mov'],Command=request.form['p_com'],Velocity=request.form['p_vel'],Awareness=request.form['p_awa'])
         batter = PlayerCard(Hand=request.form['b_hand'],Contact=request.form['b_con'],Eye=request.form['b_eye'],Power=request.form['b_pow'],Speed=request.form['b_spe'])
-        game = GameState(Pitcher=pitcher,Batter=batter,Outs=int(request.form['outs']),First_Base=firstb,Second_Base=secondb,Third_Base=thirdb)
-        handedness = calc.ranges_calc.calc_handedness(game.Pitcher,game.Batter)
-        ranges = ranges_calc.calc_ranges(ranges_lookup.obr_dict, ranges_lookup.modifiers_dict, game.Pitcher,
-                                         game.Batter, handedness)
-        if (game.First_Base != None or game.Second_Base != None):
-            ranges, obr_ordering = ranges_calc.wh_calc(game, ranges)
-        else:
-            obr_ordering = ['HR', '3B', '2B', '1B', 'IF1B', 'BB']
-        ranges = ranges_calc.go_calc(game, ranges, ranges_lookup.go_order_dict)
-        if game.Outs != 2 and (game.Second_Base != None or game.Third_Base != None):
-            ranges, fo_ordering = ranges_calc.dfo_calc(game, ranges)
-        else:
-            fo_ordering = ['FO']
-        brc = ranges_calc.brc_calc(game)
-        outs_ordering = ranges_lookup.go_order_dict[str(brc) + '_' + str(game.Outs)]
-        all_order = obr_ordering + fo_ordering + outs_ordering
-        result_list = []
-        for result in all_order:
-            for _ in range(ranges[result]):
-                result_list.append(result)
-        current = 0
-        results = []
-        for outcome in all_order:
-            window = ranges[outcome]
-            start = current
-            end = current + window - 1
-            line = {}
-            line['Outcome'] = outcome
-            line['Range'] = window
-            line['Start'] = start
-            line['End'] = end
-            results.append(line)
-            current = end + 1
-        ranges_html = gen_ranges_html(results)
+        try:
+            request.form['bunt']
+            bunt = True
+        except: bunt = False
+        game = GameState(Pitcher=pitcher,Batter=batter,Outs=int(request.form['outs']),First_Base=firstb,Second_Base=secondb,Third_Base=thirdb,Bunt=bunt)
+        ranges_html,result_list = calc_code(game)
         return(ranges_html)
 
 
@@ -105,39 +117,21 @@ def calc_api():
 def calc_api_ranges(game_number):
     if request.method == 'POST':
         game = Games.get(Games.Game_Number == game_number)
-        handedness = ranges_calc.calc_handedness(game.Pitcher,game.Batter)
-        ranges = ranges_calc.calc_ranges(ranges_lookup.obr_dict, ranges_lookup.modifiers_dict, game.Pitcher,
-                                        game.Batter, handedness)
-        if (game.First_Base != None or game.Second_Base != None):
-            ranges, obr_ordering = ranges_calc.wh_calc(game, ranges)
-        else:
-            obr_ordering = ['HR', '3B', '2B', '1B', 'IF1B', 'BB']
-        ranges = ranges_calc.go_calc(game, ranges, ranges_lookup.go_order_dict)
-        if game.Outs != 2 and (game.Second_Base != None or game.Third_Base != None):
-            ranges, fo_ordering = ranges_calc.dfo_calc(game, ranges)
-        else:
-            fo_ordering = ['FO']
-        brc = ranges_calc.brc_calc(game)
-        outs_ordering = ranges_lookup.go_order_dict[str(brc) + '_' + str(game.Outs)]
-        all_order = obr_ordering + fo_ordering + outs_ordering
-        result_list = []
-        for result in all_order:
-            for _ in range(ranges[result]):
-                result_list.append(result)
-        current = 0
-        results = []
-        for outcome in all_order:
-            window = ranges[outcome]
-            start = current
-            end = current + window - 1
-            line = {}
-            line['Outcome'] = outcome
-            line['Range'] = window
-            line['Start'] = start
-            line['End'] = end
-            results.append(line)
-            current = end + 1
-        ranges_html = gen_ranges_html(results)
+        try:
+            if request.form['bunt']:
+                game.Bunt = True
+                game.save()
+        except:
+            game.Bunt = False
+            game.save()
+        try:
+            if request.form['infield_in']:
+                game.Infield_In = True
+                game.save()
+        except:
+            game.Infield_In = False
+            game.save()
+        ranges_html,result_list = calc_code(game)
         if request.form['pitch'] != '' and request.form['swing'] != '':
             diff = ranges_calc.calc_diff(int(request.form['pitch']),int(request.form['swing']))
             result = result_list[diff]
