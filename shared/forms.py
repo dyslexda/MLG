@@ -1,7 +1,7 @@
 from peewee import *
 from shared.models import Teams, Games, Umpires
 from flask_wtf import FlaskForm
-from wtforms import Form, FieldList, FormField, SelectField, IntegerField, StringField, HiddenField, TextAreaField, RadioField, validators
+from wtforms import Form, FieldList, FormField, SelectField, IntegerField, StringField, HiddenField, TextAreaField, RadioField, BooleanField, validators
 
 class BoxOrderPosForm(Form):
     box_choices = []
@@ -38,6 +38,8 @@ class GameStatusForm(FlaskForm):
     ump_flavor = TextAreaField(label='Ump Flavor',validators=[validators.optional()])
     b_flavor = TextAreaField(label='Batter Flavor',validators=[validators.optional()])
     auto_options = RadioField(label='Auto',choices=[('Process Auto','Process Auto'),('Reset Timer','Reset Timer')],validators=[validators.optional()])
+    bunt = BooleanField(label='Bunt')
+    infield_in = BooleanField(label='Infield In')
 
 class GameCreationForm(FlaskForm):
     teams = Teams.select(Teams)

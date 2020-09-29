@@ -29,7 +29,10 @@ class Users(BaseModel):
     Reddit_Name = CharField(unique=True)
     Discord_Name = CharField(null=True)
     Discord_ID = CharField(unique=True)
-    Roles = CharField(default='Player')
+    Player = BooleanField(default=True)
+    Umpire = BooleanField(default=False)
+    Commissioner = BooleanField(default=False)
+#    Roles = CharField(default='Player')
 
 class Teams(BaseModel):
     id = AutoField(primary_key=True)
@@ -207,7 +210,7 @@ def populate_test_data():
 
     with open('demo_users.csv') as file:
         demo_users = []
-        keys = ['Reddit_Name','Discord_Name','Discord_ID','Roles']
+        keys = ['Reddit_Name','Discord_Name','Discord_ID','Player','Umpire','Commissioner']
         reader = csv.reader(file)
         for row in reader:
             user = dict(zip(keys,row))

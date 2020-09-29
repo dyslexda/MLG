@@ -61,7 +61,7 @@ async def bunt(received):
     elif received['Discord']:
         reddit_name = ''
         snowflake = received['Discord']
-    batters = (Players
+    batters = (Games
      .select(Games,Players).join(Lineups).join(Players).join(Users)
      .where(((Users.Discord_ID == snowflake) or (Users.Reddit_Name == reddit_name)) &
              (Games.Status == 'Started') & 

@@ -219,10 +219,20 @@ def game_manage(game_number):
                 else:
                     if form.r_steal.data != '' and form.runner.data != '' and not game.R_Steal:
                         webhook_functions.steal_start(game,form.runner.data)
+                    try:
+                        if form.bunt:
+                            bunt = True
+                    except:
+                        bunt = False
+                    try:
+                        if form.infield_in:
+                            infield_in = True
+                    except:
+                        infield_in = False
                     with db.atomic():
                         if form.runner.data == '':
                             form.runner.data = None
-                        game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data, 'Ump_Flavor':form.ump_flavor.data,'B_Flavor':form.b_flavor.data}
+                        game_update = {'Status':form.status.data, 'Pitch':form.pitch.data,'Swing':form.swing.data,'R_Steal':form.r_steal.data,'C_Throw':form.c_throw.data,'Runner':form.runner.data, 'Ump_Flavor':form.ump_flavor.data,'B_Flavor':form.b_flavor.data,'Bunt':bunt,'Infield_In':infield_in}
                         Games.update(game_update).where(Games.Game_Number == game.Game_Number).execute()
                         game = Games.get(Games.Game_Number == game_number)
             calc.play_process(game,auto)
@@ -236,7 +246,8 @@ def game_manage(game_number):
         brc = brc,
         lineups = lineups,
         game_pas = game_pas,
-        gamestats = gamestats
+        gamestats = gamestats,
+        user = g.user
     )
 
 @games_bp.context_processor
@@ -271,7 +282,7 @@ def lineup_manage(game_number):
                         Lineups.update(player_update).where((Lineups.Game_Number == game.Game_Number) & (Lineups.Player == player.Player_ID)).execute()
                     valid, errors = validate_lineups(raw_lineups,game)
                     if not valid:
-                        sp.rollback()
+#                        sp.rollback()
                         for error in errors: flash(error)
         return redirect(url_for('games_bp.game_manage',game_number=game_number))
     else:

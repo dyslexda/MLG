@@ -115,14 +115,14 @@ def bunt_calc(game,result_dict,bunt_dict):
     bunt_result_dict = {}
     contact_range = result_dict['On Base'] - result_dict['BB']
     in_play_out_range = 500 - result_dict['On Base'] - result_dict['K']
-    bunt_result_dict['1BWH'] = 10
+    bunt_result_dict['B1BWH'] = 10
     bunt_multiplier = bunt_dict['B1B'][int(game.Batter.Speed - game.Pitcher.Movement)]
     bunt_result_dict['B1B'] = int(Decimal(contact_range * bunt_multiplier).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) - 9
     bunt_result_dict['BB'] = result_dict['BB']
     bunt_result_dict['K'] = result_dict['K']
-    ordering = ['1BWH','B1B','BB','SacB','BFC','K','BDP']
+    ordering = ['B1BWH','B1B','BB','SacB','BFC','K','BDP']
     if brc == 0:
-        ordering = ['1BWH','B1B','BB','BGO','K']
+        ordering = ['B1BWH','B1B','BB','BGO','K']
         bunt_result_dict['BGO'] = in_play_out_range
         return(bunt_result_dict,ordering)
     elif brc == 1:
@@ -136,65 +136,13 @@ def bunt_calc(game,result_dict,bunt_dict):
         base = 'H'
     lead_multiplier = bunt_dict[base][runner_matchup]
     dp_multiplier = bunt_dict['DP'][runner_matchup]
+    if game.Outs == 2 or brc == 5:
+        dp_multiplier = 0
+        ordering.pop()
     bunt_result_dict['SacB'] = int(Decimal(in_play_out_range * lead_multiplier).quantize(Decimal('1.'),rounding='ROUND_HALF_UP'))
     bunt_result_dict['BDP'] = int(Decimal(in_play_out_range * dp_multiplier).quantize(Decimal('1.'),rounding='ROUND_HALF_UP'))
     bunt_result_dict['BFC'] = in_play_out_range - bunt_result_dict['SacB'] - bunt_result_dict['BDP']
     return(bunt_result_dict,ordering)
-
-#def bunt_calc(game,result_dict,bunt_dict):
-#    brc = brc_calc(game)
-#    bunt_result_dict = {}
-#    contact_range = result_dict['On Base'] - result_dict['BB']
-#    in_play_out_range = 500 - result_dict['On Base'] - result_dict['K']
-#    bunt_result_dict['BBOY'] = 10
-#    bunt_result_dict['IF1B'] = contact_range - bunt_result_dict['BBOY']
-#    bunt_result_dict['BB'] = result_dict['BB']
-#    bunt_result_dict['K'] = result_dict['K']
-#    if brc == 0:
-#        ordering = ['BBOY','IF1B','BB','GO','K']
-#    elif brc == 1:
-#        first_matchup = int((game.First_Base.Speed - game.Pitcher.Awareness))
-#        ordering = ['BBOY','IF1B','BB','SacB','FC','K','DP']
-#        bunt_result_dict['SacB'] = int(Decimal(bunt_dict['2'][first_matchup] * in_play_out_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) + 1
-#        bunt_result_dict['DP'] = int(Decimal(bunt_dict['DP'][first_matchup] * in_play_out_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) + 1
-#        bunt_result_dict['FC'] = in_play_out_range - bunt_result_dict['SacB'] - bunt_result_dict['DP']
-#    elif brc == 2:
-#        second_matchup = int((game.Second_Base.Speed - game.Pitcher.Awareness))
-#        ordering = ['BBOY','IF1B','BB','SacB','FC3rd','K']
-#        bunt_result_dict['SacB'] = int(Decimal(bunt_dict['3'][second_matchup] * in_play_out_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) + 1
-#        bunt_result_dict['FC3rd'] = in_play_out_range - bunt_result_dict['SacB']
-#    elif brc == 3:
-#        third_matchup = int((game.Third_Base.Speed - game.Pitcher.Awareness))
-#        ordering = ['BBOY','IF1B','BB','SacB','FCH','K']
-#        bunt_result_dict['SacB'] = int(Decimal(bunt_dict['H'][third_matchup] * in_play_out_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) + 1
-#        bunt_result_dict['FCH'] = in_play_out_range - bunt_result_dict['SacB']
-#    elif brc == 4:
-#        first_matchup = int((game.First_Base.Speed - game.Pitcher.Awareness))
-#        second_matchup = int((game.Second_Base.Speed - game.Pitcher.Awareness))
-#        second_safe = int(Decimal(bunt_dict['2'][first_matchup] * in_play_out_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) + 1
-#        third_safe = int(Decimal(bunt_dict['3'][second_matchup] * in_play_out_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) + 1
-#        if second_safe > third_safe:
-#            ordering = ['BBOY','IF1B','BB','SacB','FC3rd','K','DP31']
-#            bunt_result_dict['SacB'] = third_safe
-#            bunt_result_dict['DP31'] = int(Decimal(bunt_dict['DP'][second_matchup] * in_play_out_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) + 1
-#            bunt_result_dict['FC3rd'] = in_play_out_range - bunt_result_dict['SacB'] - bunt_result_dict['DP31']
-#        else:
-#            ordering = ['BBOY','IF1B','BB','SacB','FC','K','DP21']
-#            bunt_result_dict['SacB'] = second_safe
-#            bunt_result_dict['DP21'] = int(Decimal(bunt_dict['DP'][first_matchup] * in_play_out_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) + 1
-#            bunt_result_dict['FC'] = in_play_out_range - bunt_result_dict['SacB'] - bunt_result_dict['DP21']
-#    elif brc == 5:
-#        first_matchup = int((game.First_Base.Speed - game.Pitcher.Awareness))
-#        third_matchup = int((game.Third_Base.Speed - game.Pitcher.Awareness))
-#        second_safe = int(Decimal(bunt_dict['2'][first_matchup] * in_play_out_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) + 1
-#        home_safe = int(Decimal(bunt_dict['H'][third_matchup] * in_play_out_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) + 1
-#        if second_safe > home_safe:
-#            ordering = ['BBOY','IF1B','BB','SacB','FCH','K','DP21']
-#            bunt_result_dict['SacB'] = second_safe
-#            bunt_result_dict['DP21'] = int(Decimal(bunt_dict['DP'][first_matchup] * in_play_out_range).quantize(Decimal('1.'),rounding='ROUND_HALF_UP')) + 1
-#            bunt_result_dict['FCH'] = in_play_out_range - bunt_result_dict['SacB'] - bunt_result_dict['DP31']
-
-
 
 def wh_calc(game,result_dict):
     brc = brc_calc(game)
