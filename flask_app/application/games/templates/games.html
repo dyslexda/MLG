@@ -7,9 +7,14 @@ Games
 {% block content %}
 
     <div class="container">
-      <h1>Games</h1>
+      <h3>Current Games</h1>
       <hr />
         {% for game in game_list if game.Status == 'Started' %}
+          <li><a href="/games/{{ game.Game_Number }}">{{ game.Game_ID }}</a></li>
+        {% endfor %}<br /><br />
+      <h3>Finished Games</h1>
+      <hr />
+        {% for game in game_list if game.Status == 'Final' %}
           <li><a href="/games/{{ game.Game_Number }}">{{ game.Game_ID }}</a></li>
         {% endfor %}
     </div>

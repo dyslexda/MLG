@@ -68,18 +68,26 @@ def calc_api():
         handedness = calc.ranges_calc.calc_handedness(game.Pitcher,game.Batter)
         ranges = ranges_calc.calc_ranges(ranges_lookup.obr_dict, ranges_lookup.modifiers_dict, game.Pitcher,
                                          game.Batter, handedness)
-        if (game.First_Base != None or game.Second_Base != None):
-            ranges, obr_ordering = ranges_calc.wh_calc(game, ranges)
+        try:
+            request.form['bunt']
+            bunt = True
+        except: bunt = False
+        if bunt:
+            ranges, all_order = ranges_calc.bunt_calc(game, ranges, ranges_lookup.bunt_dict)
+            print(ranges,all_order)
         else:
-            obr_ordering = ['HR', '3B', '2B', '1B', 'IF1B', 'BB']
-        ranges = ranges_calc.go_calc(game, ranges, ranges_lookup.go_order_dict)
-        if game.Outs != 2 and (game.Second_Base != None or game.Third_Base != None):
-            ranges, fo_ordering = ranges_calc.dfo_calc(game, ranges)
-        else:
-            fo_ordering = ['FO']
-        brc = ranges_calc.brc_calc(game)
-        outs_ordering = ranges_lookup.go_order_dict[str(brc) + '_' + str(game.Outs)]
-        all_order = obr_ordering + fo_ordering + outs_ordering
+            if (game.First_Base != None or game.Second_Base != None):
+                ranges, obr_ordering = ranges_calc.wh_calc(game, ranges)
+            else:
+                obr_ordering = ['HR', '3B', '2B', '1B', 'IF1B', 'BB']
+            ranges = ranges_calc.go_calc(game, ranges, ranges_lookup.go_order_dict)
+            if game.Outs != 2 and (game.Second_Base != None or game.Third_Base != None):
+                ranges, fo_ordering = ranges_calc.dfo_calc(game, ranges)
+            else:
+                fo_ordering = ['FO']
+            brc = ranges_calc.brc_calc(game)
+            outs_ordering = ranges_lookup.go_order_dict[str(brc) + '_' + str(game.Outs)]
+            all_order = obr_ordering + fo_ordering + outs_ordering
         result_list = []
         for result in all_order:
             for _ in range(ranges[result]):

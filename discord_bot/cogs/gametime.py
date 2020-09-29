@@ -214,6 +214,17 @@ class GametimeCog(commands.Cog, name="Gametime"):
         else:
             await ctx.send("Please send a number between 1 and 1000.")
 
+    @commands.command(name='bunt')
+    @commands.dm_only()
+    async def bunt(self, ctx, number: int = None, *, arg=None):
+        snowflake = ctx.author.id
+        if number > 0 and number < 1001:
+            payload = {'Command':'bunt','Number':number,'Redditor':None,'Discord':snowflake,'Flavor':arg}
+            msg = await tree.routing(payload)
+            await ctx.send(msg)
+        else:
+            await ctx.send("Please send a number between 1 and 1000.")
+
     @commands.command(name='steal')
     @commands.dm_only()
     async def steal(self, ctx, number: int = None):

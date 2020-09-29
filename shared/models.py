@@ -86,6 +86,8 @@ class Games(BaseModel):
     Swing = IntegerField(null=True)
     C_Throw = IntegerField(null=True)
     R_Steal = IntegerField(null=True)
+    Bunt = BooleanField(default=False)
+    Infield_In = BooleanField(default=False)
     Ump_Flavor = TextField(null=True)
     B_Flavor = TextField(null=True)
     P_Flavor = TextField(null=True)
