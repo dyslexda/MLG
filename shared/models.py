@@ -28,7 +28,7 @@ class Users(BaseModel):
     id = AutoField(primary_key=True)
     Reddit_Name = CharField(unique=True)
     Discord_Name = CharField(null=True)
-    Discord_ID = CharField(unique=True)
+    Discord_ID = CharField(null=True)
     Player = BooleanField(default=True)
     Umpire = BooleanField(default=False)
     Commissioner = BooleanField(default=False)
@@ -206,22 +206,30 @@ def populate_test_data():
 
 
     test_umpires = [
-    {'Crew_Name':'FT_Blasit','Ump1':3,'Ump2':11}]
+    {'Crew_Name':'FT_Blasit','Ump1':15},
+    {'Crew_Name':'BUFPOR','Ump1':11,'Ump2':12,'Ump3':30}]
 
-    with open('demo_users.csv') as file:
-        demo_users = []
+    with open('league_users.csv') as file:
+        league_users = []
         keys = ['Reddit_Name','Discord_Name','Discord_ID','Player','Umpire','Commissioner']
         reader = csv.reader(file)
         for row in reader:
             user = dict(zip(keys,row))
-            demo_users.append(user)
-    with open('test_players.csv') as file:
-        test_players = []
+            league_users.append(user)
+    with open('league_players.csv') as file:
+        league_players = []
         keys = ['User_ID','Player_ID','Player_Name','PPos','SPos','Hand','Team','Contact','Eye','Power','Speed','Movement','Command','Velocity','Awareness']
         reader = csv.reader(file)
         for row in reader:
             player = dict(zip(keys,row))
-            test_players.append(player)
+            league_players.append(player)
+    with open('league_teams.csv') as file:
+        league_teams = []
+        keys = ['Team_Name','Team_Abbr']
+        reader = csv.reader(file)
+        for row in reader:
+            team = dict(zip(keys,row))
+            league_teams.append(team)
 
 
 #    demo_games = [{'Game_Number':50101,'Game_ID':'JAMTRI1','Season':5,'Session':1,'Away':'JAM','Home':'TRI','Umpires':['dyslexda','FT_Blasit']}]
@@ -231,9 +239,9 @@ def populate_test_data():
 #                  {'Game_Number':50202,'Game_ID':'TRICUR2','Season':5,'Session':2,'Away':'TRI','Home':'CUR','Umpires':['dyslexda','FT_Blasit']}]
 
     with db.atomic():
-        Teams.insert_many(demo_teams).execute()
-        Users.insert_many(demo_users).execute()
-        Players.insert_many(test_players).execute()
+        Teams.insert_many(league_teams).execute()
+        Users.insert_many(league_users).execute()
+        Players.insert_many(league_players).execute()
 #        Games.insert_many(test_games).execute()
         Umpires.insert_many(test_umpires).execute()
 

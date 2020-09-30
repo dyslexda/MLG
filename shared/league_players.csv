@@ -1,0 +1,288 @@
+1,1153,Larold,P,,R,POR,,,,,4,3,4,1
+2,4071,Skinny Bear Brown Hill,SS,C,R,FA,3,3,4,2,,,,
+3,4049,Cromulent Embiggens,P,,L,FA,,,,,4,3,3,2
+4,4080,Patrick McDonough,CF,,R,BFB,5,5,1,1,,,,
+5,4046,Jack Meoff,SS,C,R,FA,4,2,2,4,,,,
+6,4079,Pedro Cerrano-Spaz,RF,,R,ASS,3,1,4,4,,,,
+7,4073,Sconnie McSwings,2B,UTIL,R,FA,3,2,3,4,,,,
+8,4082,Scoob Wheatly,LF,,R,FA,3,2,4,3,,,,
+9,4075,Truck Month,CF,,R,KYM,3,4,3,2,,,,
+10,5001,Hugh Stunn,SS,UTIL,R,FA,4,3,3,2,,,,
+11,5002,Luigi DaBetterBruduh,RF,,L,HMH,5,1,1,5,,,,
+12,5003,Pieter Sanchez,C,CINF,R,MAL,2,3,5,2,,,,
+13,5004,Leon Sandcastle,LF,,L,BUF,5,2,2,3,,,,
+14,5005,Narancia Ghirga,CF,,R,POR,3,4,1,4,,,,
+15,5006,Sticky Mickey Mantle,3B,UTIL,R,HFX,1,2,5,4,,,,
+16,3073,Matt Himynamis,P,,R,POR,,,,,5,1,3,3
+17,5007,Dick Richards,LF,,R,GHG,4,1,3,4,,,,
+18,5008,Ross Ewage,3B,UTIL,L,FA,5,2,1,4,,,,
+19,5009,Zaphand Beeblebronx,3B,UTIL,L,FA,1,2,4,5,,,,
+20,1135,RyanGastings,P,,L,ACP,,,,,2,4,2,4
+21,5010,Viktor Patterson,P,,R,ACP,,,,,2,2,5,3
+22,5011,Mo Mo,C,COF,R,ASS,4,5,1,2,,,,
+23,5012,Ben Bramly,C,COF,R,BFB,4,5,1,2,,,,
+24,5013,Kirby Birch,3B,C,R,POR,2,5,3,2,,,,
+25,5014,Sheridan Blackstone,SS,UTIL,R,NO,4,4,1,3,,,,
+26,5015,Holland Oats,CF,,L,HMH,3,1,3,5,,,,
+27,1002,Garitek,C,CINF,R,GRZ,4,4,3,1,,,,
+28,1006,Smitty Hoppenscotch,CF,,L,SMD,4,2,1,5,,,,
+29,1010,Madis Mickelson,RF,,L,SMD,4,4,1,3,,,,
+30,1012,Reservoir Butler,SS,C,R,SMD,4,2,1,5,,,,
+31,1021,Q Kimbrel,CF,,R,POR,5,1,1,5,,,,
+32,1022,Chuck McCluster,RF,,R,GHG,3,4,3,2,,,,
+33,1024,Jordan Peppers,P,,R,HFX,,,,,4,2,2,4
+34,1026,Angel Leon,P,,R,POR,,,,,3,3,5,1
+35,1027,Thomas Nova,P,,L,SMD,,,,,4,4,2,2
+36,1029,Lefty Louis,1B,UTIL,L,SUN,1,5,5,1,,,,
+37,1033,Daz Reference,SS,UTIL,R,BBG,5,4,1,2,,,,
+38,1034,Jack Marnette,LF,,R,SUN,5,2,2,3,,,,
+39,1035,Pete Wheeler,CF,,L,SUN,3,3,1,5,,,,
+40,1036,Spike Suzuki,C,COF,R,HFX,4,4,3,1,,,,
+41,1039,Clive Babineaux,RF,,L,MAL,4,2,4,2,,,,
+42,1041,Barney Summers,C,CINF,L,ACP,5,5,1,1,,,,
+43,1042,Dallas Houston,RF,,R,NO,3,3,5,1,,,,
+44,1043,Tyler Palmatier,1B,UTIL,R,KYM,3,3,4,2,,,,
+45,1051,Superbone Threefinger,CF,,L,OO,4,1,3,4,,,,
+46,1052,Zed Leona,C,CINF,R,HMH,5,4,1,2,,,,
+47,1054,Steve Hofbardozzi Jr.,3B,UTIL,L,HMH,5,4,1,2,,,,
+48,1055,Osmosis Jones,2B,UTIL,L,HMH,4,3,1,4,,,,
+49,1056,Henrik Omega,RF,,L,BFB,3,3,2,4,,,,
+50,1057,Rusty LaRue,1B,,L,FA,5,3,3,1,,,,
+51,1058,Catfish Champ,CF,,L,HMH,5,3,1,3,,,,
+52,1061,Hudson Hildebrandt,P,,R,HMH,,,,,5,1,5,1
+53,1063,Alex Yaxley,C,COF,R,KYM,3,4,4,1,,,,
+54,1064,Dick Pole,1B,UTIL,R,KYM,3,3,5,1,,,,
+55,1067,Austin Schwartz,CF,,L,ACP,5,5,1,1,,,,
+56,1068,Ben Grimm,RF,,R,KYM,3,2,5,2,,,,
+57,1071,Isaac Saffron,C,CINF,L,BFB,5,5,1,1,,,,
+58,1072,Red Trapper,1B,UTIL,L,BFB,2,4,4,2,,,,
+59,1073,Juan Diego De Las Rosas Jr.,2B,UTIL,R,BFB,4,2,1,5,,,,
+60,1074,Donked McToad,P,,R,BFB,,,,,3,4,3,2
+61,1076,Fuzzy Dunlop,P,,L,OO,,,,,3,3,5,1
+62,1079,Babatunde Oladotun,P,,R,OO,,,,,4,2,3,3
+63,1082,Basebally McBaseballface Jr.,RF,,R,GRZ,5,1,1,5,,,,
+64,1083,Tony Smehrik,P,,L,GRZ,,,,,3,5,3,1
+65,1087,Foxx Dashington,P,,L,SUN,,,,,1,5,1,5
+66,1088,Stan Mann,1B,UTIL,R,ACP,5,5,1,1,,,,
+67,1090,James Pablano,P,,R,ACP,,,,,2,5,2,3
+68,1091,Dougal McGoogol,3B,UTIL,R,ACP,4,2,1,5,,,,
+69,1099,Baron Samedi,3B,UTIL,R,BFB,3,3,2,4,,,,
+70,1100,Antwan Zella,C,CINF,R,BUF,5,3,3,1,,,,
+71,1102,Graham Otherie,SS,UTIL,R,BUF,5,2,4,1,,,,
+72,1105,Grey Goose McGillicuddy,3B,UTIL,R,FA,3,3,1,5,,,,
+73,1108,Conor Sexton,1B,UTIL,L,GHG,3,3,4,2,,,,
+74,1119,Willie Mays Hayes,2B,UTIL,R,NO,4,2,1,5,,,,
+75,1120,Johnny Hopkins,3B,UTIL,L,KYM,5,2,2,3,,,,
+76,1122,Finkle Sparkles,P,,R,GHG,,,,,4,2,4,2
+77,1131,KC Bats,LF,,R,BFB,4,2,2,4,,,,
+78,1133,Hank Murphy,C,COF,L,OO,1,5,5,1,,,,
+79,1134,Ornn Mistborn,2B,UTIL,R,GHG,5,2,1,4,,,,
+80,1136,Mason Spurs,SS,UTIL,L,GHG,5,2,2,3,,,,
+81,1137,Jimmy Johns,CF,,L,ACP,5,1,2,4,,,,
+82,1140,Bartholomew Crumblepuff,P,,L,GHG,,,,,3,2,4,3
+83,1149,Garrett Evans,RF,,R,HMH,3,2,5,2,,,,
+84,1150,Ricky Vaughn,P,,R,SUN,,,,,3,4,4,1
+85,1151,Lance Lummoxx,SS,UTIL,R,SMD,3,2,4,3,,,,
+86,1152,Hans Ali,P,,L,FA,,,,,4,4,2,2
+87,1157,JP Panik,SS,UTIL,L,ACP,4,2,4,2,,,,
+88,1158,Master Cashier,SS,UTIL,R,SUN,4,1,2,5,,,,
+89,1159,Clifton Outlaw,RF,,L,KYM,3,2,4,3,,,,
+90,1160,Caleb Athen,1B,UTIL,L,MAL,5,1,1,5,,,,
+91,1162,Nate Lewis,P,,L,NO,,,,,4,2,4,2
+92,1164,Zin Martinez,P,,R,BFB,,,,,3,2,4,3
+93,1165,Dropov Andpicov,2B,UTIL,R,SMD,4,3,2,3,,,,
+94,1166,Ecliptic Astrum,C,CINF,L,BBG,1,5,1,5,,,,
+95,1169,Jerome Garcia,2B,UTIL,R,HMH,5,3,3,1,,,,
+96,1173,Icna Comit,2B,UTIL,L,BUF,5,1,4,2,,,,
+97,1174,Mad Monty,2B,UTIL,R,BBG,4,3,2,3,,,,
+98,1180,War Hamster,2B,UTIL,R,BBG,5,2,1,4,,,,
+99,1184,Buzz Schwinghammer,3B,UTIL,R,GHG,3,3,1,5,,,,
+100,1186,Francis Swagger,1B,UTIL,R,HFX,2,4,4,2,,,,
+101,1187,Brandon Blade,LF,,L,ASS,2,3,5,2,,,,
+102,1189,Ethan Franklin,1B,UTIL,L,FA,5,1,3,3,,,,
+103,1194,Rickey Tucker,P,,R,GHG,,,,,4,2,2,4
+104,1199,Boof Boog,CF,,R,MAL,5,1,5,1,,,,
+105,1201,Mylo Grams,CF,,L,HMH,1,5,5,1,,,,
+106,1205,Stephen Sondheim,P,,R,HMH,,,,,4,3,3,2
+107,1208,Base Ventura,P,,L,BBG,,,,,3,2,3,4
+108,1209,Franz Joseph Hymen,LF,,L,BFB,1,3,4,4,,,,
+109,1210,Berna Pozo,C,COF,R,HFX,4,5,2,1,,,,
+110,1212,Barney Turbo,P,,R,BUF,,,,,4,2,4,2
+111,1217,Johnny Dickshot,SS,UTIL,R,BFB,5,4,1,2,,,,
+112,1220,Al Ternate,LF,,R,SMD,3,4,1,4,,,,
+113,1113,Cookie Mongster,P,,L,BBG,5,5,1,1,5,5,1,1
+114,1222,Justin Martin,C,CINF,R,ASS,3,4,4,1,,,,
+115,2000,Jerry Jingles,P,,R,KYM,,,,,4,4,3,1
+116,2001,Jimjon Jonjim,1B,UTIL,L,ACP,4,3,2,3,,,,
+117,2002,Assassin Xekutioner,3B,UTIL,R,SUN,2,2,3,5,,,,
+118,2005,Kiger Wulf,1B,C,R,NO,3,3,3,3,,,,
+119,2010,Skillz Simanek,SS,UTIL,L,HMH,3,2,4,3,,,,
+120,2012,Burgess Whitehead,3B,UTIL,L,GRZ,4,3,4,1,,,,
+121,2014,Shovel Bryant,2B,UTIL,R,KYM,4,3,1,4,,,,
+122,2020,Demetrios Ooga,2B,UTIL,L,ASS,5,1,2,4,,,,
+123,2029,Lois Whip,P,,R,GRZ,,,,,4,1,4,3
+124,2035,Jhahn Tahmus,C,COF,L,ACP,4,4,3,1,,,,
+125,2036,Sandy Collazo,RF,,L,BUF,1,1,5,5,,,,
+126,2044,Maud Nelson,LF,,L,BBG,4,3,4,1,,,,
+127,2047,Calvin Huff,P,,R,BBG,,,,,3,3,2,4
+128,2049,Brian MacDonald,P,,R,KYM,,,,,5,2,3,2
+129,2055,Harry Peritestes,3B,UTIL,R,ASS,4,3,2,3,,,,
+130,2057,Jack Alpha,3B,UTIL,R,OO,1,5,2,4,,,,
+131,2060,LaPrince Frye,P,,L,ASS,,,,,4,3,2,3
+132,2065,Gus Buster,P,,L,POR,,,,,4,4,3,1
+133,2067,Riles McGiles,RF,,R,SUN,5,5,1,1,,,,
+134,2068,Raphael Akias,C,COF,R,POR,3,5,3,1,,,,
+135,2069,Tygen Shinybeard,LF,,L,POR,3,1,4,4,,,,
+136,2070,Billy Winters,P,,R,GHG,,,,,4,2,2,4
+137,2075,Tactical Panda,P,,R,MAL,,,,,5,5,1,1
+138,2078,Rascal Alex,P,,L,HMH,,,,,2,4,3,3
+139,2081,Cal Lidous,P,,R,SUN,,,,,5,1,5,1
+140,2082,Dixon Uraz,2B,UTIL,L,GHG,5,1,1,5,,,,
+141,2083,Dylan Green,P,,L,HFX,,,,,5,3,2,2
+142,2085,Lloyd Gross,C,COF,R,MAL,2,4,5,1,,,,
+143,2086,Drew Ekstrum,CF,,R,ASS,5,1,1,5,,,,
+144,2088,Dmitri Petrovich,LF,,R,HMH,4,2,3,3,,,,
+145,2090,Goro Shinoda,P,,L,MAL,,,,,5,5,1,1
+146,2093,True Pierce,P,,R,ACP,,,,,4,4,3,1
+147,2094,JZ,SS,UTIL,R,POR,5,1,1,5,,,,
+148,2096,Adam Croft,P,,L,GRZ,,,,,4,3,4,1
+149,2101,Duwan Anonly,RF,,R,KYM,5,3,1,3,,,,
+150,2104,Bobby Portis,P,,R,NO,,,,,3,4,4,1
+151,2106,Declan Archer,CF,,L,GRZ,4,2,2,4,,,,
+152,2107,Kalin Young,C,CINF,R,KYM,1,5,5,1,,,,
+153,2108,Arm N. Hammer,LF,,L,ASS,3,3,2,4,,,,
+154,2109,Nate Duke,2B,UTIL,L,POR,5,1,1,5,,,,
+155,3005,Pablo Sanchez,2B,UTIL,L,SUN,5,3,1,3,,,,
+156,3007,Salvatore De Luca,C,COF,L,GRZ,2,5,4,1,,,,
+157,3009,Bull Dozer,P,,R,MAL,,,,,3,3,4,2
+158,3010,Jarey Butts,1B,UTIL,R,FA,3,2,4,3,,,,
+159,3011,Josef Samuelsson,C,COF,L,NO,5,5,1,1,,,,
+160,3012,Rusty Nails,SS,UTIL,L,GHG,4,1,4,3,,,,
+161,3015,Jason Redd,P,,R,GRZ,,,,,4,1,3,4
+162,3017,Bob Dunagee,3B,UTIL,L,NO,5,2,2,3,,,,
+163,3019,Will The Thrill,1B,UTIL,R,ACP,4,1,2,5,,,,
+164,3020,Bill Bailey,SS,UTIL,R,HFX,3,3,2,4,,,,
+165,3023,Dinger Sampson,CF,,L,NO,5,1,1,5,,,,
+166,3027,Diego Medina,P,,R,NO,,,,,3,3,3,3
+167,3035,Max Power,RF,,L,FA,4,3,2,3,,,,
+168,3037,Doc Holliday,CF,,L,BBG,2,2,5,3,,,,
+169,3039,Bob Wehadababyitzaboy,C,CINF,L,SUN,1,5,1,5,,,,
+170,3042,Joanna McMartinez,P,,L,NO,,,,,5,3,2,2
+171,3043,Rekt Kiddo,3B,C,L,GHG,4,4,3,1,,,,
+172,3046,Johnny Hendrix,P,,L,FA,,,,,4,2,4,2
+173,3048,Maximillian Minninun,LF,,R,GRZ,1,3,5,3,,,,
+174,3049,Ferda Bois,P,,L,SUN,2,4,1,5,2,4,1,5
+175,3050,Annie Campbell,SS,UTIL,L,HFX,1,2,5,4,,,,
+176,3051,Carlo E. Formaggio,2B,UTIL,L,MAL,5,2,1,4,,,,
+177,3052,Oni R1,SS,UTIL,L,FA,3,3,4,2,,,,
+178,3053,Juniped Panda,3B,UTIL,R,SUN,5,1,5,1,,,,
+179,3054,Paulie Wag,SS,UTIL,L,OO,1,5,1,5,,,,
+180,3056,Donatello Chalupa,P,,R,ASS,,,,,3,3,3,3
+181,3057,Frozen Inertia,P,,R,HFX,,,,,5,1,3,3
+182,3058,Rotticus Scott Jr.,1B,C,R,HMH,5,4,2,1,,,,
+183,3059,Skel Etor,1B,C,L,FA,2,4,4,2,,,,
+184,3061,Trog Smash,3B,UTIL,L,BBG,2,3,5,2,,,,
+185,3063,Tyrone Jennings III,P,,R,OO,,,,,5,2,3,2
+186,3065,Robert Atech,CF,,L,NO,3,3,5,1,,,,
+187,3066,Thor Heyerdahl,1B,UTIL,R,OO,5,1,4,2,,,,
+188,3068,Flick Maplethorpe,LF,,L,OO,3,3,1,5,,,,
+189,3069,Wallace Grommet,SS,C,L,GRZ,4,3,4,1,,,,
+190,3077,Derek Bongiovanni,C,COF,R,NO,1,5,1,5,,,,
+191,3078,Chakra Pilates,C,COF,L,BBG,4,3,2,3,,,,
+192,3080,Jeff Dingerhitter,1B,UTIL,R,ASS,3,2,4,3,,,,
+193,3082,Basethony Balltano,C,COF,L,SMD,5,4,2,1,,,,
+194,3083,Poop McGee,P,,L,POR,,,,,4,1,4,3
+195,3084,Ryan Tyburn,2B,UTIL,R,GRZ,5,5,1,1,,,,
+196,3085,Red Arrow,P,,R,ASS,,,,,2,2,4,4
+197,3086,Nono Nones,LF,,R,GHG,5,1,2,4,,,,
+198,3087,Xerxes Dalin,3B,UTIL,L,FA,4,3,2,3,,,,
+199,3088,Yoel Roshi,P,,L,BUF,,,,,4,2,2,4
+200,3089,Joey Wheeler,P,,L,OO,,,,,1,1,5,5
+201,3091,Zelk Antilles,3B,UTIL,L,OO,3,3,5,1,,,,
+202,3092,Thelonius Junk,2B,UTIL,L,ASS,5,3,1,3,,,,
+203,1089,Jefferson Steelflex,SS,UTIL,L,BFB,4,3,4,1,,,,
+204,1069,Rub A. Chikin,2B,UTIL,R,POR,3,5,1,3,,,,
+205,4000,King Kruul,RF,,R,GHG,1,5,5,1,,,,
+206,4001,Fat Wad,3B,C,L,FA,3,2,5,2,,,,
+207,4002,Jeff Downey,3B,UTIL,L,FA,3,3,5,1,,,,
+208,4004,Animals Garritsen,CF,,R,BUF,1,5,5,1,,,,
+209,4007,Reese Worthington,LF,,L,HFX,3,3,3,3,,,,
+210,4008,LaCarpetron Dukemarriot,LF,,R,SMD,5,2,2,3,,,,
+211,4009,Johnny Dawkins,1B,UTIL,R,FA,2,3,4,3,,,,
+212,4010,North McLean,CF,,L,BUF,1,5,1,5,,,,
+213,4011,Mitch Meanmug,LF,,R,BUF,2,4,5,1,,,,
+214,4012,Deku Matsui,2B,UTIL,R,HFX,3,4,2,3,,,,
+215,4016,Shortpoleon Napsleeve,RF,,R,HFX,3,2,4,3,,,,
+216,4017,Andrew Nova,P,,L,KYM,,,,,5,3,1,3
+217,4018,Slow low,2B,C,R,BUF,3,4,3,2,,,,
+218,4019,Russel Ellis,2B,UTIL,R,OO,3,4,1,4,,,,
+219,4020,Aapo,C,COF,L,BAN,1,5,1,5,,,,
+220,4022,Adonis Sinoda,1B,UTIL,R,GRZ,2,4,5,1,,,,
+221,4023,Vinny Vega,P,,R,BUF,,,,,2,4,4,2
+222,4024,Didja Naylor,1B,UTIL,R,BBG,4,2,4,2,,,,
+223,4025,Bast Fidgewidget,RF,,R,BBG,4,4,1,3,,,,
+224,1062,BB Bambino Jr.,SS,UTIL,R,KYM,5,5,1,1,,,,
+225,4033,Leonidas States,SS,UTIL,L,BBG,4,2,5,1,,,,
+226,4034,Gargle Nutz,2B,UTIL,R,SUN,3,3,4,2,,,,
+227,2097,Bobby Vance,SS,UTIL,L,ASS,5,2,3,2,,,,
+228,2056,Art Vulfmon,2B,UTIL,R,OO,4,2,1,5,,,,
+229,4035,Dirk Dangerous,CF,,L,KYM,1,1,5,5,,,,
+230,1032,Charlie Scott,C,COF,L,SUN,5,5,1,1,,,,
+231,2007,Karolina Miaukatwicz,3B,UTIL,L,HFX,5,2,1,4,,,,
+232,4036,Turk Schmidt,3B,UTIL,L,FA,4,2,4,2,,,,
+233,2080,Junebug Wray,P,,R,FA,,,,,3,2,5,2
+234,3038,Lincoln Crawford,1B,UTIL,L,NO,3,3,5,1,,,,
+235,4037,Thor Odinsson,P,,R,KYM,,,,,5,3,3,1
+236,4039,Wild Legs Wilkerson,CF,,L,MAL,,,,,2,4,4,2
+237,4040,Trogdor Fhqwhgads,RF,,L,OO,5,2,1,4,,,,
+238,4041,John Rhys Ealy,3B,UTIL,L,BUF,4,3,3,2,,,,
+239,4042,Sarah Buntingsworth,1B,UTIL,L,POR,4,2,2,4,,,,
+240,4043,Cap Keeler,C,CINF,L,GHG,4,4,2,2,,,,
+241,4044,Ura Irons,1B,UTIL,R,BUF,3,3,3,3,,,,
+242,1028,Haraldo MacKenzie,SS,UTIL,R,HMH,5,1,4,2,,,,
+243,1211,Pete Jones,LF,,L,MAL,5,1,5,1,,,,
+244,4048,Mike Fruitstand,2B,UTIL,R,POR,4,2,2,4,,,,
+245,4050,Cali Guerensk,P,,R,BFB,,,,,2,5,2,3
+246,9993,Petra Sabor,LF,,R,MAL,5,5,1,1,,,,
+247,9994,George Ewell,C,COF,R,ACP,2,5,4,1,,,,
+248,1097,Jameson Poe,C,COF,L,GRZ,2,5,4,1,,,,
+249,2037,Remi Renaldo,C,CINF,R,POR,5,5,1,1,,,,
+250,9997,Steel Pipe Simpson,CF,,R,BFB,3,3,3,3,,,,
+251,9998,Dominus Nominus,LF,,R,GHG,2,2,4,4,,,,
+252,9999,Pops Dongoria,P,,R,SMD,,,,,5,3,2,2
+253,4065,Tristan Scoops,C,CINF,L,OO,3,3,5,1,,,,
+254,4066,Brusdar Powerade,C,COF,L,BUF,1,5,5,1,,,,
+255,4067,Dogwood Maple,RF,,L,BUF,4,5,1,2,,,,
+256,4068,Cam’ron West,2B,UTIL,R,BFB,1,5,1,5,,,,
+257,4069,Hot Dog Jeopardy,C,COF,R,SUN,1,4,4,3,,,,
+258,4070,Ioe Torrent,RF,,L,HFX,4,2,5,1,,,,
+259,9991,Whitt Bass,,,,BFB,,,,,,,,
+260,4078,Sleve McDichael,P,,R,MAL,,,,,4,2,2,4
+261,4072,Nicholas Fouss,RF,,L,HFX,3,2,3,4,,,,
+262,4076,Grimothy Johnson,P,,R,BUF,,,,,2,5,4,1
+263,3071,Wheeler Walker III,RF,,L,SUN,3,2,3,4,,,,
+264,4081,Toppo Thamornin,P,,R,BBG,,,,,5,1,4,2
+265,1008,Atlas Quin,P,,L,SMD,,,,,5,2,4,1
+266,1156,Thomas Thompson II,3B,UTIL,R,SMD,3,1,4,4,,,,
+267,1206,VeeDee Johnson,C,CINF,R,SMD,4,1,4,3,,,,
+268,4015,Plack Attack,1B,UTIL,R,SMD,3,3,4,2,,,,
+269,1023,Dan Gerzone,2B,UTIL,R,SMD,4,2,4,2,,,,
+270,4021,Jeff Shagwell,RF,,L,SMD,3,1,5,3,,,,
+271,1141,Geno Scaramucci,CF,,L,GRZ,4,4,2,2,,,,
+272,2042,Skrunk Meinhoffer,LF,,L,GHG,1,3,5,3,,,,
+273,1098,Kegs Mabry,CF,,L,SMD,3,1,5,3,,,,
+274,4045,Dakota Carolina Montana,RF,,R,NO,5,2,3,2,,,,
+275,5016,LeBarn James,RF,,R,ACP,4,3,1,2,,,,
+276,5017,Makesiondon Kelkboom,SS,UTIL,L,ASS,3,1,4,4,,,,
+277,3028,Loghan O'Brien,P,,L,BUF,,,,,3,4,3,2
+278,2032,Kali McSuntas,P,,L,BFB,,,,,5,2,1,4
+279,1191,Morris Deratt,1B,C,R,MAL,5,5,1,1,,,,
+280,5018,Brian Taylor,2B,UTIL,L,GRZ,4,4,1,3,,,,
+281,5019,Connor Morgan ,3B,UTIL,R,MAL,3,2,4,3,,,,
+282,5020,W.C. Timluc,CF,,R,FA,2,3,3,4,,,,
+283,2073,Dom Emnic,SS,UTIL,R,MAL,4,2,3,3,,,,
+284,5021,Kenny Kawaguchi,P,,L,FA,,,,,4,2,3,3
+285,3075,H.D. Dog,CF,,L,HFX,4,2,1,5,,,,
+286,5022,Release T. Kraken,CF,,R,BBG,5,1,3,3,,,,
+287,2025,Britt O'War,P,,L,HFX,,,,,3,4,3,2
+288,3079,Isaac Snowbender,LF,,R,OO,5,1,5,1,,,,
