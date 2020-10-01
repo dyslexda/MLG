@@ -133,3 +133,4 @@ dmypy.json
 # Specific stuff to this repo
 
 *.s
+client_secret.json

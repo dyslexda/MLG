@@ -53,11 +53,11 @@ def calc_page():
     return render_template(
         'calculator.html')
 
-def calc_code(game):
+def calc_code(game,bunt,if_i):
     handedness = calc.ranges_calc.calc_handedness(game.Pitcher,game.Batter)
     ranges = ranges_calc.calc_ranges(ranges_lookup.obr_dict, ranges_lookup.modifiers_dict, game.Pitcher,
                                      game.Batter, handedness)
-    if game.Bunt:
+    if bunt:
         ranges, all_order = ranges_calc.bunt_calc(game, ranges, ranges_lookup.bunt_dict)
     else:
         if (game.First_Base != None or game.Second_Base != None):
@@ -108,8 +108,12 @@ def calc_api():
             request.form['bunt']
             bunt = True
         except: bunt = False
+        try:
+            request.form['infield_in']
+            if_i = True
+        except: if_i = False
         game = GameState(Pitcher=pitcher,Batter=batter,Outs=int(request.form['outs']),First_Base=firstb,Second_Base=secondb,Third_Base=thirdb,Bunt=bunt)
-        ranges_html,result_list = calc_code(game)
+        ranges_html,result_list = calc_code(game,bunt,if_i)
         return(ranges_html)
 
 
@@ -119,19 +123,15 @@ def calc_api_ranges(game_number):
         game = Games.get(Games.Game_Number == game_number)
         try:
             if request.form['bunt']:
-                game.Bunt = True
-                game.save()
+                bunt = True
         except:
-            game.Bunt = False
-            game.save()
+            bunt = False
         try:
             if request.form['infield_in']:
-                game.Infield_In = True
-                game.save()
+                if_i = True
         except:
-            game.Infield_In = False
-            game.save()
-        ranges_html,result_list = calc_code(game)
+            if_i = False
+        ranges_html,result_list = calc_code(game,bunt,if_i)
         if request.form['pitch'] != '' and request.form['swing'] != '':
             diff = ranges_calc.calc_diff(int(request.form['pitch']),int(request.form['swing']))
             result = result_list[diff]
