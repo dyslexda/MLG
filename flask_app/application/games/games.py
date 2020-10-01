@@ -220,13 +220,17 @@ def game_manage(game_number):
                     if form.r_steal.data != '' and form.runner.data != '' and not game.R_Steal:
                         webhook_functions.steal_start(game,form.runner.data)
                     try:
-                        if form.bunt:
+                        if form.bunt.data:
                             bunt = True
+                        else:
+                            bunt = False
                     except:
                         bunt = False
                     try:
-                        if form.infield_in:
+                        if form.infield_in.data:
                             infield_in = True
+                        else:
+                            infield_in = False
                     except:
                         infield_in = False
                     with db.atomic():
