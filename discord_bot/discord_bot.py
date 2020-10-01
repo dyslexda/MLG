@@ -16,7 +16,7 @@ initial_extensions = [
                       'cogs.gametime'
                                    ]
 
-bot = commands.Bot(command_prefix='m!',description='MLG Discord Bot',owner_id=202278109708419072)
+bot = commands.Bot(command_prefix=('m!','M!'), description='MLG Discord Bot',owner_id=202278109708419072)
 
 if __name__ == '__main__':
     for extension in initial_extensions:
