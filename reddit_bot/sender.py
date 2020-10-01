@@ -70,15 +70,17 @@ def reddit_resultbug(game,result_msg):
     r = reddit_connect()
     thread = r.submission(id=game.Reddit_Thread)
     thread.comment_sort = "new"
+    if game.B_Flavor:
+        msg = (f"{game.Batter.Player_Name}: {game.B_Flavor}\n\n")
+    else:
+        msg = ''
     pitch_line = (f"    Pitch:  {game.Pitch}\n")
     swing_line = (f"    Swing:  {game.Swing}\n")
     diff_line = (f"    Diff:   {ranges_calc.calc_diff(game.Pitch, game.Swing)}\n")
     result_line = (f"    Result: {result_msg[9]}\n")
     outs_line = (f"    Outs:   {game.Outs}\n")
     score_line = (f"    {game.Away.Team_Abbr} {game.A_Score} {game.Home.Team_Abbr} {game.H_Score}\n\n")
-    msg = pitch_line + swing_line + diff_line + result_line + outs_line + score_line
-    if game.B_Flavor:
-        msg += (f"{game.Batter.Player_Name}: {game.B_Flavor}\n\n")
+    msg += pitch_line + swing_line + diff_line + result_line + outs_line + score_line
     if game.Ump_Flavor:
         msg += game.Ump_Flavor
     for comment in thread.comments: 
