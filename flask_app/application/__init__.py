@@ -1,4 +1,5 @@
 import sys, os, logging
+from logging.handlers import RotatingFileHandler
 from os import path
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
@@ -13,6 +14,18 @@ def create_app():
     app.config.from_object('config.Config')
     assets = Environment()
     assets.init_app(app)
+
+    if not app.debug:
+        if not os.path.exists('logs'):
+            os.mkdir('logs')
+        file_handler = RotatingFileHandler('logs/baseball.log', maxBytes=10240,
+                                       backupCount=10)
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('Baseball startup')
 
     with app.app_context():
         from .index import index
