@@ -288,6 +288,8 @@ def lineup_manage(game_number):
                     if not valid:
 #                        sp.rollback()
                         for error in errors: flash(error)
+                    else:
+                        calc.active_players(game)
         return redirect(url_for('games_bp.game_manage',game_number=game_number))
     else:
         for entry in lineups:
