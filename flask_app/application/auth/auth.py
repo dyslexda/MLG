@@ -35,6 +35,7 @@ def authorized():
         access_token = getOAuthToken(code)
         reddit_name = getIdentity(access_token)
         session['username'] = reddit_name
+        session.permanent = True
         user = Users.get_or_none(Users.Reddit_Name == reddit_name)
         if user:
             session['umpire'] = user.Umpire
