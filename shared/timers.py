@@ -37,7 +37,7 @@ async def main():
                             base = int(game.Runner) + 1
                             result = 'AutoSB' + str(base)
                             msg = play_check(game,auto=result)
-                elif game.PA_Timer and not game.Pitch and not game.Swing:
+                elif game.PA_Timer and not (game.Pitch and game.Swing):
                     timer_exp = game.PA_Timer.replace(tzinfo=timezone.utc).timestamp() + (60*60*12)
                     if timer_exp < now:
                         if not game.Pitch:
