@@ -150,7 +150,7 @@ def linescore_gen(game,game_pas):
     line2 = line2 + "**R**|**H**|\n"
     line3 = line3 + "|\n"
     line4 = (f"|**{game.Away.Team_Abbr}**|")
-    line5 = (f"|**{game.Away.Team_Abbr}**|")
+    line5 = (f"|**{game.Home.Team_Abbr}**|")
     for inning in range(1,inning_no+1):
         away_runs = 0
         home_runs = 0

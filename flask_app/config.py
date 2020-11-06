@@ -33,3 +33,4 @@ class Config:
     # Extra Config
     REQ_POSITIONS = environ.get('REQ_POSITIONS')
     LINEUP_SIZE = environ.get('LINEUP_SIZE')
+    SCOUTING = environ.get('SCOUTING').lower() == 'true'

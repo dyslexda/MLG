@@ -1,9 +1,9 @@
-import sys, os, logging
+import sys, os, logging, time
 from logging.handlers import RotatingFileHandler
 from os import path
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
-from flask import Flask, session, g
+from flask import Flask, session, g, request, has_request_context
 from flask_assets import Environment
 from shared.models import *
 
@@ -35,8 +35,7 @@ def create_app():
         from .admin import admin
         from .games import games
         from .calc_routes import calc_routes
-    
-    
+
         app.register_blueprint(index.index_bp)
         app.register_blueprint(teams.teams_bp)
         app.register_blueprint(players.players_bp)
@@ -45,18 +44,42 @@ def create_app():
         app.register_blueprint(games.games_bp)
         app.register_blueprint(calc_routes.calc_bp)
 
+        if app.config['SCOUTING'] == True:
+            from .scouting import scouting
+            app.register_blueprint(scouting.scouting_bp,url_prefix='/scouting')
+
         @app.before_request
         def before_request():
-            db.connect()
+            db.connect(reuse_if_open=True)
             username = session.get('username')
             if username is None:
                 g.user = None
             else:
                 g.user = Users.get_or_none(Users.Reddit_Name == username)
-        
+            if not request.environ['RAW_URI'].endswith(tuple(['.css','.js','.png','.ico'])):
+                accessfile = open("accesslog.txt","a")
+                try:
+                    if g.user != None:
+                        user = g.user.Reddit_Name
+                    else: user = None
+                    report = logger(request,user)
+                except Exception as inst:
+                    report = inst
+                accessfile.write(str(report))
+                accessfile.close()
+
         @app.teardown_request
         def after_request(response):
             db.close()
             return response
 
         return app
+
+def logger(request,user):
+    ip = request.environ['HTTP_X_FORWARDED_FOR']
+    uri = request.environ['RAW_URI']
+    if request.method == 'POST':
+        payload = request.get_json(force=True)
+    else: payload = ''
+    report = (f"{time.asctime()}	{ip}	{user}	{uri}	{payload}\n")
+    return(report)
