@@ -1,4 +1,6 @@
 import sys, os, logging, time
+import connexion
+from flask_marshmallow import Marshmallow
 from logging.handlers import RotatingFileHandler
 from os import path
 from pathlib import Path
@@ -8,7 +10,15 @@ from flask_assets import Environment
 from shared.models import *
 
 def create_app():
-    app = Flask(__name__,instance_relative_config=True)
+    basedir = os.path.abspath(os.path.dirname(__file__))
+ #   print(basedir)
+    connex_app = connexion.FlaskApp(__name__,specification_dir='api/')
+    connex_app.add_api('specification.yml')
+    app = connex_app.app
+    
+
+#    ma = Marshmallow(app)
+#    app = Flask(__name__,instance_relative_config=True)
     logging.basicConfig(filename='output.log',
                         level=logging.WARNING)
     app.config.from_object('config.Config')
@@ -35,6 +45,7 @@ def create_app():
         from .admin import admin
         from .games import games
         from .calc_routes import calc_routes
+        from .api import api
 
         app.register_blueprint(index.index_bp)
         app.register_blueprint(teams.teams_bp)
@@ -43,6 +54,7 @@ def create_app():
         app.register_blueprint(admin.admin_bp)
         app.register_blueprint(games.games_bp)
         app.register_blueprint(calc_routes.calc_bp)
+        app.register_blueprint(api.api_bp)
 
         if app.config['SCOUTING'] == True:
             from .scouting import scouting
