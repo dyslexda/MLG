@@ -1,0 +1,287 @@
+swagger: "2.0"
+info:
+  version: "1.0.0"
+  title: "MLN API"
+basePath: "/api/v1"
+tags:
+  - name: "baseball"
+schemes:
+  - "https"
+consumes:
+  - "application/json"
+produces:
+  - "application/json"
+paths:
+  /persons:
+    get:
+      tags:
+        - "persons"
+      summary: "Get all persons in database"
+      operationId: "get_persons"
+      responses:
+        200:
+          description: "Successfully retrieved persons"
+          schema:
+            $ref: "#/definitions/Persons"
+      x-swagger-router-controller: "application.api.api"
+  /persons/{person_id}:
+    get:
+      tags:
+        - "person"
+      summary: "Get a single person"
+      operationId: "get_person"
+      parameters:
+        - name: "person_id"
+          in: "path"
+          description: "The id of the person to retrieve"
+          required: true
+          type: "string"
+      responses:
+        200:
+          description: "Successfully retrived person"
+          schema:
+            $ref: "#/definitions/Person"
+        404:
+          description: "Person doesn't exist"
+      x-swagger-router-controller: "application.api.api"
+  /persons/search:
+    get:
+      tags:
+        - "some_persons"
+      summary: "Search for persons"
+      operationId: "get_some_persons"
+      parameters:
+        - name: "Team"
+          in: "query"
+          description: "A person's team"
+          required: false
+          type: "string"
+          maxLength: 4
+        - name: "Player"
+          in: "query"
+          description: "Is a player"
+          required: false
+          type: "boolean"
+        - name: "Captain"
+          in: "query"
+          description: "Is a captain"
+          required: false
+          type: "boolean"
+        - name: "GM"
+          in: "query"
+          description: "Is a GM"
+          required: false
+          type: "boolean"
+        - name: "Retired"
+          in: "query"
+          description: "Is retired"
+          required: false
+          type: "boolean"
+        - name: "Hiatus"
+          in: "query"
+          description: "Is on hiatus"
+          required: false
+          type: "boolean"
+        - name: "Rookie"
+          in: "query"
+          description: "Is a rookie"
+          required: false
+          type: "boolean"
+        - name: "Primary"
+          in: "query"
+          description: "A person's primary position"
+          required: false
+          type: "string"
+          enum: [P,C,1B,2B,3B,SS,LF,CF,RF]
+        - name: "Backup"
+          in: "query"
+          description: "A person's backup position"
+          required: false
+          type: "string"
+          enum: [C,CINF,COIF,UTIL]
+        - name: "Hand"
+          in: "query"
+          description: "A person's handedness"
+          required: false
+          type: "string"
+          enum: [L,R]
+        - name: "CON"
+          in: "query"
+          description: "A person's Contact"
+          required: false
+          type: "integer"
+          maximum: 6
+          minimum: 0
+        - name: "EYE"
+          in: "query"
+          description: "A person's Eye"
+          required: false
+          type: "integer"
+          maximum: 6
+          minimum: 0
+        - name: "PWR"
+          in: "query"
+          description: "A person's Power"
+          required: false
+          type: "integer"
+          maximum: 6
+          minimum: 0
+        - name: "SPD"
+          in: "query"
+          description: "A person's Speed"
+          required: false
+          type: "integer"
+          maximum: 6
+          minimum: 0
+        - name: "MOV"
+          in: "query"
+          description: "A person's Movement"
+          required: false
+          type: "integer"
+          maximum: 6
+          minimum: 0
+        - name: "CMD"
+          in: "query"
+          description: "A person's Command"
+          required: false
+          type: "integer"
+          maximum: 6
+          minimum: 0
+        - name: "VEL"
+          in: "query"
+          description: "A person's Velocity"
+          required: false
+          type: "integer"
+          maximum: 6
+          minimum: 0
+        - name: "AWA"
+          in: "query"
+          description: "A person's Awareness"
+          required: false
+          type: "integer"
+          maximum: 6
+          minimum: 0
+      responses:
+        200:
+          description: "Successfully searched for persons"
+          schema:
+            $ref: "#/definitions/Persons"
+        404:
+          description: "Search resulted in zero persons."
+      x-swagger-router-controller: "application.api.api"
+definitions:
+  Persons:
+    type: array
+    items:
+      $ref: "#/definitions/Person"
+  Person:
+    type: "object"
+    required:
+      - "PersonID"
+      - "Current_Name"
+      - "Stats_Name"
+      - "Reddit"
+      - "Discord"
+      - "Discord_ID"
+      - "Team"
+      - "Player"
+      - "Captain"
+      - "GM"
+      - "Retired"
+      - "Hiatus"
+      - "Rookie"
+      - "Primary"
+      - "Backup"
+      - "Hand"
+      - "CON"
+      - "EYE"
+      - "PWR"
+      - "SPD"
+      - "MOV"
+      - "CMD"
+      - "VEL"
+      - "AWR"
+    properties:
+      PersonID:
+        type: "integer"
+        format: "int32"
+      Current_Name:
+        type: "string"
+      Stats_Name:
+        type: "string"
+      Reddit:
+        type: "string"
+      Discord:
+        type: "string"
+      Discord_ID:
+        type: "integer"
+        format: "int64"
+      Team:
+        type: "string"
+      Player:
+        type: "boolean"
+      Captain:
+        type: "boolean"
+      GM:
+        type: "boolean"
+      Retired:
+        type: "boolean"
+      Hiatus:
+        type: "boolean"
+      Rookie:
+        type: "boolean"
+      Primary:
+        type: "string"
+      Backup:
+        type: "string"
+      Hand:
+        type: "string"
+      CON:
+        type: "integer"
+        format: "int32"
+      EYE:
+        type: "integer"
+        format: "int32"
+      PWR:
+        type: "integer"
+        format: "int32"
+      SPD:
+        type: "integer"
+        format: "int32"
+      MOV:
+        type: "integer"
+        format: "int32"
+      CMD:
+        type: "integer"
+        format: "int32"
+      VEL:
+        type: "integer"
+        format: "int32"
+      AWR:
+        type: "integer"
+        format: "int32"
+    example:
+      PersonID: 2069
+      Current_Name: "Tygen Shinybeard"
+      Stats_Name: "Tygen Shinybeard"
+      Reddit: "dyslexda"
+      Discord: "dyslexda#0531"
+      Discord_ID: 202278109708419072
+      Team: "POR"
+      Player: true
+      Captain: true
+      GM: false
+      Retired: false
+      Hiatus: false
+      Rookie: false
+      Primary: "LF"
+      Backup: ""
+      Hand: "L"
+      CON: 3
+      EYE: 1
+      PWR: 4
+      SPD: 4
+      MOV: 0
+      CMD: 0
+      VEL: 0
+      AWR: 0

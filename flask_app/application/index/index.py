@@ -11,15 +11,10 @@ index_bp = Blueprint(
     static_folder='static'
 )
 
+# With Connexion, 'index.html' is overriden for some reason
 @index_bp.route('/', methods=['GET'])
 def index():
     """Homepage."""
     return render_template(
-        'index.html',
+        'index0.html',
     )
-
-@index_bp.route('/test',methods=['GET','POST'])
-def test():
-    with requests.Session() as s:
-        webhook = Webhook.partial(app.config['WEBHOOK_ID'], app.config['WEBHOOK_TOKEN'], adapter=RequestsWebhookAdapter(s))
-        webhook.send('test')
