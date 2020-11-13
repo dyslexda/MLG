@@ -90,9 +90,6 @@ class PersonsSchema(ModelSchema):
         dump_only_pk = False
         string_keys = False
 
-#result,errors = PersonsSchema().dump(Persons.get(Persons.PersonID==1153))
-#print(result,errors)
-
 class Schedules(BaseModel):
     id = AutoField(primary_key=True)
     Session = IntegerField()
@@ -104,18 +101,13 @@ class Schedules(BaseModel):
     H_Score = IntegerField(null=True)
     Inning = CharField(null=True)
     Situation = CharField(null=True)
-#    Win = CharField(null=True)
-#    Loss = CharField(null=True)
     Win = ForeignKeyField(Teams,field='Abbr',null=True)
     Loss = ForeignKeyField(Teams,field='Abbr',null=True)
-#    WP = CharField(null=True)
-#    LP = CharField(null=True)
-#    SV = CharField(null=True)
-    POTG = CharField(null=True)
     WP = ForeignKeyField(Persons,field='Stats_Name',null=True)
     LP = ForeignKeyField(Persons,field='Stats_Name',null=True)
     SV = ForeignKeyField(Persons,field='Stats_Name',null=True)
 #    POTG = ForeignKeyField(Persons,field='Stats_Name',null=True)
+    POTG = CharField(null=True)
     Umpire = CharField(null=True)
     Reddit = CharField(null=True)
     Log = CharField(null=True)
@@ -123,7 +115,9 @@ class Schedules(BaseModel):
     Total_Plays = IntegerField(null=True)
     Plays_Per_Day = FloatField(null=True)
 
-
+class SchedulesSchema(ModelSchema):
+    class Meta:
+        model = Schedules
 
 def build_plays_s5():
     db.connect(reuse_if_open=True)
@@ -217,7 +211,7 @@ def build_schedules():
                     if schedule[entry] == '':
                         schedule[entry] = None
                 schedules.append(schedule)
-    schedules.pop(0)
+#    schedules.pop(0)
     with db.atomic():
         Schedules.insert_many(schedules).execute()
 

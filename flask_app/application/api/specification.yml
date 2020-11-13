@@ -169,7 +169,179 @@ paths:
         404:
           description: "Search resulted in zero persons."
       x-swagger-router-controller: "application.api.api"
+  /schedules:
+    get:
+      tags:
+        - "schedules"
+      summary: "Team schedules"
+      operationId: "schedules"
+      parameters:
+        - name: "Team"
+          in: "query"
+          description: "Is a team"
+          required: false
+          type: "string"
+          maxLength: 4
+      responses:
+        200:
+          description: "Successfully retrieved schedules"
+          schema:
+            $ref: "#/definitions/Schedules"
+        404:
+          description: "Schedules failed"
+      x-swagger-router-controller: "application.api.api"
+  /standings:
+    get:
+      tags:
+        - "standings"
+      summary: "Divisional standings"
+      operationId: "standings"
+      responses:
+        200:
+          description: "Successfully retrieved standings"
+          schema:
+            $ref: "#/definitions/AllStandings"
+        404:
+          description: "Standings failed"
+      x-swagger-router-controller: "application.api.api"
 definitions:
+  Schedules:
+    type: array
+    items:
+      $ref: "#/definitions/Schedule"
+  Schedule:
+    type: "object"
+    required:
+      - "Session"
+      - "Game_No"
+      - "Away"
+      - "Home"
+      - "Game_ID"
+      - "A_Score"
+      - "H_Score"
+      - "Inning"
+      - "Situation"
+      - "Win"
+      - "Loss"
+      - "WP"
+      - "LP"
+      - "SV"
+      - "POTG"
+      - "Umpire"
+      - "Reddit"
+      - "Log"
+      - "Duration"
+      - "Total_Plays"
+      - "Plays_Per_Day"
+    properties:
+      Session:
+        type: "integer"
+      Game_No:
+        type: "integer"
+      Away:
+        type: "string"
+      Home:
+        type: "string"
+      Game_ID:
+        type: "string"
+      A_Score:
+        type: "integer"
+      H_Score:
+        type: "integer"
+      Inning:
+        type: "string"
+      Situation:
+        type: "string"
+      Win:
+        type: "string"
+      Loss:
+        type: "string"
+      WP:
+        type: "string"
+      LP:
+        type: "string"
+      SV:
+        type: "string"
+      POTG:
+        type: "string"
+      Umpire:
+        type: "string"
+      Reddit:
+        type: "string"
+      Log:
+        type: "string"
+      Duration:
+        type: "number"
+        format: "float"
+      Total_Plays:
+        type: "integer"
+      Plays_Per_Day:
+        type: "number"
+        format: "float"
+  AllStandings:
+    type: array
+    items:
+      $ref: "#/definitions/LeagueStandings"
+  LeagueStandings:
+    type: array
+    items:
+      $ref: "#/definitions/DivisionStandings"
+  DivisionStandings:
+    type: array
+    items:
+      $ref: "#/definitions/TeamStanding"
+  TeamStanding:
+    type: "object"
+    required:
+      - "pos"
+      - "teamId"
+      - "teamName"
+      - "teamAbbr"
+      - "wins"
+      - "losses"
+      - "pct"
+      - "gamesBehind"
+      - "runsScored"
+      - "runsAgainst"
+      - "runDiff"
+      - "streak"
+      - "last3"
+      - "last5"
+      - "last7"
+      - "eNumber"
+    properties:
+      pos:
+        type: "integer"
+      teamId:
+        type: "string"
+      teamName:
+        type: "string"
+      teamAbbr:
+        type: "string"
+      wins:
+        type: "integer"
+      losses:
+        type: "integer"
+      pct:
+        type: "string"
+      gamesBehind:
+        type: "integer"
+      runsScored:
+        type: "integer"
+      runsAgainst:
+        type: "integer"
+      runDiff:
+        type: "integer"
+      streak:
+        type: "string"
+      last3:
+        type: "string"
+      last5:
+        type: "string"
+      last7:
+        type: "string"
+      eNumber:
+        type: "string"
   Persons:
     type: array
     items:
