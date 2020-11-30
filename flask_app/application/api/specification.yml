@@ -279,17 +279,33 @@ definitions:
         type: "number"
         format: "float"
   AllStandings:
-    type: array
-    items:
-      $ref: "#/definitions/LeagueStandings"
+    properties:
+      standings:
+        type: array
+        items:
+          $ref: "#/definitions/LeagueStandings"
+      season:
+        type: "integer"
   LeagueStandings:
-    type: array
-    items:
-      $ref: "#/definitions/DivisionStandings"
+    properties:
+      standings:
+        type: array
+        items:
+          $ref: "#/definitions/DivisionStandings"
+      league:
+        type: "string"
+      wildcard:
+        type: array
+        items:
+          $ref: "#/definitions/TeamStanding"
   DivisionStandings:
-    type: array
-    items:
-      $ref: "#/definitions/TeamStanding"
+    properties:
+      standings:
+        type: array
+        items:
+          $ref: "#/definitions/TeamStanding"
+      division:
+        type: "string"
   TeamStanding:
     type: "object"
     required:

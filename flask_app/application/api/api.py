@@ -39,6 +39,9 @@ def schedules(Team=None):
 def standings():
     return(LeagueStandings().to_dict())
 
+def wildcard():
+    pass
+
 
 class TeamStanding():
     def __init__(self, team):
@@ -129,6 +132,14 @@ class TeamStanding():
             'last7': self.last7,
             'eNumber': self.eNumber}
 
+class WildCard():
+    def __init__(self,teams):
+        self.teams = [team['teamAbbr'] for team in teams]
+        self.members = [TeamStanding(team) for team in Teams.select().where(Teams.Abbr << self.teams)]
+        self.records_todict = StandingsOrder(self.members).placement()
+    def to_dict(self):
+        return self.records_todict
+
 
 class LeagueStandings():
     def __init__(self):
@@ -149,25 +160,24 @@ class ConferenceStandings():
         divisions_q = Teams.select(Teams.Division).where(Teams.League == self.name).distinct()
         self.divisions = dict()
         self.divisions_todict = list()
+        self.wild_card = list()
         for division in divisions_q:
             self.divisions[division.Division] = DivisionStandings(division.Division)
             self.divisions_todict.append(self.divisions[division.Division].to_dict())
+            self.wild_card.extend(self.divisions[division.Division].to_dict()['records'][1:])
+        self.wildcard = WildCard(self.wild_card).to_dict()
     def to_dict(self):
         return {
             'league': self.name,
-            'divisions': self.divisions_todict}
+            'divisions': self.divisions_todict,
+            'wildcard': self.wildcard}
 
 class DivisionStandings():
     def __init__(self,name):
         self.name = name
         self.records = list()
         self.members = [TeamStanding(team) for team in Teams.select().where(Teams.Division == name)]
-        self.records_obj = StandingsOrder(self.members).placement()
-        self.records_todict = list()
-        for record in self.records_obj:
-            record.pos = self.records_obj.index(record) + 1
-            self.gamesBehind = (((self.records_obj[0].wins - record.wins)+(record.losses - self.records_obj[0].losses))/2)
-            self.records_todict.append(record.to_dict())
+        self.records_todict = StandingsOrder(self.members).placement()
     def to_dict(self):
         return {
             'name': self.name,
@@ -180,9 +190,8 @@ class StandingsOrder():
         for member in self.members:
             self.member_dict[member.team.Abbr] = member
         self.order = list()
-        self.placement()
-    def __repr__(self):
-        return(repr(self.order))
+#    def __repr__(self):
+#        return(repr(self.order))
     def placement(self):
         while len(self.order) != len(self.members):
             if not self.first_wins():
@@ -191,7 +200,14 @@ class StandingsOrder():
                         if not self.fourth_learec():
                             if not self.fifth_rundiff():
                                 self.sixth_random()
-        return self.order
+        records_todict = list()
+        for record in self.order:
+            record.pos = self.order.index(record) + 1
+            record.gamesBehind = (((self.order[0].wins - record.wins)+(record.losses - self.order[0].losses))/2)
+            record.eNumber = 15 - self.order[0].wins - record.losses
+            records_todict.append(record.to_dict())
+        return(records_todict)
+#        return self.order
     def first_wins(self):
         max_wins = max(self.member_dict.items(),key=lambda x:x[1].wins)
         win_lst = [self.member_dict[team].wins for team in self.member_dict]
@@ -207,7 +223,8 @@ class StandingsOrder():
             final_games = [game for game in team.games if game.Win]
             team.h2h_wins = len([game for game in final_games if game.Loss.Abbr in tied_abbr if game.Win.Abbr == team.team.Abbr])
             team.h2h_losses = len([game for game in final_games if game.Win.Abbr in tied_abbr if game.Loss.Abbr == team.team.Abbr])
-            team.h2h_perc = team.h2h_wins/(team.h2h_wins + team.h2h_losses)
+            try: team.h2h_perc = team.h2h_wins/(team.h2h_wins + team.h2h_losses)
+            except ZeroDivisionError: team.h2h_perc = 0
         max_perc = max(self.tied,key=lambda team:team.h2h_perc)
         h2h_perc_lst = [team.h2h_perc for team in self.tied]
         if h2h_perc_lst.count(max(h2h_perc_lst)) == 1:
