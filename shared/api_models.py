@@ -13,33 +13,9 @@ from marshmallow_peewee import ModelSchema
 basedir = path.abspath(path.dirname(path.dirname(__file__)))
 load_dotenv(path.join(basedir, '.env'))
 
-#connex_app = connexion.App(__name__, specification_dir=basedir)
-#app = connex_app.app
-#ma = Marshmallow(app)
-
 # Builds absolute path relative to this models.py file so other directories (like bots) can find the same database when importing
 db_path = path.join(basedir+'/shared/','mlg_api.s')
 db = PooledSqliteExtDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1},max_connections=30,stale_timeout=500)
-
-# Access Google Sheets for updates
-secret_path = basedir + '/shared/client_secret.json'
-gSheet = pygsheets.authorize(service_file=secret_path)
-p_master_log = gSheet.open_by_key(environ.get('P_MASTER_LOG'))
-prev_pas_sh = p_master_log.worksheet_by_title("All_PAs_1-4")
-s5_pas_sh = p_master_log.worksheet_by_title("All_PAs_5")
-persons_sh = p_master_log.worksheet_by_title("Persons")
-teams_sh = p_master_log.worksheet_by_title("Teams")
-schedules_sh = p_master_log.worksheet_by_title("Schedule")
-#test_sh = p_master_log.worksheet_by_title("Test")
-
-# Keys for zipping dicts for entering to database
-all_pas_keys = ['Play_No','Inning','Outs','BRC','Play_Type','Pitcher','Pitch_No','Batter','Swing_No','Catcher','Throw_No','Runner','Steal_No','Result','Run_Scored','Ghost_Scored','RBIs','Stolen_Base','Diff','Runs_Scored_On_Play','Off_Team','Def_Team','Game_No','Session_No','Inning_No','Pitcher_ID','Batter_ID','Catcher_ID','Runner_ID']
-
-persons_keys = ['PersonID','Current_Name','Stats_Name','Reddit','Discord','Discord_ID','Team','Player','Captain','GM','Retired','Hiatus','Rookie','Primary','Backup','Hand','CON','EYE','PWR','SPD','MOV','CMD','VEL','AWR']
-
-teams_keys = ['TID','Abbr','Name','Stadium','League','Division','Logo_URL','Location','Mascot']
-
-schedules_keys = ['Session','Game_No','Away','Home','Game_ID','A_Score','H_Score','Inning','Situation','Win','Loss','WP','LP','SV','POTG','Umpire','Reddit','Log','Duration','Total_Plays','Plays_Per_Day']
 
 class BaseModel(Model):
     class Meta:
@@ -119,106 +95,73 @@ class SchedulesSchema(ModelSchema):
     class Meta:
         model = Schedules
 
-def build_plays_s5():
-    db.connect(reuse_if_open=True)
-    pas = []
-    s5_pas_val = s5_pas_sh.get_values(start="A2",end="AC106",include_tailing_empty_rows=False)
-    for p in s5_pas_val:
-        pa = dict(zip(all_pas_keys,p))
-        pas.append(pa)
-    with db.atomic():
-        PAs.insert_many(pas).execute()
-    db.close()
+class PAs(BaseModel):
+    id = AutoField(primary_key=True)
+    Play_No = IntegerField()
+    Inning = CharField()
+    Outs = IntegerField()
+    BRC = IntegerField()
+    Play_Type = CharField()
+    Pitcher = CharField(null=True)
+    Pitch_No = IntegerField(null=True)
+    Batter = CharField(null=True)
+    Swing_No = IntegerField(null=True)
+    Catcher = CharField(null=True)
+    Throw_No = IntegerField(null=True)
+    Runner = CharField(null=True)
+    Steal_No = IntegerField(null=True)
+    Result = CharField()
+    Run_Scored = IntegerField(null=True)
+    Ghost_Scored = IntegerField(null=True)
+    RBIs = IntegerField(null=True)
+    Stolen_Base = IntegerField(null=True)
+    Diff = IntegerField()
+    Runs_Scored_On_Play = IntegerField(null=True)
+    Off_Team = CharField()
+    Def_Team = CharField()
+    Game_No = IntegerField()
+    Session_No = IntegerField()
+    Inning_No = IntegerField()
+    Pitcher_ID = IntegerField(null=True)
+    Batter_ID = IntegerField(null=True)
+    Catcher_ID = IntegerField(null=True)
+    Runner_ID = IntegerField(null=True)
 
-def build_plays_old():
-    db.connect(reuse_if_open=True)
-    db.drop_tables([PAs])
-    db.create_tables([PAs])
-    ranges = (("A2","AC5000"),("A5001","AC10000"),("A10001","AC15000"),("A15001","AC20000"),("A20001","AC22287"))
-    for range in ranges:
-        pas = []
-        prev_pas_val = prev_pas_sh.get_values(start=range[0],end=range[1],include_tailing_empty_rows=False)
-        for p in prev_pas_val:
-            pa = dict(zip(all_pas_keys,p))
-            pas.append(pa)
-    #    all_pas.pop(0)
-        with db.atomic():
-            PAs.insert_many(pas).execute()
-    db.close()
-
-def build_persons():
-    defaults = { 'Reddit':None,
-                 'Discord':None,
-                 'Discord_ID':None,
-                 'Team':'',
-                 'Player':0,
-                 'Captain':0,
-                 'GM':0,
-                 'Retired':0,
-                 'Hiatus':0,
-                 'Rookie':0,
-                 'Primary':'',
-                 'Backup':'',
-                 'Hand':'R',
-                 'CON':0,
-                 'EYE':0,
-                 'PWR':0,
-                 'SPD':0,
-                 'MOV':0,
-                 'CMD':0,
-                 'VEL':0,
-                 'AWR':0
-               }
-    db.connect(reuse_if_open=True)
-    db.drop_tables([Persons,Teams,Schedules])
-    db.create_tables([Persons])
-    persons = []
-    persons_data = persons_sh.get_all_values(include_tailing_empty_rows=False)
-    for p in persons_data:
-        person = dict(zip(persons_keys,p))
-        for cat in person:
-            if person[cat] == '' or person[cat] == 'N': person[cat] = defaults[cat]
-        persons.append(person)
-    persons.pop(0) #header row
-    with db.atomic():
-        Persons.insert_many(persons).execute()
-    db.close()
-
-def build_teams():
-    db.connect(reuse_if_open=True)
-    db.drop_tables([Teams])
-    db.create_tables([Teams])
-    teams = []
-    teams_data = teams_sh.get_all_values(include_tailing_empty_rows=False)
-    for t in teams_data:
-        team = dict(zip(teams_keys,t))
-        teams.append(team)
-    teams.pop(0)
-    with db.atomic():
-        Teams.insert_many(teams).execute()
-
-def build_schedules():
-    db.connect(reuse_if_open=True)
-    db.drop_tables([Schedules])
-    db.create_tables([Schedules])
-    schedules = []
-    schedules_data = schedules_sh.get_all_values(include_tailing_empty_rows=False)
-    for s in schedules_data:
-        schedule = dict(zip(schedules_keys,s))
-        if schedule['Session'] != 'Session':
-            if int(schedule['Session']) != 0 and int(schedule['Session']) < 15:
-                for entry in schedule:
-                    if schedule[entry] == '':
-                        schedule[entry] = None
-                schedules.append(schedule)
-#    schedules.pop(0)
-    with db.atomic():
-        Schedules.insert_many(schedules).execute()
+    def sheets_compare(self):
+        str_dict = {
+        'Play_No': str(self.Play_No),
+        'Inning': str(self.Inning),
+        'Outs': str(self.Outs),
+        'BRC': str(self.BRC),
+        'Play_Type': str(self.Play_Type),
+        'Pitcher': str(self.Pitcher),
+        'Pitch_No': str(self.Pitch_No),
+        'Batter': str(self.Batter),
+        'Swing_No': str(self.Swing_No),
+        'Catcher': str(self.Catcher),
+        'Throw_No': str(self.Throw_No),
+        'Runner': str(self.Runner),
+        'Steal_No': str(self.Steal_No),
+        'Result': str(self.Result),
+        'Run_Scored': str(self.Run_Scored),
+        'Ghost_Scored': str(self.Ghost_Scored),
+        'RBIs': str(self.RBIs),
+        'Stolen_Base': str(self.Stolen_Base),
+        'Diff': str(self.Diff),
+        'Runs_Scored_On_Play': str(self.Runs_Scored_On_Play),
+        'Off_Team': str(self.Off_Team),
+        'Def_Team': str(self.Def_Team),
+        'Game_No': str(self.Game_No),
+        'Session_No': str(self.Session_No),
+        'Inning_No': str(self.Inning_No),
+        'Pitcher_ID': str(self.Pitcher_ID),
+        'Batter_ID': str(self.Batter_ID),
+        'Catcher_ID': str(self.Catcher_ID),
+        'Runner_ID': str(self.Runner_ID)}
+        return(str_dict)
 
 def main():
-    build_persons()
-    build_teams()
-    build_schedules()
+    pass
 
 if __name__ == "__main__":
     main()
