@@ -150,8 +150,8 @@ def update_pas():
                     PAs.update(changed).where(PAs.Play_No == pa.Play_No).execute()
 
 async def main():
+    access_sheets()
     while True:
-        access_sheets()
         persons = build_persons()
         teams = build_teams()
         schedules = build_schedules()
