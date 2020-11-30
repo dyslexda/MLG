@@ -39,10 +39,6 @@ def schedules(Team=None):
 def standings():
     return(LeagueStandings().to_dict())
 
-def wildcard():
-    pass
-
-
 class TeamStanding():
     def __init__(self, team):
         self.team = team
