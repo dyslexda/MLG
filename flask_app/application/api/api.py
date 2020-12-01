@@ -186,8 +186,6 @@ class StandingsOrder():
         for member in self.members:
             self.member_dict[member.team.Abbr] = member
         self.order = list()
-#    def __repr__(self):
-#        return(repr(self.order))
     def placement(self):
         while len(self.order) != len(self.members):
             if not self.first_wins():
@@ -203,7 +201,6 @@ class StandingsOrder():
             record.eNumber = 15 - self.order[0].wins - record.losses
             records_todict.append(record.to_dict())
         return(records_todict)
-#        return self.order
     def first_wins(self):
         max_wins = max(self.member_dict.items(),key=lambda x:x[1].wins)
         win_lst = [self.member_dict[team].wins for team in self.member_dict]
@@ -220,7 +217,8 @@ class StandingsOrder():
             team.h2h_wins = len([game for game in final_games if game.Loss.Abbr in tied_abbr if game.Win.Abbr == team.team.Abbr])
             team.h2h_losses = len([game for game in final_games if game.Win.Abbr in tied_abbr if game.Loss.Abbr == team.team.Abbr])
             try: team.h2h_perc = team.h2h_wins/(team.h2h_wins + team.h2h_losses)
-            except ZeroDivisionError: team.h2h_perc = 0
+            except ZeroDivisionError: 
+                team.h2h_perc = 0
         max_perc = max(self.tied,key=lambda team:team.h2h_perc)
         h2h_perc_lst = [team.h2h_perc for team in self.tied]
         if h2h_perc_lst.count(max(h2h_perc_lst)) == 1:
@@ -228,13 +226,13 @@ class StandingsOrder():
             del self.member_dict[max_perc.team.Abbr]
             return(True)
         else:
-            self.tied = [self.member_dict[team] for team in self.member_dict if self.member_dict[team].h2h_perc == max(self.member_dict.items(),key=lambda x:x[1].h2h_perc)[1].h2h_perc]
+            self.tied = [self.member_dict[team] for team in tied_abbr if self.member_dict[team].h2h_perc == max_perc.h2h_perc]
             return(False)
     def third_divrec(self):
         max_div_wins = max(self.tied,key=lambda team:team.div_wins)
         div_win_lst = [team.div_wins for team in self.tied]
         if div_win_lst.count(max(div_win_lst)) == 1:
-            self.order.append(max_div)
+            self.order.append(max_div_wins)
             del self.member_dict[max_div_wins.team.Abbr]
             return(True)
         else:
@@ -244,7 +242,7 @@ class StandingsOrder():
         max_lea_wins = max(self.tied,key=lambda team:team.lea_wins)
         lea_win_lst = [team.lea_wins for team in self.tied]
         if lea_win_lst.count(max(lea_win_lst)) == 1:
-            self.order.append(max_lea)
+            self.order.append(max_lea_wins)
             del self.member_dict[max_lea_wins.team.Abbr]
             return(True)
         else:
