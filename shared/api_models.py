@@ -33,6 +33,10 @@ class Teams(BaseModel):
     Location = CharField()
     Mascot = CharField()
 
+class TeamsSchema(ModelSchema):
+    class Meta:
+        model = Teams
+
 class Persons(BaseModel):
     id = AutoField(primary_key=True)
     PersonID = IntegerField(unique=True)
@@ -115,13 +119,13 @@ class PAs(BaseModel):
     Ghost_Scored = IntegerField(null=True)
     RBIs = IntegerField(null=True)
     Stolen_Base = IntegerField(null=True)
-    Diff = IntegerField()
+    Diff = IntegerField(null=True)
     Runs_Scored_On_Play = IntegerField(null=True)
     Off_Team = CharField()
     Def_Team = CharField()
     Game_No = IntegerField()
     Session_No = IntegerField()
-    Inning_No = IntegerField()
+    Inning_No = IntegerField(null=True)
     Pitcher_ID = IntegerField(null=True)
     Batter_ID = IntegerField(null=True)
     Catcher_ID = IntegerField(null=True)
@@ -159,6 +163,43 @@ class PAs(BaseModel):
         'Catcher_ID': str(self.Catcher_ID),
         'Runner_ID': str(self.Runner_ID)}
         return(str_dict)
+
+    def sheets_compare_int(self):
+        int_dict = {
+        'Play_No': self.Play_No,
+        'Inning': self.Inning,
+        'Outs': self.Outs,
+        'BRC': self.BRC,
+        'Play_Type': self.Play_Type,
+        'Pitcher': self.Pitcher,
+        'Pitch_No': self.Pitch_No,
+        'Batter': self.Batter,
+        'Swing_No': self.Swing_No,
+        'Catcher': self.Catcher,
+        'Throw_No': self.Throw_No,
+        'Runner': self.Runner,
+        'Steal_No': self.Steal_No,
+        'Result': self.Result,
+        'Run_Scored': self.Run_Scored,
+        'Ghost_Scored': self.Ghost_Scored,
+        'RBIs': self.RBIs,
+        'Stolen_Base': self.Stolen_Base,
+        'Diff': self.Diff,
+        'Runs_Scored_On_Play': self.Runs_Scored_On_Play,
+        'Off_Team': self.Off_Team,
+        'Def_Team': self.Def_Team,
+        'Game_No': self.Game_No,
+        'Session_No': self.Session_No,
+        'Inning_No': self.Inning_No,
+        'Pitcher_ID': self.Pitcher_ID,
+        'Batter_ID': self.Batter_ID,
+        'Catcher_ID': self.Catcher_ID,
+        'Runner_ID': self.Runner_ID}
+        return(int_dict)
+
+class PlaysSchema(ModelSchema):
+    class Meta:
+        model = PAs
 
 def main():
     pass
