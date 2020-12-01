@@ -217,8 +217,7 @@ class StandingsOrder():
             team.h2h_wins = len([game for game in final_games if game.Loss.Abbr in tied_abbr if game.Win.Abbr == team.team.Abbr])
             team.h2h_losses = len([game for game in final_games if game.Win.Abbr in tied_abbr if game.Loss.Abbr == team.team.Abbr])
             try: team.h2h_perc = team.h2h_wins/(team.h2h_wins + team.h2h_losses)
-            except ZeroDivisionError: 
-                team.h2h_perc = 0
+            except ZeroDivisionError: team.h2h_perc = 0
         max_perc = max(self.tied,key=lambda team:team.h2h_perc)
         h2h_perc_lst = [team.h2h_perc for team in self.tied]
         if h2h_perc_lst.count(max(h2h_perc_lst)) == 1:
