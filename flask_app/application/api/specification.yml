@@ -204,9 +204,159 @@ paths:
         404:
           description: "Standings failed"
       x-swagger-router-controller: "application.api.api"
+  /teams:
+    get:
+      tags:
+        - "teams"
+      summary: "Teams"
+      operationId: "teams"
+      responses:
+        200:
+          description: "Successfully retrieved teams"
+          schema:
+            $ref: "#/definitions/Teams"
+        404:
+          description: "Teams failed"
+      x-swagger-router-controller: "application.api.api"
+  /plays:
+    get:
+      tags:
+        - "plays"
+      summary: "Recorded PAs"
+      operationId: "plays"
+      parameters:
+        - name: "Season"
+          in: "query"
+          description: "Season"
+          required: false
+          type: "integer"
+        - name: "Session_No"
+          in: "query"
+          description: "Session"
+          required: false
+          type: "integer"
+        - name: "Game_No"
+          in: "query"
+          description: "Game number"
+          required: false
+          type: "integer"
+        - name: "Batter"
+          in: "query"
+          description: "Batter's player name"
+          required: false
+          type: "string"
+        - name: "Pitcher"
+          in: "query"
+          description: "Pitcher's player name"
+          required: false
+          type: "string"
+        - name: "Batter_ID"
+          in: "query"
+          description: "Batter's Player ID"
+          required: false
+          type: "integer"
+        - name: "Pitcher_ID"
+          in: "query"
+          description: "Pitcher's Player ID"
+          required: false
+          type: "integer"
+        - name: "Runner_ID"
+          in: "query"
+          description: "Runner's Player ID"
+          required: false
+          type: "integer"
+        - name: "Catcher_ID"
+          in: "query"
+          description: "Catcher's Player ID"
+          required: false
+          type: "integer"
+        - name: "Play_Type"
+          in: "query"
+          description: "Play type"
+          required: false
+          type: "string"
+          enum: [Swing,Steal,HNR,Bunt]
+        - name: "BRC"
+          in: "query"
+          description: "Baserunner code"
+          required: false
+          type: "integer"
+          enum: [0,1,2,3,4,5,6,7]
+        - name: "Run_Scored"
+          in: "query"
+          description: "Batter scored eventually"
+          required: false
+          type: "integer"
+          enum: [0,1]
+        - name: "Ghost_Scored"
+          in: "query"
+          description: "Ghost scored on play"
+          required: false
+          type: "integer"
+          enum: [0,1]
+        - name: "RBIs"
+          in: "query"
+          description: "Runs batted in on play"
+          required: false
+          type: "integer"
+        - name: "Stolen_Base"
+          in: "query"
+          description: "Successful steal"
+          required: false
+          type: "integer"
+          enum: [0,1]
+        - name: "Runs_Scored_On_Play"
+          in: "query"
+          description: "Total runs scored on play"
+          required: false
+          type: "integer"
+        - name: "Off_Team"
+          in: "query"
+          description: "Offensive team as team abbreviation"
+          required: false
+          type: "string"
+          maxLength: 4
+        - name: "Def_Team"
+          in: "query"
+          description: "Defensive team as team abbreviation"
+          required: false
+          type: "string"
+          maxLength: 4
+        - name: "Inning_No"
+          in: "query"
+          description: "Inning number"
+          required: false
+          type: "integer"
+        - $ref: "#/parameters/limit"
+        - $ref: "#/parameters/offset"
+      responses:
+        200:
+          description: "Successfully retrieved plays"
+          schema:
+            allOf:
+              - $ref: "#/definitions/PaginationResponse"
+              - type: "object"
+                properties:
+                  plays:
+                    type: "array"
+                    $ref: "#/definitions/Plays"
+        404:
+          description: "Plays failed"
+      x-swagger-router-controller: "application.api.api"
 definitions:
+  PaginationResponse:
+    type: "object"
+    properties:
+      totalRecords:
+        type: "integer"
+      totalReturned:
+        type: "integer"
+      limit:
+         type: "integer"
+      offset:
+         type: "integer"
   Schedules:
-    type: array
+    type: "array"
     items:
       $ref: "#/definitions/Schedule"
   Schedule:
@@ -278,6 +428,136 @@ definitions:
       Plays_Per_Day:
         type: "number"
         format: "float"
+  Teams:
+    type: "array"
+    items:
+      $ref: "#/definitions/Team"
+  Team:
+    type: "object"
+    required:
+      - "teamId"
+      - "teamAbbr"
+      - "teamName"
+      - "stadium"
+      - "league"
+      - "division"
+      - "logoURL"
+      - "location"
+      - "mascot"
+    properties:
+      teamId:
+        type: "string"
+      teamAbbr:
+        type: "string"
+      teamName:
+        type: "string"
+      stadium:
+        type: "string"
+      league:
+        type: "string"
+      division:
+        type: "string"
+      logoURL:
+        type: "string"
+      location:
+        type: "string"
+      mascot:
+        type: "string"
+  Plays:
+    type: array
+    items:
+      $ref: "#/definitions/Play"
+  Play:
+    type: "object"
+    required:
+      - "playNo"
+      - "inning"
+      - "outs"
+      - "brc"
+      - "playType"
+      - "pitcher"
+      - "pitchNo"
+      - "batter"
+      - "swingNo"
+      - "catcher"
+      - "throwNo"
+      - "runner"
+      - "stealNo"
+      - "result"
+      - "runScored"
+      - "ghostScored"
+      - "RBIs"
+      - "stolenBase"
+      - "diff"
+      - "runsScoredOnPlay"
+      - "offTeam"
+      - "defTeam"
+      - "gameNo"
+      - "sessionNo"
+      - "inningNo"
+      - "pitcherId"
+      - "batterId"
+      - "catcherId"
+      - "runnerId"
+    properties:
+      playNo:
+        type: "integer"
+      inning:
+        type: "string"
+      outs:
+        type: "integer"
+      brc:
+        type: "integer"
+      playType:
+        type: "string"
+      pitcher:
+        type: "string"
+      pitchNo:
+        type: "integer"
+      batter:
+        type: "string"
+      swingNo:
+        type: "integer"
+      catcher:
+        type: "string"
+      throwNo:
+        type: "integer"
+      runner:
+        type: "string"
+      stealNo:
+        type: "integer"
+      result:
+        type: "integer"
+      runScored:
+        type: "integer"
+      ghostScored:
+        type: "integer"
+      RBIs:
+        type: "integer"
+      stolenBase:
+        type: "integer"
+      diff:
+        type: "integer"
+      runsScoredOnPlay:
+        type: "integer"
+      offTeam:
+        type: "string"
+      defTeam:
+        type: "string"
+      gameNo:
+        type: "integer"
+      sessionNo:
+        type: "integer"
+      inningNo:
+        type: "integer"
+      pitcherId:
+        type: "integer"
+      batterId:
+        type: "integer"
+      catcherId:
+        type: "integer"
+      runnerId:
+        type: "integer"
   AllStandings:
     properties:
       standings:
@@ -289,13 +569,13 @@ definitions:
   LeagueStandings:
     properties:
       standings:
-        type: array
+        type: "array"
         items:
           $ref: "#/definitions/DivisionStandings"
       league:
         type: "string"
       wildcard:
-        type: array
+        type: "array"
         items:
           $ref: "#/definitions/TeamStanding"
   DivisionStandings:
@@ -473,3 +753,21 @@ definitions:
       CMD: 0
       VEL: 0
       AWR: 0
+parameters:
+    limit:
+      name: "limit"
+      in: "query"
+      description: "The maximum number of items to return at once, maximum of 1000."
+      type: "integer"
+      minimum: 1
+      maximum: 1000
+      default: 100
+      required: false
+    offset:
+      name: "offset"
+      in: "query"
+      description: "The number of items to skip before starting to collect the result set"
+      type: "integer"
+      minimum: 0
+      default: 0
+      required: false

@@ -29,31 +29,29 @@ def access_sheets():
     schedules_sh = p_master_log.worksheet_by_title("Schedule")
 
 def build_plays_s5():
-    db.connect(reuse_if_open=True)
     pas = []
     s5_pas_val = s5_pas_sh.get_values(start="A2",end="AC1920",include_tailing_empty_rows=False)
     for p in s5_pas_val:
         pa = dict(zip(all_pas_keys,p))
+        for cat in pa:
+            if pa[cat] == '': pa[cat] = None
         pas.append(pa)
     with db.atomic():
         PAs.insert_many(pas).execute()
-    db.close()
 
 def build_plays_old():
-    db.connect(reuse_if_open=True)
-    db.drop_tables([PAs])
-    db.create_tables([PAs])
     ranges = (("A2","AC5000"),("A5001","AC10000"),("A10001","AC15000"),("A15001","AC20000"),("A20001","AC22287"))
     for range in ranges:
         pas = []
         prev_pas_val = prev_pas_sh.get_values(start=range[0],end=range[1],include_tailing_empty_rows=False)
         for p in prev_pas_val:
             pa = dict(zip(all_pas_keys,p))
+            for cat in pa:
+                if pa[cat] == '': pa[cat] = None
             pas.append(pa)
     #    all_pas.pop(0)
         with db.atomic():
             PAs.insert_many(pas).execute()
-    db.close()
 
 def build_persons():
     defaults = { 'Reddit':None,
@@ -138,16 +136,40 @@ def build_schedules():
 def update_pas():
     pas_list = s5_pas_sh.get_all_values(include_tailing_empty_rows=False)
     cur_session = pas_list[-1][0][0:3]
+    int_list = ['Play_No','Outs','BRC','Pitch_No','Swing_No','Throw_No','Steal_No','Run_Scored','Ghost_Scored','RBIs','Stolen_Base','Diff','Runs_Scored_On_Play','Game_No','Session_No','Inning_No','Pitcher_ID','Batter_ID','Catcher_ID','Runner_ID']
     for i in pas_list:
         if i[0].startswith(cur_session):
             sheet_pa_dict = dict(zip(all_pas_keys,i))
+            for cat in sheet_pa_dict: 
+                if sheet_pa_dict[cat] == '': sheet_pa_dict[cat] = None
+                elif cat in int_list: sheet_pa_dict[cat] = int(sheet_pa_dict[cat])
             pa, created = PAs.get_or_create(Play_No=i[0],defaults=sheet_pa_dict)
             if not created:
-                diff = deepdiff.DeepDiff(pa.sheets_compare(),sheet_pa_dict)
+                diff = deepdiff.DeepDiff(pa.sheets_compare_int(),sheet_pa_dict)
                 if bool(diff):
                     changed = {}
                     for val in diff['values_changed']: changed[val[6:-2]] = diff['values_changed'][val]['new_value']
                     PAs.update(changed).where(PAs.Play_No == pa.Play_No).execute()
+
+def generate_db():
+    access_sheets()
+    db.connect(reuse_if_open=True)
+    db.drop_tables([PAs])
+    db.create_tables([PAs])
+    build_plays_old()
+    build_plays_s5()
+    persons = build_persons()
+    teams = build_teams()
+    schedules = build_schedules()
+    with db.atomic():
+        if persons and teams and schedules:
+            db.drop_tables([Persons,Teams,Schedules])
+            db.create_tables([Persons,Teams,Schedules])
+            Persons.insert_many(persons).execute()
+            Teams.insert_many(teams).execute()
+            Schedules.insert_many(schedules).execute()
+        update_pas()
+    db.close()
 
 async def main():
     access_sheets()
@@ -166,8 +188,7 @@ async def main():
             update_pas()
         db.close()
         await asyncio.sleep(60*15)
-#    build_plays_old()
-#    build_plays_s5()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    generate_db()
+#    asyncio.run(main())
