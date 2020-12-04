@@ -5,6 +5,7 @@ from shared.api_models import *
 from decimal import Decimal
 import flask_app.application.api.standings as calc_standings
 import random
+from flask_app.application.api.calc import *
 
 # Blueprint Configuration
 api_bp = Blueprint(
@@ -66,4 +67,13 @@ def plays(limit,offset,**kwargs):
     response['offset'] = offset
     response['totalRecords'] = totalRecords
     response['totalReturned'] = plays.count()
+    return(response)
+
+def calc(**kwargs):
+    pitcher,pitch,batter,swing,runners,errors = argValidation(kwargs)
+    if len(errors) != 0:
+        return errors,400
+    game = GameState(Pitcher=pitcher,Batter=batter,Outs=kwargs['outs'],First_Base=runners['b1'],Second_Base=runners['b2'],Third_Base=runners['b3'],Bunt=False,Pitch=pitch,Swing=swing)
+    results,order,outcome = calcCode(game)
+    response = formatResponse(game,results,order,outcome)
     return(response)
