@@ -92,8 +92,13 @@ def calc_ranges(obr_dict,modifiers_dict,pitcher,batter,handedness):
     range_1b = (final_base_hit - range_hr - range_3b - range_2b) + 5
     range_on_base = range_hr + range_3b + range_2b + range_if1b + range_bb + range_1b - 1
     # Complicated formulas for PO and FO, but basically it's a percentage of the remaining range based on Power vs Velocity
-    range_po = int(Decimal(((500 - range_on_base) * obr_dict['FO'][handedness][stat_checker(batter.Power,pitcher.Velocity)]) * obr_dict['PO'][handedness][stat_checker(batter.Power,pitcher.Velocity)]).quantize(Decimal('1.'),rounding='ROUND_HALF_UP') + 1)
-    range_fo = int(Decimal(((500 - range_on_base) * obr_dict['FO'][handedness][stat_checker(batter.Power,pitcher.Velocity)]) - range_po).quantize(Decimal('1.'),rounding='ROUND_HALF_UP'))
+    po_initial = ((500 - range_on_base)*obr_dict['FO'][handedness][stat_checker(batter.Power,pitcher.Velocity)])
+    high_fo = po_initial - (po_initial*obr_dict['PO'][handedness][stat_checker(batter.Power,pitcher.Velocity)]) + range_on_base - 1
+    high_po = (po_initial * obr_dict['PO'][handedness][stat_checker(batter.Power,pitcher.Velocity)]) + high_fo + 1
+    range_fo = int(Decimal(high_fo - range_on_base).quantize(Decimal('1.'),rounding='ROUND_HALF_UP'))
+    range_po = int(Decimal(high_po - high_fo).quantize(Decimal('1.'),rounding='ROUND_HALF_UP'))
+#    range_po = int(Decimal(((500 - range_on_base) * obr_dict['FO'][handedness][stat_checker(batter.Power,pitcher.Velocity)]) * obr_dict['PO'][handedness][stat_checker(batter.Power,pitcher.Velocity)]).quantize(Decimal('1.'),rounding='ROUND_HALF_UP') + 1)
+#    range_fo = int(Decimal(((500 - range_on_base) * obr_dict['FO'][handedness][stat_checker(batter.Power,pitcher.Velocity)]) - range_po).quantize(Decimal('1.'),rounding='ROUND_HALF_UP'))
     range_k = obr_dict['K'][handedness][stat_checker(batter.Contact,pitcher.Movement)]
     range_go = 500 - (range_on_base + range_po + range_fo + range_k)
     result_dict = {}
