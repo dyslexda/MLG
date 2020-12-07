@@ -59,7 +59,8 @@ def genPlayerCard(input,pos=None):
 def playerValidation(kwargs,prefix,errors):
     player,model = None,None
     if (prefix + '_id') in kwargs: model = Persons.get_or_none(Persons.PersonID == kwargs[(prefix + '_id')])
-    elif (prefix + '_name') in kwargs: model = Persons.get_or_none(Persons.Stats_Name == kwargs[(prefix + '_name')])
+    elif (prefix + '_name') in kwargs: 
+        model = Persons.get_or_none(Persons.Stats_Name == kwargs[(prefix + '_name')])
     elif (prefix + '_attr') in kwargs:
         if kwargs[(prefix + '_attr')][0].upper() in ['L','R'] and kwargs[(prefix + '_attr')][1:].isdigit() and len(kwargs[(prefix + '_attr')]) == 5:
             player = genPlayerCard(kwargs[(prefix + '_attr')],prefix)
@@ -108,7 +109,7 @@ def calcCode(game):
         else:
             fo_ordering = ['FO']
         brc = ranges_calc.brc_calc(game)
-        outs_ordering = ranges_lookup.go_order_dict[str(brc) + '_' + str(game.Outs)]
+        outs_ordering = list(ranges_lookup.go_order_dict[str(brc) + '_' + str(game.Outs)])
         if 'GORA' in outs_ordering:
             outs_ordering.remove('GORA')
             fo_ordering = ['GORA'] + fo_ordering
