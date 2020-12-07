@@ -108,7 +108,7 @@ def calcCode(game):
         else:
             fo_ordering = ['FO']
         brc = ranges_calc.brc_calc(game)
-        outs_ordering = ranges_lookup.go_order_dict[str(brc) + '_' + str(game.Outs)]
+        outs_ordering = list(ranges_lookup.go_order_dict[str(brc) + '_' + str(game.Outs)])
         if 'GORA' in outs_ordering:
             outs_ordering.remove('GORA')
             fo_ordering = ['GORA'] + fo_ordering
