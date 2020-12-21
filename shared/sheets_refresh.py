@@ -30,7 +30,8 @@ def access_sheets():
 
 def build_plays_s5():
     pas = []
-    s5_pas_val = s5_pas_sh.get_values(start="A2",end="AC1920",include_tailing_empty_rows=False)
+#    s5_pas_val = s5_pas_sh.get_values(start="A2",end="AC1920",include_tailing_empty_rows=False)
+    s5_pas_val = s5_pas_sh.get_all_values(include_tailing_empty_rows=False)
     for p in s5_pas_val:
         pa = dict(zip(all_pas_keys,p))
         for cat in pa:
@@ -148,7 +149,10 @@ def update_pas():
                 diff = deepdiff.DeepDiff(pa.sheets_compare_int(),sheet_pa_dict)
                 if bool(diff):
                     changed = {}
-                    for val in diff['values_changed']: changed[val[6:-2]] = diff['values_changed'][val]['new_value']
+                    print(diff)
+                    for diff_type in ['values_changed','type_changes']:
+                        if diff_type in diff:
+                            for val in diff[diff_type]: changed[val[6:-2]] = diff[diff_type][val]['new_value']
                     PAs.update(changed).where(PAs.Play_No == pa.Play_No).execute()
 
 def generate_db():
