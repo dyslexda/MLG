@@ -156,7 +156,6 @@ def update_pas():
                     PAs.update(changed).where(PAs.Play_No == pa.Play_No).execute()
 
 def generate_db():
-    access_sheets()
     db.connect(reuse_if_open=True)
     db.drop_tables([PAs])
     db.create_tables([PAs])
@@ -177,6 +176,7 @@ def generate_db():
 
 async def main():
     access_sheets()
+    generate_db()
     while True:
         persons = build_persons()
         teams = build_teams()
@@ -194,5 +194,4 @@ async def main():
         await asyncio.sleep(60*15)
 
 if __name__ == "__main__":
-    generate_db()
-#    asyncio.run(main())
+    asyncio.run(main())

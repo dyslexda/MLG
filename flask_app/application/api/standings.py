@@ -151,7 +151,7 @@ class StandingsOrder():
         self.order = list()
     def placement(self):
         while len(self.order) != len(self.members):
-            if not self.first_wins():
+            if not self.first_pct():
                 if not self.second_h2h():
                     if not self.third_divrec():
                         if not self.fourth_learec():
@@ -164,12 +164,12 @@ class StandingsOrder():
             record.eNumber = 15 - self.order[0].wins - record.losses
             records_todict.append(record.to_dict())
         return(records_todict)
-    def first_wins(self):
-        max_wins = max(self.member_dict.items(),key=lambda x:x[1].wins)
-        win_lst = [self.member_dict[team].wins for team in self.member_dict]
-        if win_lst.count(max_wins[1].wins) == 1: 
-            self.order.append(max_wins[1])
-            del self.member_dict[max_wins[1].team.Abbr]
+    def first_pct(self):
+        max_pct = max(self.member_dict.items(),key=lambda x:x[1].pct)
+        pct_lst = [self.member_dict[team].pct for team in self.member_dict]
+        if pct_lst.count(max_pct[1].pct) == 1: 
+            self.order.append(max_pct[1])
+            del self.member_dict[max_pct[1].team.Abbr]
             return(True)
         else: return(False)
     def second_h2h(self):
