@@ -16,3 +16,5 @@ connexion[swagger-ui]
 flask-marshmallow
 mmh3
 deepdiff
+marshmallow_peewee
+flask_cors

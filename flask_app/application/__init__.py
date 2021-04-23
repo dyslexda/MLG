@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from flask import Flask, session, g, request, has_request_context
 from flask_assets import Environment
+from flask_cors import CORS
 from shared.models import *
 
 def create_app():
@@ -15,6 +16,7 @@ def create_app():
     connex_app = connexion.FlaskApp(__name__,specification_dir='api/')
     connex_app.add_api('specification.yml')
     app = connex_app.app
+    CORS(app)
     
 
 #    ma = Marshmallow(app)
