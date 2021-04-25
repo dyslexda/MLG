@@ -2,14 +2,44 @@ from peewee import *
 from playhouse.pool import PooledSqliteExtDatabase
 from playhouse.migrate import *
 from wtfpeewee.orm import model_form
-import wtforms, os, inspect, csv, json
+import wtforms, os, inspect, csv, json, pygsheets, time
+from os import environ, path
+from dotenv import load_dotenv
 from flask_wtf import FlaskForm
 from wtforms import Form, FieldList, FormField, SelectField, HiddenField, validators
 
+basedir = path.abspath(path.dirname(path.dirname(__file__)))
+load_dotenv(path.join(basedir, '.env'))
+
 # Builds absolute path relative to this models.py file so other directories (like bots) can find the same database when importing
-db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'mlg.s')
-#db = SqliteDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1})
+db_path = path.join(basedir+'/shared/','mlg.s')
 db = PooledSqliteExtDatabase(db_path, check_same_thread=False, pragmas={'foreign_keys': 1},max_connections=30,stale_timeout=500)
+
+# Access Google Sheets for updates
+secret_path = basedir + '/shared/client_secret.json'
+gSheet = pygsheets.authorize(service_file=secret_path)
+p_master_log = gSheet.open_by_key(environ.get('P_MASTER_LOG'))
+prev_pas_sh = p_master_log.worksheet_by_title("All_PAs_1-4")
+s5_pas_sh = p_master_log.worksheet_by_title("All_PAs_5")
+persons_sh = p_master_log.worksheet_by_title("Persons")
+#test_sh = p_master_log.worksheet_by_title("Test")
+
+def main():
+    while True:
+        s5_plays = s5_pas_sh.get_values(start="A100",end="AC106",include_tailing_empty_rows=False)
+        for play in s5_plays:
+            p_dict = dict(zip(all_pas_keys,play))
+            play_record, created = PAs.get_or_create(Play_No=play[0],defaults=p_dict)
+            if not created:
+                got = PAs.get(PAs.Play_No==play[0])
+                got_dict = got.__data__
+                got_dict.pop('id')
+                for i in got_dict:
+                    print(i,got_dict[i] == p_dict[i],got_dict[i],p_dict[i])
+#                print(got_dict,p_dict)
+#            except:
+#                print(play[0])
+        time.sleep(10)
 
 class ListField(Field):
     field_type = 'list'
@@ -123,27 +153,64 @@ class Lineups(BaseModel):
     Order = IntegerField(null=True)
     Position = CharField(null=True)
 
-class BoxOrderPosForm(Form):
-    box_choices = []
-    for i in range(0,10): box_choices.append((i,i))
-    order_choices = []
-    for i in range(0,10): order_choices.append((i,i))
-    pos_choices = [('-','-')]
-    for i in ['P','C','1B','2B','3B','SS','LF','CF','RF','DH']: pos_choices.append((i,i))
-    player_id = HiddenField()
-    box = SelectField(coerce=int,choices = box_choices)
-    order = SelectField(coerce=int,choices = order_choices)
-    pos = SelectField(choices = pos_choices)
+class Persons(BaseModel):
+    id = AutoField(primary_key=True)
+    PersonID = IntegerField(unique=True)
+    Current_Name = CharField()
+    Stats_Name = CharField(unique=True)
+    Reddit = CharField(default=None)
+    Discord = CharField()
+    Discord_ID = CharField(null=True)
+    Team = CharField()
+    Player = BooleanField(default=True)
+    Captain = BooleanField(default=False)
+    GM = BooleanField(default=False)
+    Retired = BooleanField(default=False)
+    Hiatus = BooleanField(default=False)
+    Rookie = BooleanField(default=False)
+    Primary = CharField(null=True,default=None)
+    Backup = CharField(null=True)
+    Hand = CharField()
+    CON = IntegerField(default=0)
+    EYE = IntegerField(default=0)
+    PWR = IntegerField(default=0)
+    SPD = IntegerField(default=0)
+    MOV = IntegerField(default=0)
+    CMD = IntegerField(default=0)
+    VEL = IntegerField(default=0)
+    AWR = IntegerField(default=0)
 
-class LineupBoxForm(FlaskForm):
-    bop = FieldList(FormField(BoxOrderPosForm))
-
-class GameStatusForm(FlaskForm):
-    choices = ['Staged','Init','Started','Final']
-    status_choices = []
-    for i in choices: status_choices.append((i,i))
-    game_id = HiddenField()
-    status = SelectField(choices = status_choices)
+class PAs(BaseModel):
+    id = AutoField(primary_key=True)
+    Play_No = IntegerField()
+    Inning = CharField()
+    Outs = IntegerField()
+    BRC = IntegerField()
+    Play_Type = CharField()
+    Pitcher = CharField(null=True)
+    Pitch_No = IntegerField(null=True)
+    Batter = CharField(null=True)
+    Swing_No = IntegerField(null=True)
+    Catcher = CharField(null=True)
+    Throw_No = IntegerField(null=True)
+    Runner = CharField(null=True)
+    Steal_No = IntegerField(null=True)
+    Result = CharField()
+    Run_Scored = IntegerField(null=True)
+    Ghost_Scored = IntegerField(null=True)
+    RBIs = IntegerField(null=True)
+    Stolen_Base = IntegerField(null=True)
+    Diff = IntegerField()
+    Runs_Scored_On_Play = IntegerField(null=True)
+    Off_Team = CharField()
+    Def_Team = CharField()
+    Game_No = IntegerField()
+    Session_No = IntegerField()
+    Inning_No = IntegerField()
+    Pitcher_ID = CharField(null=True)
+    Batter_ID = CharField(null=True)
+    Catcher_ID = CharField(null=True)
+    Runner_ID = CharField(null=True)
 
 class All_PAs(BaseModel):
     id = AutoField(primary_key=True)
@@ -245,10 +312,56 @@ def populate_test_data():
 #        Games.insert_many(test_games).execute()
         Umpires.insert_many(test_umpires).execute()
 
+all_pas_keys = ['Play_No','Inning','Outs','BRC','Play_Type','Pitcher','Pitch_No','Batter','Swing_No','Catcher','Throw_No','Runner','Steal_No','Result','Run_Scored','Ghost_Scored','RBIs','Stolen_Base','Diff','Runs_Scored_On_Play','Off_Team','Def_Team','Game_No','Session_No','Inning_No','Pitcher_ID','Batter_ID','Catcher_ID','Runner_ID']
+
+persons_keys = ['PersonID','Current_Name','Stats_Name','Reddit','Discord','Discord_ID','Team','Player','Captain','GM','Retired','Hiatus','Rookie','Primary','Backup','Hand','CON','EYE','PWR','SPD','MOV','CMD','VEL','AWR']
+
+def build_plays_s5():
+    db.connect(reuse_if_open=True)
+    pas = []
+    s5_pas_val = s5_pas_sh.get_values(start="A2",end="AC106",include_tailing_empty_rows=False)
+    for p in s5_pas_val:
+        pa = dict(zip(all_pas_keys,p))
+        pas.append(pa)
+    with db.atomic():
+        PAs.insert_many(pas).execute()
+    db.close()
+
+def build_plays_old():
+    db.connect(reuse_if_open=True)
+    db.drop_tables([PAs])
+    db.create_tables([PAs])
+    ranges = (("A2","AC5000"),("A5001","AC10000"),("A10001","AC15000"),("A15001","AC20000"),("A20001","AC22287"))
+    for range in ranges:
+        pas = []
+        prev_pas_val = prev_pas_sh.get_values(start=range[0],end=range[1],include_tailing_empty_rows=False)
+        for p in prev_pas_val:
+            pa = dict(zip(all_pas_keys,p))
+            pas.append(pa)
+    #    all_pas.pop(0)
+        with db.atomic():
+            PAs.insert_many(pas).execute()
+    db.close()
+
+def build_persons():
+    db.connect(reuse_if_open=True)
+    db.drop_tables([Persons])
+    db.create_tables([Persons])
+    persons = []
+    persons_data = persons_sh.get_all_values(include_tailing_empty_rows=False)
+    for p in persons_data:
+        person = dict(zip(persons_keys,p))
+        persons.append(person)
+    persons.pop(0) #header row
+    with db.atomic():
+        Persons.insert_many(persons).execute()
+    db.close()
+
 if __name__ == "__main__":
+    main()
 #    db.connect()
 #    db.create_tables([List_Nums])
 #    db.close()
 #    migration()
-    db_init()
-    populate_test_data()
+#    db_init()
+#    populate_test_data()
