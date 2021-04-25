@@ -21,6 +21,8 @@ class BaseModel(Model):
     class Meta:
         database = db
 
+
+
 class Teams(BaseModel):
     id = AutoField(primary_key=True)
     TID = CharField(unique=True)
@@ -32,6 +34,19 @@ class Teams(BaseModel):
     Logo_URL = CharField()
     Location = CharField()
     Mascot = CharField()
+
+    def sheets_compare(self):
+        teams_dict = {
+        'TID': self.TID,
+        'Abbr': self.Abbr,
+        'Name': self.Name,
+        'Stadium': self.Stadium,
+        'League': self.League,
+        'Division': self.Division,
+        'Logo_URL': self.Logo_URL,
+        'Location': self.Location,
+        'Mascot': self.Mascot}
+        return(teams_dict)
 
 class TeamsSchema(ModelSchema):
     class Meta:
@@ -63,6 +78,34 @@ class Persons(BaseModel):
     CMD = IntegerField(default=0)
     VEL = IntegerField(default=0)
     AWR = IntegerField(default=0)
+
+    def sheets_compare(self):
+        persons_dict = {
+        'PersonID': self.PersonID,
+        'Current_Name': self.Current_Name,
+        'Stats_Name': self.Stats_Name,
+        'Reddit': self.Reddit,
+        'Discord': self.Discord,
+        'Discord_ID': self.Discord_ID,
+        'Team': self.Team,
+        'Player': self.Player,
+        'Captain': self.Captain,
+        'GM': self.GM,
+        'Retired': self.Retired,
+        'Hiatus': self.Hiatus,
+        'Rookie': self.Rookie,
+        'Primary': self.Primary,
+        'Backup': self.Backup,
+        'Hand': self.Hand,
+        'CON': self.CON,
+        'EYE': self.EYE,
+        'PWR': self.PWR,
+        'SPD': self.SPD,
+        'MOV': self.MOV,
+        'CMD': self.CMD,
+        'VEL': self.VEL,
+        'AWR': self.AWR}
+        return(persons_dict)
 
 class PersonsSchema(ModelSchema):
     class Meta:
@@ -98,9 +141,46 @@ class Schedules(BaseModel):
     Total_Plays = IntegerField(null=True)
     Plays_Per_Day = FloatField(null=True)
 
+    def sheets_compare(self):
+        schedules_dict = {
+        'Session': self.Session,
+        'Game_No': self.Game_No,
+        'Away': self.Away.Abbr,
+        'Home': self.Home.Abbr,
+        'Game_ID': self.Game_ID,
+        'A_Score': self.A_Score,
+        'H_Score': self.H_Score,
+        'Inning': self.Inning,
+        'Situation': self.Situation,
+        'Win': self.Win,
+        'Loss': self.Loss,
+        'WP': self.WP,
+        'LP': self.LP,
+        'SV': self.SV,
+        'POTG': self.POTG,
+        'Umpire': self.Umpire,
+        'Reddit': self.Reddit,
+        'Log': self.Log,
+        'Duration': self.Duration,
+        'Total_Plays': self.Total_Plays,
+        'Plays_Per_Day': self.Plays_Per_Day}
+        if schedules_dict['Win']: schedules_dict['Win'] = self.Win.Abbr
+        if schedules_dict['Loss']: schedules_dict['Loss'] = self.Loss.Abbr
+        return(schedules_dict)
+
 class SchedulesSchema(ModelSchema):
     class Meta:
         model = Schedules
+
+class Lineups(BaseModel):
+    id = AutoField(primary_key=True)
+    Game_No = ForeignKeyField(Schedules,field='Game_No',null=True)
+    Team = ForeignKeyField(Teams,field='Abbr',null=True)
+    Player = ForeignKeyField(Persons,field='PersonID',null=True)
+    Play_Entrance = IntegerField(null=True)
+    Position = CharField(null=True)
+    Order = IntegerField(null=True)
+    Pitcher_No = IntegerField(null=True)
 
 class PAs(BaseModel):
     id = AutoField(primary_key=True)
@@ -108,7 +188,7 @@ class PAs(BaseModel):
     Inning = CharField()
     Outs = IntegerField()
     BRC = IntegerField()
-    Play_Type = CharField()
+    Play_Type = CharField(null=True)
     Pitcher = CharField(null=True)
     Pitch_No = IntegerField(null=True)
     Batter = CharField(null=True)
