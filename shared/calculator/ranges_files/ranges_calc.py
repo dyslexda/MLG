@@ -239,7 +239,7 @@ def go_calc(game,result_dict,go_order_dict):
     brc = brc_calc(game)
     lookup_val = str(brc)+'_'+str(game.Outs)
     out_dict = {}
-    if go_order_dict[lookup_val] == ['FO','PO','GO','K']:
+    if go_order_dict[lookup_val] == ['PO','GO','K']:
         pass
     elif brc == 1:
         if game.First_Base.Speed < 4:

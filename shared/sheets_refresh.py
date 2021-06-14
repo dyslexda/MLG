@@ -41,6 +41,8 @@ teams_keys = ['TID','Abbr','Name','Stadium','League','Division','Logo_URL','Loca
 
 schedules_keys = ['Session','Game_No','Away','Home','Game_ID','A_Score','H_Score','Inning','Situation','Win','Loss','WP','LP','SV','POTG','Umpire','Reddit','Log','Duration','Total_Plays','Plays_Per_Day']
 
+lineups_keys = ['Game_No','Team','Player','Play_Entrance','Position','Order','Pitcher_No']
+
 def access_sheets():
     gSheet = pygsheets.authorize(service_file=secret_path)
     global prev_pas_sh, s5_pas_sh, persons_sh, teams_sh, schedules_sh, persons_defaults, test_sh, home_sh, lineups_sh
@@ -182,7 +184,6 @@ async def update_pas(sleeptime):
                                 for val in diff[diff_type]: changed[val[6:-2]] = diff[diff_type][val]['new_value']
                         PAs.update(changed).where(PAs.Play_No == pa.Play_No).execute()
         await asyncio.sleep(sleeptime)
-        print('pas',time.time())
 
 def generate_db():
     db.connect(reuse_if_open=True)
@@ -240,7 +241,6 @@ async def update_persons(sleeptime):
                         for val in diff['values_changed']: changed[val[6:-2]] = diff['values_changed'][val]['new_value']
                         Persons.update(changed).where(Persons.PersonID == person.PersonID).execute()
         await asyncio.sleep(sleeptime)
-        print('persons',time.time())
 
 def validate_schedules(schedules):
     ref_sched = []
@@ -281,7 +281,6 @@ async def update_schedules(sleeptime):
 #                    for val in diff['values_changed']: changed[val[6:-2]] = diff['values_changed'][val]['new_value']
                     Schedules.update(changed).where(Schedules.Game_No == sched.Game_No).execute()
         await asyncio.sleep(sleeptime)
-        print('schedules',time.time())
 
 def validate_teams(teams):
     ref_team = []
@@ -312,7 +311,6 @@ async def update_teams(sleeptime):
                     for val in diff['values_changed']: changed[val[6:-2]] = diff['values_changed'][val]['new_value']
                     Teams.update(changed).where(Teams.TID == team.TID).execute()
         await asyncio.sleep(sleeptime)
-        print('teams',time.time())
 
 class lineupCard():
     def __init__(self,num):
@@ -330,44 +328,74 @@ class lineupCard():
         self.Game_ID = self.whole_card[2][2]
         self.Away = self.whole_card[2][7]
         self.Home = self.whole_card[3][7]
-        self.Game_No = Schedules.get(Schedules.Game_ID == self.Game_ID).Game_No
-        print(self.Umpire,self.Game_ID,self.Away,self.Home,self.Game_No)
+        self.Game = Schedules.get_or_none(Schedules.Game_ID == self.Game_ID)
+        if self.Game == None:
+            self.Away_Lineup = None
+            self.Home_Lineup = None
+            return
+        self.Game_No = self.Game.Game_No
         self.Away_Lineup = []
         self.Home_Lineup = []
         for i in self.whole_card[7:23]:
             entry = lineupEntry(i,self.Game_No,self.Away)
             self.Away_Lineup.append(entry)
         for i in self.whole_card[26:42]:
-            entry = lineupEntry(i,self.Game_No,self.Away)
+            entry = lineupEntry(i,self.Game_No,self.Home)
             self.Home_Lineup.append(entry)
-        print(self.Home_Lineup[0])
 
 class lineupEntry():
     def __init__(self,line,game_no,team):
         self.game_no = game_no
         self.team = team
         self.name = line[0]
+        self.player_id = Persons.get_or_none(Persons.Stats_Name == self.name)
+        if self.player_id != None: self.player_id = self.player_id.PersonID
         self.pos = self.conv_none(line[4])
-        self.play = self.conv_none(line[5])
-        self.bat = self.conv_none(line[6])
-        self.pit = self.conv_none(line[7])
+        self.play = self.conv_none_int(line[5])
+        self.bat = self.conv_none_int(line[6])
+        self.pit = self.conv_none_int(line[7])
     def conv_none(self,data):
         if data == '':
             return(None)
         else:
             return(data)
+    def conv_none_int(self,data):
+        if data == '':
+            return(None)
+        else:
+            return(int(data))
 
-def update_lineups():
-#    card1 = lineups_sh.get_values(start='C1',end='J42',include_tailing_empty_rows=False)
-#    print(card1)
-    lineupCard(8)
+async def update_lineups(sleeptime):
+    while True:
+        cards = {}
+        home_arr = home_sh.get_values(start='A5',end='D12',include_tailing_empty_rows=False)
+        for i in range(len(home_arr)):
+            if home_arr[i][0] != '': 
+               cards[i+1] = lineupCard(i+1)
+               for line in cards[i+1].Away_Lineup: update_entry(line)
+               for line in cards[i+1].Home_Lineup: update_entry(line)
+        await asyncio.sleep(sleeptime)
+
+def update_entry(line):
+    entry = Lineups.get_or_none(Lineups.Player == line.player_id, Lineups.Game_No == line.game_no)
+    z_entry = dict(zip(lineups_keys,[line.game_no,line.team,line.player_id,line.play,line.pos,line.bat,line.pit]))
+    if not entry:
+        Lineups.insert(z_entry).execute()
+    else:
+        diff = deepdiff.DeepDiff(entry.sheets_compare(),z_entry)
+        if bool(diff):
+            print(diff)
+            changed = {}
+            for diff_type in ['values_changed','type_changes']:
+                if diff_type in diff:
+                    for val in diff[diff_type]: changed[val[6:-2]] = diff[diff_type][val]['new_value']
+            Lineups.update(changed).where(Lineups.Player == line.player_id, Lineups.Game_No == line.game_no).execute()
 
 def main():
     access_sheets()
 #    generate_db()
     loop = asyncio.get_event_loop()
-    cors = asyncio.wait([update_persons(60*15*1),update_schedules(60*5),update_teams(60*15*1),update_pas(60*5)])
-#    cors = asyncio.wait([update_schedules(60*1)])
+    cors = asyncio.wait([update_persons(60*15*1),update_schedules(60*5),update_teams(60*15*1),update_pas(60*5),update_lineups(60*5)])
     loop.run_until_complete(cors)
 
     
