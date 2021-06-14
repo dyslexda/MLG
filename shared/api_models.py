@@ -182,6 +182,21 @@ class Lineups(BaseModel):
     Order = IntegerField(null=True)
     Pitcher_No = IntegerField(null=True)
 
+    def sheets_compare(self):
+        lineups_dict = {
+        'Game_No': self.Game_No.Game_No,
+        'Team': self.Team.Abbr,
+        'Player': self.Player.PersonID,
+        'Play_Entrance': self.Play_Entrance,
+        'Position': self.Position,
+        'Order': self.Order,
+        'Pitcher_No': self.Pitcher_No}
+        return(lineups_dict)
+
+class LineupsSchema(ModelSchema):
+    class Meta:
+        model = Lineups
+
 class PAs(BaseModel):
     id = AutoField(primary_key=True)
     Play_No = IntegerField(null=True)

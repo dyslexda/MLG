@@ -267,6 +267,26 @@ paths:
         404:
           description: "Schedules failed"
       x-swagger-router-controller: "application.api.api"
+  /lineup/{game_no}:
+    get:
+      tags:
+        - "lineup"
+      summary: "A game's lineup"
+      operationId: "get_lineup"
+      parameters:
+        - name: "game_no"
+          in: "path"
+          description: "The game ID for which to retrieve lineups"
+          required: true
+          type: "integer"
+      responses:
+        200:
+          description: "Object with 'away' and 'home' arrays, each with up to 12 nested lists (1-9 batting orders, 10 pitchers, 11 bench, 12 bullpen)"
+          schema:
+            $ref: "#/definitions/Lineup"
+        404:
+          description: "Game lineup doesn't exist"
+      x-swagger-router-controller: "application.api.api"
   /standings:
     get:
       tags:
@@ -830,6 +850,39 @@ definitions:
       CMD: 0
       VEL: 0
       AWR: 0
+  Lineup:
+    properties:
+      home:
+        type: array
+        items:
+          type: array
+          items:
+            $ref: "#/definitions/Entry"
+      away:
+        type: array
+        items:
+          type: array
+          items:
+            $ref: "#/definitions/Entry"
+  Entry:
+    type: "object"
+    required:
+      - "order"
+      - "playEntrance"
+      - "playerID"
+      - "playerName"
+      - "position"
+    properties:
+      order:
+        type: "integer"
+      playEntrance:
+        type: "integer"
+      playerID:
+        type: "integer"
+      playerName:
+        type: "string"
+      position:
+        type: "string"
 parameters:
     limit:
       name: "limit"
