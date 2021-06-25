@@ -45,24 +45,23 @@ lineups_keys = ['Game_No','Team','Player','Play_Entrance','Position','Order','Pi
 
 def access_sheets():
     gSheet = pygsheets.authorize(service_file=secret_path)
-    global prev_pas_sh, s5_pas_sh, persons_sh, teams_sh, schedules_sh, persons_defaults, test_sh, home_sh, lineups_sh
+    global prev_pas_sh, cur_pas_sh, persons_sh, teams_sh, schedules_sh, persons_defaults, home_sh, lineups_sh
     global card1, card2, card3, card4, card5, card6, card7, card8
     p_master_log = gSheet.open_by_key(environ.get('P_MASTER_LOG'))
-    prev_pas_sh = p_master_log.worksheet_by_title("All_PAs_1-4")
-    s5_pas_sh = p_master_log.worksheet_by_title("All_PAs_5")
+    prev_pas_sh = p_master_log.worksheet_by_title("All_PAs_1-5")
+    cur_pas_sh = p_master_log.worksheet_by_title("All_PAs_6")
     persons_sh = p_master_log.worksheet_by_title("Persons")
     teams_sh = p_master_log.worksheet_by_title("Teams")
     schedules_sh = p_master_log.worksheet_by_title("Schedule")
-    test_sh = p_master_log.worksheet_by_title("Test")
     
-    ump_central = gSheet.open_by_key('1od9QlusBic2GAJP1IvIdLx5k1Dvm5Qp-ts-pfBt-XMw')
+    ump_central = gSheet.open_by_key('15s8vfZMNPx-yLVQTegSqobNlNeMrlt2ooWJpQmvbjBg')
     home_sh = ump_central.worksheet_by_title('HOME')
     lineups_sh = ump_central.worksheet_by_title('Lineup Cards')
 
-def build_plays_s5():
+def build_plays_cur():
     pas = []
-    s5_pas_val = s5_pas_sh.get_all_values(include_tailing_empty_rows=False)
-    for p in s5_pas_val:
+    cur_pas_val = cur_pas_sh.get_all_values(include_tailing_empty_rows=False)
+    for p in cur_pas_val:
         pa = dict(zip(all_pas_keys,p))
         for cat in pa:
             if pa[cat] == '': pa[cat] = None
@@ -71,7 +70,7 @@ def build_plays_s5():
         PAs.insert_many(pas).execute()
 
 def build_plays_old():
-    ranges = (("A2","AC5000"),("A5001","AC10000"),("A10001","AC15000"),("A15001","AC20000"),("A20001","AC22287"))
+    ranges = (("A2","AC5000"),("A5001","AC10000"),("A10001","AC15000"),("A15001","AC20000"),("A20001","AC25000"),("A25001","AC28920"))
     for range in ranges:
         pas = []
         prev_pas_val = prev_pas_sh.get_values(start=range[0],end=range[1],include_tailing_empty_rows=False)
@@ -155,10 +154,10 @@ def build_schedules():
                 schedules.append(schedule)
     ref_sched = []
     for sched in schedules:
-        if sched['Game_No'] == '50101': ref_sched.append(sched)
+        if sched['Game_No'] == '60101': ref_sched.append(sched)
     try:
         assert len(ref_sched) == 1
-        assert ref_sched[0]['Game_ID'] == 'GRZACP1'
+        assert ref_sched[0]['Game_ID'] == 'GHGACP1'
         return(schedules)
     except AssertionError:
         return(None)
@@ -187,10 +186,10 @@ async def update_pas(sleeptime):
 
 def generate_db():
     db.connect(reuse_if_open=True)
-    db.drop_tables([PAs])
+    db.drop_tables([PAs,Lineups])
     db.create_tables([PAs])
     build_plays_old()
-    build_plays_s5()
+    build_plays_cur()
     persons = build_persons()
     teams = build_teams()
     schedules = build_schedules()
@@ -201,7 +200,7 @@ def generate_db():
             Persons.insert_many(persons).execute()
             Teams.insert_many(teams).execute()
             Schedules.insert_many(schedules).execute()
-#        update_pas()
+            db.create_tables([Lineups])
     db.close()
 
 def validate_persons(persons):
@@ -393,7 +392,7 @@ def update_entry(line):
 
 def main():
     access_sheets()
-#    generate_db()
+    generate_db()
     loop = asyncio.get_event_loop()
     cors = asyncio.wait([update_persons(60*15*1),update_schedules(60*5),update_teams(60*15*1),update_pas(60*5),update_lineups(60*5)])
     loop.run_until_complete(cors)
