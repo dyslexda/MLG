@@ -36,7 +36,8 @@ class TeamStanding():
                 else:
                     self.runsScored += game.H_Score
                     self.runsAgainst += game.A_Score
-        self.pct = str(float(Decimal(self.wins/(self.wins+self.losses)).quantize(Decimal('.001'),rounding='ROUND_HALF_UP')))
+        try: self.pct = str(float(Decimal(self.wins/(self.wins+self.losses)).quantize(Decimal('.001'),rounding='ROUND_HALF_UP')))
+        except ZeroDivisionError as e: self.pct = (str(0))
         self.runDiff = (self.runsScored - self.runsAgainst)
         last7 = self.games.where(Schedules.Situation == 'FINAL').order_by(Schedules.Game_No.desc()).limit(7)
         l3_wins,l3_losses,l5_wins,l5_losses,l7_wins,l7_losses = 0,0,0,0,0,0
@@ -71,6 +72,7 @@ class TeamStanding():
                 else: nextdir = 'L'
                 if direction == nextdir: counter += 1
                 else: break
+        if not direction: direction = 'W'
         self.streak = direction + str(counter)
     def to_dict(self):
         return {
@@ -123,7 +125,7 @@ class ConferenceStandings():
         for division in divisions_q:
             self.divisions[division.Division] = DivisionStandings(division.Division)
             self.divisions_todict.append(self.divisions[division.Division].to_dict())
-            self.wild_card.extend(self.divisions[division.Division].to_dict()['records'][1:])
+            self.wild_card.extend(self.divisions[division.Division].to_dict()['standings'][1:])
         self.wildcard = WildCard(self.wild_card).to_dict()
     def to_dict(self):
         return {
@@ -139,8 +141,8 @@ class DivisionStandings():
         self.records_todict = StandingsOrder(self.members).placement()
     def to_dict(self):
         return {
-            'name': self.name,
-            'records': self.records_todict}
+            'division': self.name,
+            'standings': self.records_todict}
 
 class StandingsOrder():
     def __init__(self,members):

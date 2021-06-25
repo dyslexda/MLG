@@ -68,22 +68,22 @@ def format_lineup(lineup):
         lineup_lst.append([])
         ord_q = lineup.where(Lineups.Order == i).order_by(Lineups.Play_Entrance)
         for player in ord_q:
-            player_dict = {"Order": player.Order, "Play_Entrance": player.Play_Entrance, "Player_ID": player.Player.PersonID, "Player_Name": player.Player.Stats_Name, "Position": player.Position}
+            player_dict = {"order": player.Order, "playEntrance": player.Play_Entrance, "playerID": player.Player.PersonID, "playerName": player.Player.Stats_Name, "position": player.Position}
             lineup_lst[i-1].append(player_dict)
     pitchers_q = lineup.where(Lineups.Pitcher_No).order_by(Lineups.Pitcher_No)
     lineup_lst.append([])
     for player in pitchers_q:
-        player_dict = {"Order": player.Order, "Play_Entrance": player.Play_Entrance, "Player_ID": player.Player.PersonID, "Player_Name": player.Player.Stats_Name, "Position": player.Position}
+        player_dict = {"order": player.Order, "playEntrance": player.Play_Entrance, "playerID": player.Player.PersonID, "playerName": player.Player.Stats_Name, "position": player.Position}
         lineup_lst[-1].append(player_dict)
     bench_q = lineup.where(Lineups.Play_Entrance == None, Lineups.Player.Primary != "P")
     lineup_lst.append([])
     for player in bench_q:
-        player_dict = {"Order": player.Order, "Play_Entrance": player.Play_Entrance, "Player_ID": player.Player.PersonID, "Player_Name": player.Player.Stats_Name, "Position": player.Player.Primary}
+        player_dict = {"order": player.Order, "playEntrance": player.Play_Entrance, "playerID": player.Player.PersonID, "playerName": player.Player.Stats_Name, "position": player.Player.Primary}
         lineup_lst[-1].append(player_dict)
     bullpen_q = lineup.where(Lineups.Play_Entrance == None, Lineups.Player.Primary == "P")
     lineup_lst.append([])
     for player in bullpen_q:
-        player_dict = {"Order": player.Order, "Play_Entrance": player.Play_Entrance, "Player_ID": player.Player.PersonID, "Player_Name": player.Player.Stats_Name, "Position": player.Player.Primary}
+        player_dict = {"order": player.Order, "playEntrance": player.Play_Entrance, "playerID": player.Player.PersonID, "playerName": player.Player.Stats_Name, "position": player.Player.Primary}
         lineup_lst[-1].append(player_dict)
     return(lineup_lst)
 

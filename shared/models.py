@@ -19,8 +19,8 @@ db = PooledSqliteExtDatabase(db_path, check_same_thread=False, pragmas={'foreign
 secret_path = basedir + '/shared/client_secret.json'
 gSheet = pygsheets.authorize(service_file=secret_path)
 p_master_log = gSheet.open_by_key(environ.get('P_MASTER_LOG'))
-prev_pas_sh = p_master_log.worksheet_by_title("All_PAs_1-4")
-s5_pas_sh = p_master_log.worksheet_by_title("All_PAs_5")
+prev_pas_sh = p_master_log.worksheet_by_title("All_PAs_1-5")
+s5_pas_sh = p_master_log.worksheet_by_title("All_PAs_6")
 persons_sh = p_master_log.worksheet_by_title("Persons")
 #test_sh = p_master_log.worksheet_by_title("Test")
 
