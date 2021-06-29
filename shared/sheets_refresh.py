@@ -270,7 +270,6 @@ async def update_schedules(sleeptime):
         schedules = validate_schedules(schedules)
         if schedules:
             for s in schedules:
-                print(s)
                 sched = Schedules.get(Schedules.Game_No == s['Game_No'])
                 diff = deepdiff.DeepDiff(sched.sheets_compare(),s)
                 if bool(diff):
@@ -279,10 +278,7 @@ async def update_schedules(sleeptime):
                         if diff_type in diff:
                             for val in diff[diff_type]: changed[val[6:-2]] = diff[diff_type][val]['new_value']
 #                    for val in diff['values_changed']: changed[val[6:-2]] = diff['values_changed'][val]['new_value']
-                    q = Schedules.update(changed).where(Schedules.Game_No == sched.Game_No)
-                    print(q)
-                    print(diff,changed)
-                    q.execute()
+                    Schedules.update(changed).where(Schedules.Game_No == sched.Game_No).execute()
         await asyncio.sleep(sleeptime)
 
 def validate_teams(teams):
@@ -391,7 +387,6 @@ def line_check(line):
     else: return(False)
 
 def update_entry(line):
-    print(line)
     entry = Lineups.get_or_none(Lineups.Player == line.player_id, Lineups.Game_No == line.game_no)
     z_entry = dict(zip(lineups_keys,[line.game_no,line.team,line.player_id,line.play,line.pos,line.bat,line.pit]))
     if not entry:
@@ -410,9 +405,7 @@ def main():
     access_sheets()
 #    generate_db()
     loop = asyncio.get_event_loop()
-    print("here")
-#    cors = asyncio.wait([update_persons(60*15*1),update_schedules(60*5),update_teams(60*15*1),update_pas(60*5),update_lineups(60*5)])
-    cors = asyncio.wait([update_lineups(30)])
+    cors = asyncio.wait([update_persons(60*15*1),update_schedules(60*5),update_teams(60*15*1),update_pas(60*5),update_lineups(60*5)])
     loop.run_until_complete(cors)
 
 
