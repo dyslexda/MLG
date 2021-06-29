@@ -145,8 +145,6 @@ class Schedules(BaseModel):
         schedules_dict = {
         'Session': self.Session,
         'Game_No': self.Game_No,
-        'Away': self.Away.Abbr,
-        'Home': self.Home.Abbr,
         'Game_ID': self.Game_ID,
         'A_Score': self.A_Score,
         'H_Score': self.H_Score,
@@ -160,12 +158,14 @@ class Schedules(BaseModel):
         'POTG': self.POTG,
         'Umpire': self.Umpire,
         'Reddit': self.Reddit,
-        'Log': self.Log,
+#        'Log': self.Log, # Logs removed in S6
         'Duration': self.Duration,
         'Total_Plays': self.Total_Plays,
         'Plays_Per_Day': self.Plays_Per_Day}
         if schedules_dict['Win']: schedules_dict['Win'] = self.Win.Abbr
         if schedules_dict['Loss']: schedules_dict['Loss'] = self.Loss.Abbr
+        if self.Away and self.Home: schedules_dict['Away'],schedules_dict['Home'] = self.Away.Abbr, self.Home.Abbr # To account for playoff games not having teams set
+        else: schedules_dict['Away'],schedules_dict['Home'] = None, None
         return(schedules_dict)
 
 class SchedulesSchema(ModelSchema):
