@@ -39,7 +39,7 @@ persons_defaults = { 'Reddit':None,
 
 teams_keys = ['TID','Abbr','Name','Stadium','League','Division','Logo_URL','Location','Mascot']
 
-schedules_keys = ['Session','Game_No','Away','Home','Game_ID','A_Score','H_Score','Inning','Situation','Win','Loss','WP','LP','SV','POTG','Umpire','Reddit','Log','Duration','Total_Plays','Plays_Per_Day']
+schedules_keys = ['Session','Game_No','Away','Home','Game_ID','A_Score','H_Score','Inning','Situation','Win','Loss','WP','LP','SV','POTG','Umpire','Reddit','Duration','Total_Plays','Plays_Per_Day']
 
 lineups_keys = ['Game_No','Team','Player','Play_Entrance','Position','Order','Pitcher_No']
 
@@ -164,7 +164,7 @@ def build_schedules():
 
 async def update_pas(sleeptime):
     while True:
-        pas_list = s5_pas_sh.get_all_values(include_tailing_empty_rows=False)
+        pas_list = cur_pas_sh.get_all_values(include_tailing_empty_rows=False)
         cur_session = pas_list[-1][0][0:3]
         int_list = ['Play_No','Outs','BRC','Pitch_No','Swing_No','Throw_No','Steal_No','Run_Scored','Ghost_Scored','RBIs','Stolen_Base','Diff','Runs_Scored_On_Play','Game_No','Session_No','Inning_No','Pitcher_ID','Batter_ID','Catcher_ID','Runner_ID']
         for i in pas_list:
@@ -244,10 +244,10 @@ async def update_persons(sleeptime):
 def validate_schedules(schedules):
     ref_sched = []
     for sched in schedules:
-        if sched['Game_No'] == 50101: ref_sched.append(sched)
+        if sched['Game_No'] == 60101: ref_sched.append(sched)
     try:
         assert len(ref_sched) == 1
-        assert ref_sched[0]['Game_ID'] == 'GRZACP1'
+        assert ref_sched[0]['Game_ID'] == 'GHGACP1'
         return(schedules)
     except AssertionError:
         return(None)
@@ -336,11 +336,13 @@ class lineupCard():
         self.Away_Lineup = []
         self.Home_Lineup = []
         for i in self.whole_card[7:23]:
-            entry = lineupEntry(i,self.Game_No,self.Away)
-            self.Away_Lineup.append(entry)
+            if i[0] != '':
+                entry = lineupEntry(i,self.Game_No,self.Away)
+                self.Away_Lineup.append(entry)
         for i in self.whole_card[26:42]:
-            entry = lineupEntry(i,self.Game_No,self.Home)
-            self.Home_Lineup.append(entry)
+            if i[0] != '':
+                entry = lineupEntry(i,self.Game_No,self.Home)
+                self.Home_Lineup.append(entry)
 
 class lineupEntry():
     def __init__(self,line,game_no,team):
@@ -369,11 +371,20 @@ async def update_lineups(sleeptime):
         cards = {}
         home_arr = home_sh.get_values(start='A5',end='D12',include_tailing_empty_rows=False)
         for i in range(len(home_arr)):
-            if home_arr[i][0] != '': 
-               cards[i+1] = lineupCard(i+1)
-               for line in cards[i+1].Away_Lineup: update_entry(line)
-               for line in cards[i+1].Home_Lineup: update_entry(line)
+            if home_arr[i][0] != '':
+                cards[i+1] = lineupCard(i+1)
+                [ update_entry(line) for line in cards[i+1].Away_Lineup if line_check(line) ]
+                [ update_entry(line) for line in cards[i+1].Home_Lineup if line_check(line) ]
         await asyncio.sleep(sleeptime)
+
+def line_check(line):
+    if (line.name != '' and 
+        line.pos != '' and
+        line.play != '' and
+        ((line.pos != 'P' and line.bat != '') or 
+         (line.pos=='P' and line.pit != ''))):
+        return(True)
+    else: return(False)
 
 def update_entry(line):
     entry = Lineups.get_or_none(Lineups.Player == line.player_id, Lineups.Game_No == line.game_no)
@@ -383,22 +394,20 @@ def update_entry(line):
     else:
         diff = deepdiff.DeepDiff(entry.sheets_compare(),z_entry)
         if bool(diff):
-            print(diff)
             changed = {}
             for diff_type in ['values_changed','type_changes']:
                 if diff_type in diff:
                     for val in diff[diff_type]: changed[val[6:-2]] = diff[diff_type][val]['new_value']
             Lineups.update(changed).where(Lineups.Player == line.player_id, Lineups.Game_No == line.game_no).execute()
 
+
 def main():
     access_sheets()
-    generate_db()
+#    generate_db()
     loop = asyncio.get_event_loop()
     cors = asyncio.wait([update_persons(60*15*1),update_schedules(60*5),update_teams(60*15*1),update_pas(60*5),update_lineups(60*5)])
     loop.run_until_complete(cors)
 
-    
+
 if __name__ == "__main__":
     main()
-
-
